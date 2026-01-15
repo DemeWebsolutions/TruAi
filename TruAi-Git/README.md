@@ -188,13 +188,3 @@ This documentation is **not end-user documentation**.
 **Internal AI Control Plane for High-Assurance Operations**
 
 ---
-
-If you want, I can also provide:
-
-* 🔒 **Ultra-minimal “Legal-Only” README**
-* 🧾 **Investor / NDA-safe summary**
-* 🛡 **Regulatory / compliance-facing version**
-* 🧑‍💻 **Internal developer-only spec**
-* 🪪 **Public-facing sanitized landing description**
-
-Just tell me which audience this is for.
