@@ -149,12 +149,17 @@ class TruAiAPI {
             // Context metadata
             if (metadata.selection_length !== undefined && 
                 typeof metadata.selection_length === 'number' && 
-                !isNaN(metadata.selection_length)) {
+                !isNaN(metadata.selection_length) && 
+                metadata.selection_length >= 0) {
                 body.selection_length = metadata.selection_length;
             }
             
             // Allow conversation_id override via metadata if needed
-            if (metadata.conversation_id) body.conversation_id = metadata.conversation_id;
+            // This allows callers to pass conversation_id in metadata for consistency
+            // with other metadata fields, but the direct parameter takes precedence
+            if (metadata.conversation_id && !conversationId) {
+                body.conversation_id = metadata.conversation_id;
+            }
             
             // NOTE: Model routing should NOT be exposed in production UI
             // This is for internal/dev use only. Production code should use the model parameter.
