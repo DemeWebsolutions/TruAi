@@ -148,7 +148,7 @@ A lightweight, non-framework test harness is available for development testing:
 1. Open TruAi dashboard and log in
 2. Open a code file in the editor
 3. Select a block of code (at least 50 characters)
-4. Click "AI Rewrite" button or press Ctrl+Shift+R
+4. Click "AI Rewrite" button or press Cmd/Ctrl+Enter
 5. Enter instruction: "Add comments explaining each line"
 6. Click "Generate Rewrite"
 7. Review diff preview showing original vs. rewritten
@@ -161,6 +161,208 @@ A lightweight, non-framework test harness is available for development testing:
 - Metadata includes: `intent=inline_rewrite`, `scope=selection`, `risk=SAFE`, `selection_length=<count>`
 - Diff preview displays clearly
 - Accept applies changes, Reject discards
+
+### Phase 5: Polish & UX Tightening Tests
+
+#### Test 5.1: Empty Selection Handling
+
+**Purpose:** Verify that empty selection is properly handled with UI feedback.
+
+**Steps:**
+1. Open TruAi dashboard and log in
+2. Open a code file in the editor
+3. Click anywhere in the editor WITHOUT selecting text
+4. Observe the "AI Rewrite" button state
+5. Try clicking the "AI Rewrite" button
+6. Press Cmd/Ctrl+Enter
+
+**Expected Results:**
+- "AI Rewrite" button is visually disabled (grayed out)
+- Button cannot be clicked when disabled
+- Keyboard shortcut shows toast: "Select text to rewrite"
+- No modal opens for empty selection
+
+#### Test 5.2: Maximum Selection Size Guard
+
+**Purpose:** Verify that oversized selections are blocked with helpful feedback.
+
+**Steps:**
+1. Open TruAi dashboard and log in
+2. Open or create a file with > 4000 characters of code
+3. Select all text (Cmd/Ctrl+A)
+4. Click "AI Rewrite" button or press Cmd/Ctrl+Enter
+5. Observe the notification message
+
+**Expected Results:**
+- Toast notification appears: "Selection too large (X chars). Please reduce to 4000 chars or less."
+- Modal does NOT open
+- No API request sent
+- User can select smaller portion and try again
+
+#### Test 5.3: Suggested Prompt Chips
+
+**Purpose:** Verify that prompt chips appear and function correctly.
+
+**Steps:**
+1. Open TruAi dashboard and log in
+2. Open a code file and select some text
+3. Click "AI Rewrite" button
+4. Observe the prompt chips above the instruction textarea
+5. Click on "Refactor" chip
+6. Observe the instruction field
+7. Click on "Add comments" chip
+8. Observe the instruction field
+
+**Expected Results:**
+- Six prompt chips displayed: "Refactor", "Fix bug", "Improve readability", "Add comments", "Optimize performance", "Add error handling"
+- Clicking first chip inserts text into instruction field
+- Clicking second chip appends with comma separator: "Refactor, Add comments"
+- Chips are clickable and responsive
+- Manual text can still be entered
+
+#### Test 5.4: Session Instruction Preservation
+
+**Purpose:** Verify that last instruction is preserved within session.
+
+**Steps:**
+1. Open TruAi dashboard and log in
+2. Open a code file and select text
+3. Click "AI Rewrite" button
+4. Enter instruction: "Test instruction 123"
+5. Click "Cancel" to close modal
+6. Select different text
+7. Click "AI Rewrite" button again
+8. Observe the instruction field
+
+**Expected Results:**
+- Instruction field is pre-filled with "Test instruction 123"
+- Cursor positioned at end of text
+- User can edit or replace text
+- Instruction persists across modal opens in same session
+- Instruction is NOT saved to localStorage (refresh clears it)
+
+#### Test 5.5: Forensic ID Display and Copy
+
+**Purpose:** Verify forensic ID is displayed and copyable in diff preview.
+
+**Steps:**
+1. Complete a rewrite operation to reach diff preview
+2. Locate the "Forensic ID" section
+3. Observe the styling and display
+4. Click the copy button next to forensic ID
+5. Paste into a text editor (Cmd/Ctrl+V)
+
+**Expected Results:**
+- Forensic ID displayed in dedicated banner with label "Forensic ID:"
+- ID shown in monospace font within styled code element
+- Copy button visible with icon
+- Clicking copy button shows success toast: "Forensic ID copied to clipboard"
+- Pasted value matches displayed forensic ID exactly
+- Format: TRUAI_<timestamp>_<hash>
+
+#### Test 5.6: Line Wrapping Toggle
+
+**Purpose:** Verify line wrapping can be toggled in diff preview.
+
+**Steps:**
+1. Complete a rewrite with code containing long lines (>100 chars)
+2. In diff preview, locate "Wrap lines" checkbox
+3. Observe initial state (should be checked/wrapped by default)
+4. Uncheck the "Wrap lines" checkbox
+5. Observe the diff code display
+6. Check the "Wrap lines" checkbox again
+7. Observe the diff code display
+
+**Expected Results:**
+- "Wrap lines" checkbox displayed above diff columns
+- Default state: checked, lines wrap within column width
+- Unchecked: lines extend horizontally, horizontal scrollbar appears
+- Checked again: lines wrap, scrollbar disappears
+- Toggle works smoothly without page reload
+- Both original and rewritten columns update together
+
+#### Test 5.7: Keyboard Accessibility - Escape
+
+**Purpose:** Verify Escape key closes diff preview modal.
+
+**Steps:**
+1. Complete a rewrite to open diff preview
+2. Press Escape key
+3. Observe the modal behavior
+
+**Expected Results:**
+- Diff preview modal closes immediately
+- No changes applied to editor
+- No error messages
+- Editor remains in previous state
+
+#### Test 5.8: Keyboard Accessibility - Enter
+
+**Purpose:** Verify Enter key behavior in diff preview.
+
+**Steps:**
+1. Complete a rewrite to open diff preview
+2. Press Enter key without focusing any button
+3. Observe behavior
+4. Close and reopen diff preview
+5. Tab to "Apply Changes" button (or click to focus it)
+6. Observe focus indicator on button
+7. Press Enter key
+8. Observe behavior
+
+**Expected Results:**
+- Pressing Enter without focus on Apply button: No action (safe)
+- Pressing Enter with Apply button focused: Changes applied
+- Changes applied successfully to editor
+- Notification shows: "Changes applied successfully"
+- Modal closes after application
+
+#### Test 5.9: Button State Dynamic Update
+
+**Purpose:** Verify button state updates as selection changes.
+
+**Steps:**
+1. Open TruAi dashboard with a code file
+2. Observe "AI Rewrite" button (should be disabled)
+3. Select some text with mouse
+4. Observe button state change
+5. Click elsewhere to deselect
+6. Observe button state change
+7. Select text with keyboard (Shift+Arrow keys)
+8. Observe button state change
+
+**Expected Results:**
+- Initial state: button disabled
+- After selection: button enabled immediately
+- After deselection: button disabled immediately
+- Keyboard selection: button enabled
+- State updates are instant and responsive
+- Visual disabled state (grayed out) matches functional state
+
+#### Test 5.10: Dark Theme Compatibility
+
+**Purpose:** Verify all Phase 5 elements work correctly in dark theme.
+
+**Steps:**
+1. Ensure dark theme is active (default)
+2. Complete a full rewrite flow
+3. Observe all UI elements:
+   - Disabled button state
+   - Prompt chips
+   - Forensic ID banner
+   - Copy button
+   - Line wrap toggle
+   - Diff code backgrounds
+
+**Expected Results:**
+- All text readable with proper contrast
+- Disabled button visible but clearly non-interactive
+- Prompt chips have appropriate hover states
+- Forensic ID banner distinguishable from surrounding UI
+- Copy button visible and styled appropriately
+- No white boxes or harsh contrasts
+- Color-coded diffs (red/green tints) subtle and readable
+- All interactive elements have visible hover states
 
 ### Phase 3: Privacy Toggle Persistence
 
