@@ -790,5 +790,277 @@ If any test fails or unexpected behavior occurs:
 
 ---
 
+## Phase 7: Selection-Scoped AI Tools Tests
+
+### Test 7.1: Explain Selection - Toolbar Dropdown
+
+**Purpose:** Verify Explain Selection works via toolbar dropdown.
+
+**Steps:**
+1. Open TruAi dashboard and log in
+2. Open a code file in the editor
+3. Select a block of code (at least 20 characters)
+4. Click the dropdown arrow next to "AI Rewrite" button
+5. Observe dropdown menu
+6. Click "Explain Selection"
+7. Observe the prompt modal
+8. Optionally enter additional questions
+9. Click "Generate Explanation"
+10. Observe the explanation modal
+
+**Expected Results:**
+- Dropdown opens with "Explain Selection" and "Add Comments" options
+- Prompt modal shows selected code preview and character count
+- Optional instruction field is present
+- Request sent with metadata: `intent=explain_selection`, `scope=selection`, `risk=SAFE`
+- Explanation modal displays with read-only text
+- Forensic ID displayed and copyable
+- Copy Explanation button works
+- Close button closes modal
+
+### Test 7.2: Explain Selection - Keyboard Shortcut
+
+**Purpose:** Verify keyboard shortcut triggers Explain Selection.
+
+**Steps:**
+1. Open TruAi dashboard with a code file
+2. Focus the editor
+3. Select some text
+4. Press Cmd/Ctrl+Shift+Enter
+5. Observe behavior
+
+**Expected Results:**
+- Explain Selection prompt modal opens
+- Same behavior as toolbar dropdown trigger
+- Shortcut only works when editor is focused
+- Shows toast if no selection
+
+### Test 7.3: Explain Selection - Context Menu
+
+**Purpose:** Verify Explain Selection works via context menu.
+
+**Steps:**
+1. Open TruAi dashboard with a code file
+2. Select code
+3. Right-click on selected text
+4. Observe context menu
+5. Click "Explain Selection"
+
+**Expected Results:**
+- Context menu shows three options: AI Rewrite Selection, Explain Selection, Add Comments
+- Clicking Explain Selection opens prompt modal
+- Works same as other trigger methods
+
+### Test 7.4: Explain Selection - Guardrails
+
+**Purpose:** Verify selection guardrails for Explain Selection.
+
+**Steps:**
+1. Open editor without selecting text
+2. Try to open Explain Selection via dropdown
+3. Select text over 4000 characters
+4. Try to open Explain Selection
+5. Select valid text and trigger Explain
+6. Edit code while modal is open
+7. Complete the explanation
+
+**Expected Results:**
+- Without selection: Shows toast "Select text to explain"
+- Oversized selection: Shows toast with character count and limit
+- Valid selection: Opens prompt modal
+- Editing during operation: Request continues (no stale detection for read-only)
+- Explanation displays correctly
+
+### Test 7.5: Add Comments - Toolbar Dropdown
+
+**Purpose:** Verify Add Comments works via toolbar dropdown.
+
+**Steps:**
+1. Open TruAi dashboard with a code file
+2. Select a function or code block
+3. Click dropdown arrow next to "AI Rewrite"
+4. Click "Add Comments"
+5. Optionally enter comment style (e.g., "JSDoc style")
+6. Click "Generate Comments"
+7. Observe diff preview
+8. Review original vs. commented code
+9. Click "Apply Changes"
+
+**Expected Results:**
+- Add Comments option visible in dropdown
+- Prompt modal shows with optional style instruction
+- Request sent with metadata: `intent=add_comments`, `scope=selection`, `risk=SAFE`
+- Diff preview shows original and commented versions
+- All original code preserved
+- Only comments/docstrings added
+- Forensic ID displayed
+- Apply button applies changes to editor
+- Reject button closes without changes
+
+### Test 7.6: Add Comments - Context Menu
+
+**Purpose:** Verify Add Comments works via context menu.
+
+**Steps:**
+1. Open editor and select code
+2. Right-click selected text
+3. Click "Add Comments" from context menu
+4. Follow the flow to generate and review comments
+
+**Expected Results:**
+- Context menu shows Add Comments option
+- Same behavior as dropdown trigger
+- Diff preview works correctly
+
+### Test 7.7: Dropdown UI Behavior
+
+**Purpose:** Verify dropdown opens/closes correctly.
+
+**Steps:**
+1. Open editor with a file
+2. Click dropdown arrow
+3. Observe menu
+4. Click dropdown arrow again
+5. Click outside the dropdown
+6. Click dropdown arrow, then click an option
+
+**Expected Results:**
+- First click: Dropdown opens
+- Second click: Dropdown closes
+- Click outside: Dropdown closes
+- Click option: Executes action and closes dropdown
+- Dropdown positioned correctly below button
+
+### Test 7.8: Context Menu with All Tools
+
+**Purpose:** Verify all three tools appear in context menu.
+
+**Steps:**
+1. Open editor and select code
+2. Right-click on selection
+3. Observe all menu options
+4. Hover over each option
+5. Test each option
+
+**Expected Results:**
+- Context menu shows three options in order:
+  1. AI Rewrite Selection (with sparkle icon)
+  2. Explain Selection (with question mark icon)
+  3. Add Comments (with comment icon)
+- All icons display correctly
+- Hover state works for each option
+- Each option triggers correct modal
+
+### Test 7.9: Multiple Tool Usage in Session
+
+**Purpose:** Verify multiple tools can be used sequentially.
+
+**Steps:**
+1. Select code
+2. Use Explain Selection
+3. Close explanation modal
+4. Select different code
+5. Use Add Comments
+6. Apply or reject
+7. Select code again
+8. Use AI Rewrite
+9. Apply or reject
+
+**Expected Results:**
+- All tools work independently
+- No state contamination between tools
+- Each generates unique forensic ID
+- Modals render correctly each time
+- No JavaScript errors
+
+### Test 7.10: Empty Selection Handling
+
+**Purpose:** Verify all tools handle empty selection correctly.
+
+**Steps:**
+1. Open editor without selecting text
+2. Try AI Rewrite button (should be disabled)
+3. Try dropdown button (should work)
+4. Click "Explain Selection" from dropdown
+5. Try keyboard shortcut Cmd/Ctrl+Shift+Enter
+6. Try keyboard shortcut Cmd/Ctrl+Enter
+
+**Expected Results:**
+- AI Rewrite button disabled when no selection
+- Dropdown button always enabled
+- Clicking Explain/Add Comments without selection shows toast
+- Both keyboard shortcuts show appropriate toast
+- No modals open without selection
+
+### Test 7.11: Forensic ID Consistency
+
+**Purpose:** Verify forensic IDs are unique and properly displayed.
+
+**Steps:**
+1. Use Explain Selection and note forensic ID
+2. Close modal
+3. Use Add Comments and note forensic ID
+4. Close modal
+5. Use AI Rewrite and note forensic ID
+
+**Expected Results:**
+- All three forensic IDs are unique
+- Format: TRUAI_<timestamp>_<hash>
+- All are copyable via copy button
+- All displayed prominently in their respective modals
+
+### Test 7.12: No New Endpoints Verification
+
+**Purpose:** Confirm all tools use existing unified endpoint.
+
+**Steps:**
+1. Open browser dev tools Network tab
+2. Use Explain Selection
+3. Check network request
+4. Use Add Comments
+5. Check network request
+6. Use AI Rewrite
+7. Check network request
+
+**Expected Results:**
+- All three tools POST to `/api/v1/chat/message`
+- No new endpoints called
+- Metadata includes correct `intent` value for each tool
+- All requests include forensic_id and selection_length
+
+### Test 7.13: Explanation Modal Copy Function
+
+**Purpose:** Verify copy functionality in explanation modal.
+
+**Steps:**
+1. Use Explain Selection successfully
+2. In explanation modal, click "Copy Explanation"
+3. Paste into external text editor
+
+**Expected Results:**
+- Copy button shows success toast
+- Pasted text matches displayed explanation
+- No extra formatting or characters
+
+### Test 7.14: Dark Theme Compatibility
+
+**Purpose:** Verify all new UI elements work in dark theme.
+
+**Steps:**
+1. Ensure dark theme is active
+2. Open dropdown menu
+3. Open context menu
+4. Open Explain Selection modal
+5. Open Add Comments diff preview
+
+**Expected Results:**
+- Dropdown has proper contrast and readability
+- Context menu visible and styled correctly
+- Explanation modal text readable
+- All icons visible
+- No white boxes or harsh contrasts
+
+---
+
 **Last Updated:** 2026-01-16
-**Version:** 1.1.0
+**Version:** 1.2.0 (Phase 7)
