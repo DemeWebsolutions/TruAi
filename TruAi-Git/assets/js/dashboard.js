@@ -124,7 +124,7 @@ function showInlineRewritePrompt() {
                     <pre class="code-preview">${escapeHtml(selection.text.substring(0, 200))}${selection.text.length > 200 ? '...' : ''}</pre>
                 </div>
                 <div class="prompt-chips">
-                    ${suggestions.map(s => `<button class="prompt-chip" onclick="insertPromptSuggestion('${escapeHtml(s)}')">${escapeHtml(s)}</button>`).join('')}
+                    ${suggestions.map(s => `<button class="prompt-chip" onclick="insertPromptSuggestion('${s}')">${escapeHtml(s)}</button>`).join('')}
                 </div>
                 <textarea 
                     id="rewriteInstruction" 
@@ -293,7 +293,7 @@ function showDiffPreviewModal() {
                 <div class="diff-forensic">
                     <strong style="color: var(--text-secondary);">Forensic ID:</strong> 
                     <code class="forensic-id" title="Click to copy">${escapeHtml(diffPreviewData.forensicId)}</code>
-                    <button class="btn-copy-forensic" onclick="copyForensicId('${escapeHtml(diffPreviewData.forensicId)}')" title="Copy to clipboard">
+                    <button class="btn-copy-forensic" id="copyForensicBtn" data-forensic-id="${escapeHtml(diffPreviewData.forensicId)}" title="Copy to clipboard">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -351,6 +351,17 @@ function setupDiffKeyboardHandlers() {
     };
     
     diffModal.addEventListener('keydown', keyHandler);
+    
+    // Setup copy forensic ID button
+    const copyBtn = document.getElementById('copyForensicBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const forensicId = copyBtn.getAttribute('data-forensic-id');
+            if (forensicId) {
+                copyForensicId(forensicId);
+            }
+        });
+    }
 }
 
 /**
@@ -374,6 +385,26 @@ function toggleLineWrap() {
  * Copy forensic ID to clipboard
  */
 function copyForensicId(forensicId) {
+    // Feature detection for clipboard API
+    if (!navigator.clipboard) {
+        // Fallback for older browsers or non-HTTPS contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = forensicId;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showNotification('Forensic ID copied to clipboard', 'success');
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+            showNotification('Failed to copy forensic ID', 'error');
+        }
+        document.body.removeChild(textArea);
+        return;
+    }
+    
     navigator.clipboard.writeText(forensicId).then(() => {
         showNotification('Forensic ID copied to clipboard', 'success');
     }).catch(err => {
@@ -476,7 +507,6 @@ window.rejectDiff = rejectDiff;
 window.applyDiff = applyDiff;
 window.insertPromptSuggestion = insertPromptSuggestion;
 window.toggleLineWrap = toggleLineWrap;
-window.copyForensicId = copyForensicId;
 
 /**
  * Show context menu for editor
