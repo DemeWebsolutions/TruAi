@@ -44,6 +44,14 @@ let inlineRewritePending = false; // Track if rewrite is in progress
 // Constants
 const MAX_SELECTION_SIZE = 4000; // Maximum characters for selection rewrite
 
+// AI Prompt Templates
+const AI_PROMPTS = {
+    EXPLAIN: (additionalContext) => 
+        `Please explain the following code in clear, concise terms. Describe what it does, how it works, and any important details.${additionalContext ? `\n\nAdditional context/questions: ${additionalContext}` : ''}\n\nCode:\n\`\`\`\n{CODE}\n\`\`\``,
+    ADD_COMMENTS: (additionalContext) =>
+        `Please add clear, helpful comments and/or docstrings to the following code. Preserve all functionality and only add comments.${additionalContext ? `\n\nAdditional instructions: ${additionalContext}` : ''}\n\nCode:\n\`\`\`\n{CODE}\n\`\`\`\n\nProvide ONLY the commented code without explanations or markdown formatting.`
+};
+
 /**
  * Generate forensic ID for tracking AI operations
  * Format: TRUAI_<timestamp>_<hash>
@@ -829,9 +837,8 @@ async function executeExplainSelection() {
         const api = new TruAiAPI();
         const forensicId = generateForensicId();
         
-        // Prepare the message
-        const additionalContext = instruction ? `\n\nAdditional context/questions: ${instruction}` : '';
-        const message = `Please explain the following code in clear, concise terms. Describe what it does, how it works, and any important details.${additionalContext}\n\nCode:\n\`\`\`\n${selection.text}\n\`\`\``;
+        // Prepare the message using template
+        const message = AI_PROMPTS.EXPLAIN(instruction).replace('{CODE}', selection.text);
         
         // Get model from settings
         const model = (settings && settings.ai && settings.ai.model) ? settings.ai.model : 'gpt-4';
@@ -884,13 +891,13 @@ function showExplanationModal(explanation, forensicId) {
         <div class="diff-preview-content">
             <div class="diff-preview-header">
                 <h3>Code Explanation</h3>
-                <button class="diff-preview-close" onclick="closeExplanationModal()">×</button>
+                <button class="diff-preview-close" id="closeExplanationBtn">×</button>
             </div>
             <div class="diff-preview-body">
                 <div class="diff-forensic">
                     <strong style="color: var(--text-secondary);">Forensic ID:</strong> 
                     <code class="forensic-id" title="Click to copy">${escapeHtml(forensicId)}</code>
-                    <button class="btn-copy-forensic" onclick="copyForensicId('${escapeHtml(forensicId)}')" title="Copy to clipboard">
+                    <button class="btn-copy-forensic" id="copyExplanationForensicBtn" title="Copy to clipboard">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -901,14 +908,14 @@ function showExplanationModal(explanation, forensicId) {
                     <pre class="explanation-text">${escapeHtml(explanation)}</pre>
                 </div>
                 <div class="diff-preview-actions">
-                    <button class="btn-clipboard" onclick="copyExplanation()">
+                    <button class="btn-clipboard" id="copyExplanationTextBtn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                         </svg>
                         Copy Explanation
                     </button>
-                    <button class="btn-primary" onclick="closeExplanationModal()">Close</button>
+                    <button class="btn-primary" id="closeExplanationMainBtn">Close</button>
                 </div>
             </div>
         </div>
@@ -918,6 +925,25 @@ function showExplanationModal(explanation, forensicId) {
     
     // Store explanation for copy function
     window.currentExplanation = explanation;
+    
+    // Setup event listeners
+    const closeBtn = document.getElementById('closeExplanationBtn');
+    const closeMainBtn = document.getElementById('closeExplanationMainBtn');
+    const copyForensicBtn = document.getElementById('copyExplanationForensicBtn');
+    const copyTextBtn = document.getElementById('copyExplanationTextBtn');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeExplanationModal);
+    }
+    if (closeMainBtn) {
+        closeMainBtn.addEventListener('click', closeExplanationModal);
+    }
+    if (copyForensicBtn) {
+        copyForensicBtn.addEventListener('click', () => copyForensicId(forensicId));
+    }
+    if (copyTextBtn) {
+        copyTextBtn.addEventListener('click', copyExplanation);
+    }
     
     // Setup escape key handler
     const keyHandler = (e) => {
@@ -1056,9 +1082,8 @@ async function executeAddComments() {
         const editor = document.getElementById('codeEditor');
         const originalEditorContent = editor ? editor.value : '';
         
-        // Prepare the message
-        const additionalContext = instruction ? `\n\nAdditional instructions: ${instruction}` : '';
-        const message = `Please add clear, helpful comments and/or docstrings to the following code. Preserve all functionality and only add comments.${additionalContext}\n\nCode:\n\`\`\`\n${selection.text}\n\`\`\`\n\nProvide ONLY the commented code without explanations or markdown formatting.`;
+        // Prepare the message using template
+        const message = AI_PROMPTS.ADD_COMMENTS(instruction).replace('{CODE}', selection.text);
         
         // Get model from settings
         const model = (settings && settings.ai && settings.ai.model) ? settings.ai.model : 'gpt-4';
