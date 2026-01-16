@@ -926,7 +926,7 @@ function renderSettingsContent() {
 
     switch(activeSettingsTab) {
         case 'general':
-            return renderGeneralSettings(editor, appearance, git, terminal);
+            return renderGeneralSettings(editor, appearance, git, terminal, ai);
         case 'models':
             return renderModelsSettings(ai);
         case 'features':
@@ -934,11 +934,11 @@ function renderSettingsContent() {
         case 'beta':
             return renderBetaSettings();
         default:
-            return renderGeneralSettings(editor, appearance, git, terminal);
+            return renderGeneralSettings(editor, appearance, git, terminal, ai);
     }
 }
 
-function renderGeneralSettings(editor, appearance, git, terminal) {
+function renderGeneralSettings(editor, appearance, git, terminal, ai) {
     return `
         <div class="settings-panel">
             <!-- Account Section -->
@@ -1154,6 +1154,28 @@ function renderGeneralSettings(editor, appearance, git, terminal) {
                     </div>
                     <div style="margin-top: 16px; text-align: center;">
                         <a href="#" class="link-explore-themes">Explore other themes</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privacy Section -->
+            <div class="settings-section" id="privacySection" data-section="privacy">
+                <div class="settings-section-header">
+                    <h2 class="settings-section-title">Privacy</h2>
+                </div>
+                <div class="settings-section-content">
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Control how TruAi uses your data to improve the product.
+                    </p>
+                    <div class="settings-toggle">
+                        <label class="toggle-label">
+                            <span>Allow TruAi to use my interactions to improve the product</span>
+                            <span class="toggle-description">TruAi may store and learn from your prompts, codebase, edit history, and other usage data to improve the product. You can turn this off at any time.</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="dataSharingToggle" ${localStorage.getItem('truai_data_sharing_enabled') === 'true' ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -1631,6 +1653,21 @@ function setupDashboardListeners() {
                 setupSettingsNavigation();
             });
         });
+        
+        // Setup data sharing toggle listener
+        const dataSharingToggle = document.getElementById('dataSharingToggle');
+        if (dataSharingToggle) {
+            dataSharingToggle.addEventListener('change', function() {
+                const enabled = this.checked;
+                if (typeof window.handleDataSharingConsent === 'function') {
+                    window.handleDataSharingConsent(enabled);
+                } else {
+                    // Fallback: set directly if function not available
+                    localStorage.setItem('truai_data_sharing_enabled', enabled ? 'true' : 'false');
+                }
+                console.log('Data sharing preference updated:', enabled);
+            });
+        }
     }
 
     // Settings handlers
