@@ -38,10 +38,20 @@
     transition: all 0.2s;
 }
 
-.editor-toolbar-btn:hover {
+.editor-toolbar-btn:hover:not(:disabled) {
     background: var(--bg-hover);
     color: var(--text-primary);
     border-color: var(--accent-blue);
+}
+
+.editor-toolbar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.editor-toolbar-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .editor-toolbar-btn svg {
@@ -134,6 +144,31 @@
     overflow-x: auto;
     max-height: 150px;
     overflow-y: auto;
+}
+
+/* Prompt Chips */
+.prompt-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.prompt-chip {
+    padding: 6px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.prompt-chip:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
 }
 
 .rewrite-instruction {
@@ -240,6 +275,9 @@
 }
 
 .diff-forensic {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 8px 12px;
     background: var(--bg-tertiary);
     border-radius: 4px;
@@ -247,6 +285,56 @@
     color: var(--text-tertiary);
     font-family: 'Monaco', 'Courier New', monospace;
     font-size: 11px;
+}
+
+.forensic-id {
+    flex: 1;
+    padding: 4px 8px;
+    background: var(--bg-primary);
+    border-radius: 3px;
+    color: var(--text-primary);
+    user-select: all;
+    cursor: pointer;
+}
+
+.btn-copy-forensic {
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.btn-copy-forensic:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
+}
+
+/* Diff Controls */
+.diff-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+    padding: 8px 0;
+}
+
+.wrap-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.wrap-toggle input[type="checkbox"] {
+    cursor: pointer;
 }
 
 .diff-view {
@@ -281,13 +369,23 @@
     line-height: 1.6;
     color: var(--text-primary);
     overflow-x: auto;
-    white-space: pre-wrap;
-    word-wrap: break-word;
     margin: 0;
     flex: 1;
     min-height: 200px;
     max-height: 500px;
     overflow-y: auto;
+}
+
+.diff-code.wrap-lines {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-x: hidden;
+}
+
+.diff-code.no-wrap {
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
 }
 
 .original-code {
@@ -311,7 +409,6 @@
 .btn-secondary {
     padding: 8px 16px;
     border-radius: 4px;
-    border: none;
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
@@ -321,6 +418,7 @@
 .btn-primary {
     background: var(--accent-blue);
     color: white;
+    border: none;
 }
 
 .btn-primary:hover {
