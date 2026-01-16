@@ -529,27 +529,6 @@
     overflow: hidden;
 }
 
-.context-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 16px;
-    color: var(--text-primary);
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.context-menu-item:hover {
-    background: var(--bg-hover);
-}
-
-.context-menu-item svg {
-    width: 16px;
-    height: 16px;
-    color: var(--text-secondary);
-}
-
 /* Notification styles */
 .notification {
     animation: slideIn 0.3s ease;
