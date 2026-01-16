@@ -33,6 +33,383 @@ let currentConversationId = null;
 let chatMessages = [];
 let activeSettingsTab = 'general'; // general, models, features, beta
 
+// Inline AI Rewrite state
+let showDiffPreview = false;
+let diffPreviewData = null; // { original, rewritten, selectionStart, selectionEnd }
+
+/**
+ * Generate forensic ID for tracking AI operations
+ * Format: TRUAI_<timestamp>_<hash>
+ */
+function generateForensicId() {
+    const timestamp = Date.now();
+    const randomPart = Math.random().toString(36).substring(2, 15);
+    const hash = btoa(timestamp + randomPart).substring(0, 16).replace(/[^a-zA-Z0-9]/g, '');
+    return `TRUAI_${timestamp}_${hash}`;
+}
+
+/**
+ * Get selected text from code editor
+ * Returns null if no selection or editor not available
+ */
+function getEditorSelection() {
+    const editor = document.getElementById('codeEditor');
+    if (!editor) return null;
+    
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    
+    if (start === end) return null; // No selection
+    
+    return {
+        text: editor.value.substring(start, end),
+        start: start,
+        end: end
+    };
+}
+
+/**
+ * Show inline rewrite prompt modal
+ */
+function showInlineRewritePrompt() {
+    // Check if modal already exists
+    if (document.getElementById('inline-rewrite-modal')) {
+        return; // Prevent duplicate modals
+    }
+    
+    const selection = getEditorSelection();
+    
+    if (!selection) {
+        showNotification('Please select some code to rewrite', 'info');
+        return;
+    }
+    
+    // Create prompt modal
+    const modal = document.createElement('div');
+    modal.id = 'inline-rewrite-modal';
+    modal.className = 'inline-rewrite-modal';
+    modal.innerHTML = `
+        <div class="inline-rewrite-content">
+            <div class="inline-rewrite-header">
+                <h3>AI Rewrite - Selected Text</h3>
+                <button class="inline-rewrite-close" onclick="closeInlineRewriteModal()">×</button>
+            </div>
+            <div class="inline-rewrite-body">
+                <div class="selected-code-preview">
+                    <div class="preview-label">Selected Code (${selection.text.length} chars):</div>
+                    <pre class="code-preview">${escapeHtml(selection.text.substring(0, 200))}${selection.text.length > 200 ? '...' : ''}</pre>
+                </div>
+                <textarea 
+                    id="rewriteInstruction" 
+                    class="rewrite-instruction" 
+                    placeholder="Enter instructions for how to rewrite this code (e.g., 'Add error handling', 'Optimize for performance', 'Add comments')"
+                    rows="3"
+                ></textarea>
+                <div class="inline-rewrite-actions">
+                    <button class="btn-secondary" onclick="closeInlineRewriteModal()">Cancel</button>
+                    <button class="btn-primary" onclick="executeInlineRewrite()">Generate Rewrite</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Focus the instruction input
+    setTimeout(() => {
+        document.getElementById('rewriteInstruction')?.focus();
+    }, 100);
+}
+
+/**
+ * Close inline rewrite modal
+ */
+function closeInlineRewriteModal() {
+    const modal = document.getElementById('inline-rewrite-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+/**
+ * Execute inline AI rewrite
+ */
+async function executeInlineRewrite() {
+    const instruction = document.getElementById('rewriteInstruction')?.value.trim();
+    const selection = getEditorSelection();
+    
+    if (!instruction) {
+        showNotification('Please enter rewrite instructions', 'warning');
+        return;
+    }
+    
+    if (!selection) {
+        showNotification('Selection lost. Please try again.', 'error');
+        closeInlineRewriteModal();
+        return;
+    }
+    
+    // Show loading state
+    const executeBtn = document.querySelector('#inline-rewrite-modal .btn-primary');
+    if (executeBtn) {
+        executeBtn.disabled = true;
+        executeBtn.textContent = 'Generating...';
+    }
+    
+    try {
+        const api = new TruAiAPI();
+        const forensicId = generateForensicId();
+        
+        // Sanitize instruction to prevent prompt injection
+        const sanitizedInstruction = instruction.replace(/["'`\\]/g, '').substring(0, 500);
+        
+        // Prepare the message with context
+        const message = `Please rewrite the following code according to these instructions: ${sanitizedInstruction}\n\nCode to rewrite:\n\`\`\`\n${selection.text}\n\`\`\`\n\nProvide ONLY the rewritten code without explanations or markdown formatting.`;
+        
+        // Get model from settings
+        const model = (settings && settings.ai && settings.ai.model) ? settings.ai.model : 'gpt-4';
+        
+        // Send request with metadata
+        const response = await api.sendMessage(message, null, model, {
+            intent: 'inline_rewrite',
+            scope: 'selection',
+            risk: 'SAFE',
+            forensic_id: forensicId,
+            selection_length: selection.text.length
+        });
+        
+        if (response.message && response.message.content) {
+            // Clean up the response - remove markdown code blocks if present
+            let rewrittenCode = response.message.content.trim();
+            // Remove opening code fence (```language or ```)
+            rewrittenCode = rewrittenCode.replace(/^```[\w]*\n?/, '');
+            // Remove closing code fence
+            rewrittenCode = rewrittenCode.replace(/\n?```$/, '');
+            rewrittenCode = rewrittenCode.trim();
+            
+            // Store diff preview data
+            diffPreviewData = {
+                original: selection.text,
+                rewritten: rewrittenCode,
+                selectionStart: selection.start,
+                selectionEnd: selection.end,
+                forensicId: forensicId,
+                instruction: instruction
+            };
+            
+            // Close prompt modal
+            closeInlineRewriteModal();
+            
+            // Show diff preview
+            showDiffPreviewModal();
+        } else {
+            throw new Error('Invalid response from AI');
+        }
+        
+    } catch (error) {
+        console.error('Inline rewrite error:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+        
+        // Reset button
+        if (executeBtn) {
+            executeBtn.disabled = false;
+            executeBtn.textContent = 'Generate Rewrite';
+        }
+    }
+}
+
+/**
+ * Show diff preview modal
+ */
+function showDiffPreviewModal() {
+    if (!diffPreviewData) return;
+    
+    const modal = document.createElement('div');
+    modal.id = 'diff-preview-modal';
+    modal.className = 'diff-preview-modal';
+    modal.innerHTML = `
+        <div class="diff-preview-content">
+            <div class="diff-preview-header">
+                <h3>Code Rewrite Preview</h3>
+                <button class="diff-preview-close" onclick="closeDiffPreview()">×</button>
+            </div>
+            <div class="diff-preview-body">
+                <div class="diff-instruction">
+                    <strong>Instruction:</strong> ${escapeHtml(diffPreviewData.instruction)}
+                </div>
+                <div class="diff-forensic">
+                    <small>Forensic ID: ${escapeHtml(diffPreviewData.forensicId)}</small>
+                </div>
+                <div class="diff-view">
+                    <div class="diff-column">
+                        <div class="diff-column-header">Original</div>
+                        <pre class="diff-code original-code">${escapeHtml(diffPreviewData.original)}</pre>
+                    </div>
+                    <div class="diff-column">
+                        <div class="diff-column-header">Rewritten</div>
+                        <pre class="diff-code rewritten-code">${escapeHtml(diffPreviewData.rewritten)}</pre>
+                    </div>
+                </div>
+                <div class="diff-preview-actions">
+                    <button class="btn-secondary" onclick="rejectDiff()">Reject</button>
+                    <button class="btn-primary" onclick="applyDiff()">Apply Changes</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+/**
+ * Close diff preview modal
+ */
+function closeDiffPreview() {
+    const modal = document.getElementById('diff-preview-modal');
+    if (modal) {
+        modal.remove();
+    }
+    diffPreviewData = null;
+}
+
+/**
+ * Reject the diff - just close the preview
+ */
+function rejectDiff() {
+    closeDiffPreview();
+    showNotification('Changes rejected', 'info');
+}
+
+/**
+ * Apply the diff - replace selected text with rewritten code
+ */
+function applyDiff() {
+    if (!diffPreviewData) return;
+    
+    const editor = document.getElementById('codeEditor');
+    if (!editor || !activeTab) {
+        showNotification('Editor not available', 'error');
+        closeDiffPreview();
+        return;
+    }
+    
+    // Replace the selected range with rewritten code
+    const before = editor.value.substring(0, diffPreviewData.selectionStart);
+    const after = editor.value.substring(diffPreviewData.selectionEnd);
+    const newContent = before + diffPreviewData.rewritten + after;
+    
+    // Update editor and tab
+    editor.value = newContent;
+    activeTab.content = newContent;
+    activeTab.modified = true;
+    
+    // Mark tab as modified
+    const tabIndex = openTabs.indexOf(activeTab);
+    const tabElement = document.querySelector(`.editor-tab[data-tab="${tabIndex}"]`);
+    if (tabElement && !tabElement.querySelector('.tab-modified')) {
+        const modifiedIndicator = document.createElement('span');
+        modifiedIndicator.className = 'tab-modified';
+        modifiedIndicator.textContent = '•';
+        tabElement.appendChild(modifiedIndicator);
+    }
+    
+    closeDiffPreview();
+    showNotification('Changes applied successfully', 'success');
+}
+
+/**
+ * Show notification toast
+ */
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-primary);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.3s';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Make functions globally accessible for onclick handlers
+window.closeInlineRewriteModal = closeInlineRewriteModal;
+window.executeInlineRewrite = executeInlineRewrite;
+window.closeDiffPreview = closeDiffPreview;
+window.rejectDiff = rejectDiff;
+window.applyDiff = applyDiff;
+
+/**
+ * Show context menu for editor
+ */
+function showEditorContextMenu(x, y) {
+    // Remove existing context menu if any
+    const existingMenu = document.getElementById('editor-context-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+    }
+    
+    const menu = document.createElement('div');
+    menu.id = 'editor-context-menu';
+    menu.className = 'editor-context-menu';
+    menu.style.cssText = `
+        position: fixed;
+        left: ${x}px;
+        top: ${y}px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        min-width: 200px;
+    `;
+    
+    menu.innerHTML = `
+        <div class="context-menu-item" onclick="showInlineRewritePrompt(); closeEditorContextMenu();">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+            </svg>
+            AI Rewrite Selection
+        </div>
+    `;
+    
+    document.body.appendChild(menu);
+    
+    // Close menu when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', closeEditorContextMenu);
+    }, 0);
+}
+
+/**
+ * Close editor context menu
+ */
+function closeEditorContextMenu() {
+    const menu = document.getElementById('editor-context-menu');
+    if (menu) {
+        menu.remove();
+    }
+    document.removeEventListener('click', closeEditorContextMenu);
+}
+
+// Make context menu functions globally accessible
+window.closeEditorContextMenu = closeEditorContextMenu;
+
 function renderDashboard() {
     const app = document.getElementById('app');
     app.innerHTML = `
@@ -894,7 +1271,17 @@ function renderEditorContent() {
     }
     
     return `
-        <textarea class="code-textarea" id="codeEditor" spellcheck="false">${activeTab.content || ''}</textarea>
+        <div class="editor-with-toolbar">
+            <div class="editor-toolbar">
+                <button class="editor-toolbar-btn" id="aiRewriteBtn" title="AI Rewrite Selection (Cmd/Ctrl+Enter)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                    </svg>
+                    AI Rewrite
+                </button>
+            </div>
+            <textarea class="code-textarea" id="codeEditor" spellcheck="false">${activeTab.content || ''}</textarea>
+        </div>
     `;
 }
 
@@ -1336,6 +1723,14 @@ function setupDashboardListeners() {
 
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
+        // Cmd/Ctrl + Enter for AI inline rewrite
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            const editor = document.getElementById('codeEditor');
+            if (editor && document.activeElement === editor) {
+                e.preventDefault();
+                showInlineRewritePrompt();
+            }
+        }
         // Cmd/Ctrl + ` to toggle terminal
         if ((e.metaKey || e.ctrlKey) && e.key === '`') {
             e.preventDefault();
@@ -1354,6 +1749,26 @@ function setupDashboardListeners() {
             // Command palette (to be implemented)
         }
     });
+    
+    // AI Rewrite button
+    const aiRewriteBtn = document.getElementById('aiRewriteBtn');
+    if (aiRewriteBtn) {
+        aiRewriteBtn.addEventListener('click', function() {
+            showInlineRewritePrompt();
+        });
+    }
+    
+    // Context menu for code editor
+    const editorElement = document.getElementById('codeEditor');
+    if (editorElement) {
+        editorElement.addEventListener('contextmenu', function(e) {
+            const selection = getEditorSelection();
+            if (selection) {
+                e.preventDefault();
+                showEditorContextMenu(e.pageX, e.pageY);
+            }
+        });
+    }
 }
 
 async function loadFileTree() {
