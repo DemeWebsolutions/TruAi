@@ -44,6 +44,14 @@ let inlineRewritePending = false; // Track if rewrite is in progress
 // Constants
 const MAX_SELECTION_SIZE = 4000; // Maximum characters for selection rewrite
 
+// AI Prompt Templates
+const AI_PROMPTS = {
+    EXPLAIN: (additionalContext) => 
+        `Please explain the following code in clear, concise terms. Describe what it does, how it works, and any important details.${additionalContext ? `\n\nAdditional context/questions: ${additionalContext}` : ''}\n\nCode:\n\`\`\`\n{CODE}\n\`\`\``,
+    ADD_COMMENTS: (additionalContext) =>
+        `Please add clear, helpful comments and/or docstrings to the following code. Preserve all functionality and only add comments.${additionalContext ? `\n\nAdditional instructions: ${additionalContext}` : ''}\n\nCode:\n\`\`\`\n{CODE}\n\`\`\`\n\nProvide ONLY the commented code without explanations or markdown formatting.`
+};
+
 /**
  * Generate forensic ID for tracking AI operations
  * Format: TRUAI_<timestamp>_<hash>
@@ -727,6 +735,409 @@ function copyToClipboard(text, successMessage) {
 }
 
 /**
+ * Show Explain Selection prompt modal
+ */
+function showExplainSelectionPrompt() {
+    // Check if modal already exists
+    if (document.getElementById('explain-selection-modal')) {
+        return;
+    }
+    
+    const selection = getEditorSelection();
+    
+    if (!selection) {
+        showNotification('Select text to explain', 'info');
+        return;
+    }
+    
+    // Check maximum selection size
+    if (selection.text.length > MAX_SELECTION_SIZE) {
+        showNotification(
+            `Selection too large (${selection.text.length} chars). Please reduce to ${MAX_SELECTION_SIZE} chars or less.`,
+            'warning'
+        );
+        return;
+    }
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'explain-selection-modal';
+    modal.className = 'inline-rewrite-modal';
+    modal.innerHTML = `
+        <div class="inline-rewrite-content">
+            <div class="inline-rewrite-header">
+                <h3>Explain Selection</h3>
+                <button class="inline-rewrite-close" onclick="closeExplainSelectionModal()">×</button>
+            </div>
+            <div class="inline-rewrite-body">
+                <div class="selected-code-preview">
+                    <div class="preview-label">Selected Code (${selection.text.length} chars):</div>
+                    <pre class="code-preview">${escapeHtml(selection.text.substring(0, 200))}${selection.text.length > 200 ? '...' : ''}</pre>
+                </div>
+                <textarea 
+                    id="explainInstruction" 
+                    class="rewrite-instruction" 
+                    placeholder="Optional: Add specific questions or context (or leave empty for general explanation)"
+                    rows="2"
+                ></textarea>
+                <div class="inline-rewrite-actions">
+                    <button class="btn-secondary" onclick="closeExplainSelectionModal()">Cancel</button>
+                    <button class="btn-primary" onclick="executeExplainSelection()">Generate Explanation</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Focus the instruction input
+    setTimeout(() => {
+        const instructionField = document.getElementById('explainInstruction');
+        if (instructionField) {
+            instructionField.focus();
+        }
+    }, 100);
+}
+
+/**
+ * Close explain selection modal
+ */
+function closeExplainSelectionModal() {
+    const modal = document.getElementById('explain-selection-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+/**
+ * Execute explain selection
+ */
+async function executeExplainSelection() {
+    const instruction = document.getElementById('explainInstruction')?.value.trim();
+    const selection = getEditorSelection();
+    
+    if (!selection) {
+        showNotification('Selection lost. Please try again.', 'error');
+        closeExplainSelectionModal();
+        return;
+    }
+    
+    // Show loading state
+    const executeBtn = document.querySelector('#explain-selection-modal .btn-primary');
+    const cancelBtn = document.querySelector('#explain-selection-modal .btn-secondary');
+    if (executeBtn) {
+        executeBtn.disabled = true;
+        executeBtn.textContent = 'Generating...';
+    }
+    if (cancelBtn) {
+        cancelBtn.disabled = true;
+    }
+    
+    try {
+        const api = new TruAiAPI();
+        const forensicId = generateForensicId();
+        
+        // Prepare the message using template
+        const message = AI_PROMPTS.EXPLAIN(instruction).replace('{CODE}', selection.text);
+        
+        // Get model from settings
+        const model = (settings && settings.ai && settings.ai.model) ? settings.ai.model : 'gpt-4';
+        
+        // Send request with metadata
+        const response = await api.sendMessage(message, null, model, {
+            intent: 'explain_selection',
+            scope: 'selection',
+            risk: 'SAFE',
+            forensic_id: forensicId,
+            selection_length: selection.text.length
+        });
+        
+        // Parse response
+        const explanation = parseRewriteResponse(response);
+        
+        if (!explanation) {
+            throw new Error('Unable to parse AI response. Please try again.');
+        }
+        
+        // Close prompt modal
+        closeExplainSelectionModal();
+        
+        // Show explanation in result modal
+        showExplanationModal(explanation, forensicId);
+        
+    } catch (error) {
+        console.error('Explain selection error:', error);
+        showNotification('Failed to generate explanation: ' + error.message, 'error');
+        
+        // Reset button state
+        if (executeBtn) {
+            executeBtn.disabled = false;
+            executeBtn.textContent = 'Generate Explanation';
+        }
+        if (cancelBtn) {
+            cancelBtn.disabled = false;
+        }
+    }
+}
+
+/**
+ * Show explanation result modal
+ */
+function showExplanationModal(explanation, forensicId) {
+    const modal = document.createElement('div');
+    modal.id = 'explanation-result-modal';
+    modal.className = 'diff-preview-modal';
+    modal.innerHTML = `
+        <div class="diff-preview-content">
+            <div class="diff-preview-header">
+                <h3>Code Explanation</h3>
+                <button class="diff-preview-close" id="closeExplanationBtn">×</button>
+            </div>
+            <div class="diff-preview-body">
+                <div class="diff-forensic">
+                    <strong style="color: var(--text-secondary);">Forensic ID:</strong> 
+                    <code class="forensic-id" title="Click to copy">${escapeHtml(forensicId)}</code>
+                    <button class="btn-copy-forensic" id="copyExplanationForensicBtn" title="Copy to clipboard">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="explanation-content">
+                    <pre class="explanation-text">${escapeHtml(explanation)}</pre>
+                </div>
+                <div class="diff-preview-actions">
+                    <button class="btn-clipboard" id="copyExplanationTextBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy Explanation
+                    </button>
+                    <button class="btn-primary" id="closeExplanationMainBtn">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Store explanation for copy function
+    window.currentExplanation = explanation;
+    
+    // Setup event listeners
+    const closeBtn = document.getElementById('closeExplanationBtn');
+    const closeMainBtn = document.getElementById('closeExplanationMainBtn');
+    const copyForensicBtn = document.getElementById('copyExplanationForensicBtn');
+    const copyTextBtn = document.getElementById('copyExplanationTextBtn');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeExplanationModal);
+    }
+    if (closeMainBtn) {
+        closeMainBtn.addEventListener('click', closeExplanationModal);
+    }
+    if (copyForensicBtn) {
+        copyForensicBtn.addEventListener('click', () => copyForensicId(forensicId));
+    }
+    if (copyTextBtn) {
+        copyTextBtn.addEventListener('click', copyExplanation);
+    }
+    
+    // Setup escape key handler
+    const keyHandler = (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeExplanationModal();
+        }
+    };
+    modal.addEventListener('keydown', keyHandler);
+}
+
+/**
+ * Close explanation modal
+ */
+function closeExplanationModal() {
+    const modal = document.getElementById('explanation-result-modal');
+    if (modal) {
+        modal.remove();
+    }
+    window.currentExplanation = null;
+}
+
+/**
+ * Copy explanation to clipboard
+ */
+function copyExplanation() {
+    if (window.currentExplanation) {
+        copyToClipboard(window.currentExplanation, 'Explanation copied to clipboard');
+    }
+}
+
+/**
+ * Show Add Comments prompt modal
+ */
+function showAddCommentsPrompt() {
+    // Check if modal already exists
+    if (document.getElementById('add-comments-modal')) {
+        return;
+    }
+    
+    const selection = getEditorSelection();
+    
+    if (!selection) {
+        showNotification('Select text to add comments', 'info');
+        return;
+    }
+    
+    // Check maximum selection size
+    if (selection.text.length > MAX_SELECTION_SIZE) {
+        showNotification(
+            `Selection too large (${selection.text.length} chars). Please reduce to ${MAX_SELECTION_SIZE} chars or less.`,
+            'warning'
+        );
+        return;
+    }
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'add-comments-modal';
+    modal.className = 'inline-rewrite-modal';
+    modal.innerHTML = `
+        <div class="inline-rewrite-content">
+            <div class="inline-rewrite-header">
+                <h3>Add Comments/Docstrings</h3>
+                <button class="inline-rewrite-close" onclick="closeAddCommentsModal()">×</button>
+            </div>
+            <div class="inline-rewrite-body">
+                <div class="selected-code-preview">
+                    <div class="preview-label">Selected Code (${selection.text.length} chars):</div>
+                    <pre class="code-preview">${escapeHtml(selection.text.substring(0, 200))}${selection.text.length > 200 ? '...' : ''}</pre>
+                </div>
+                <textarea 
+                    id="commentsInstruction" 
+                    class="rewrite-instruction" 
+                    placeholder="Optional: Specify comment style or focus areas (e.g., 'JSDoc style', 'focus on complex logic')"
+                    rows="2"
+                ></textarea>
+                <div class="inline-rewrite-actions">
+                    <button class="btn-secondary" onclick="closeAddCommentsModal()">Cancel</button>
+                    <button class="btn-primary" onclick="executeAddComments()">Generate Comments</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Focus the instruction input
+    setTimeout(() => {
+        const instructionField = document.getElementById('commentsInstruction');
+        if (instructionField) {
+            instructionField.focus();
+        }
+    }, 100);
+}
+
+/**
+ * Close add comments modal
+ */
+function closeAddCommentsModal() {
+    const modal = document.getElementById('add-comments-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+/**
+ * Execute add comments
+ */
+async function executeAddComments() {
+    const instruction = document.getElementById('commentsInstruction')?.value.trim();
+    const selection = getEditorSelection();
+    
+    if (!selection) {
+        showNotification('Selection lost. Please try again.', 'error');
+        closeAddCommentsModal();
+        return;
+    }
+    
+    // Show loading state
+    const executeBtn = document.querySelector('#add-comments-modal .btn-primary');
+    const cancelBtn = document.querySelector('#add-comments-modal .btn-secondary');
+    if (executeBtn) {
+        executeBtn.disabled = true;
+        executeBtn.textContent = 'Generating...';
+    }
+    if (cancelBtn) {
+        cancelBtn.disabled = true;
+    }
+    
+    try {
+        const api = new TruAiAPI();
+        const forensicId = generateForensicId();
+        
+        // Store original editor content for stale detection
+        const editor = document.getElementById('codeEditor');
+        const originalEditorContent = editor ? editor.value : '';
+        
+        // Prepare the message using template
+        const message = AI_PROMPTS.ADD_COMMENTS(instruction).replace('{CODE}', selection.text);
+        
+        // Get model from settings
+        const model = (settings && settings.ai && settings.ai.model) ? settings.ai.model : 'gpt-4';
+        
+        // Send request with metadata
+        const response = await api.sendMessage(message, null, model, {
+            intent: 'add_comments',
+            scope: 'selection',
+            risk: 'SAFE',
+            forensic_id: forensicId,
+            selection_length: selection.text.length
+        });
+        
+        // Parse response
+        const commentedCode = parseRewriteResponse(response);
+        
+        if (!commentedCode) {
+            throw new Error('Unable to parse AI response. Please try again.');
+        }
+        
+        // Store diff preview data with original content for stale detection
+        diffPreviewData = {
+            original: selection.text,
+            rewritten: commentedCode,
+            selectionStart: selection.start,
+            selectionEnd: selection.end,
+            forensicId: forensicId,
+            instruction: instruction || 'Add comments/docstrings',
+            originalEditorContent: originalEditorContent,
+            originalContentLength: originalEditorContent.length
+        };
+        
+        // Close prompt modal
+        closeAddCommentsModal();
+        
+        // Show diff preview (reuse existing diff preview)
+        showDiffPreviewModal();
+        
+    } catch (error) {
+        console.error('Add comments error:', error);
+        showNotification('Failed to generate comments: ' + error.message, 'error');
+        
+        // Reset button state
+        if (executeBtn) {
+            executeBtn.disabled = false;
+            executeBtn.textContent = 'Generate Comments';
+        }
+        if (cancelBtn) {
+            cancelBtn.disabled = false;
+        }
+    }
+}
+
+/**
  * Show notification toast
  */
 function showNotification(message, type = 'info') {
@@ -767,6 +1178,14 @@ window.insertPromptSuggestion = insertPromptSuggestion;
 window.toggleLineWrap = toggleLineWrap;
 window.copyRewrittenText = copyRewrittenText;
 window.copyDiffPatch = copyDiffPatch;
+window.showExplainSelectionPrompt = showExplainSelectionPrompt;
+window.closeExplainSelectionModal = closeExplainSelectionModal;
+window.executeExplainSelection = executeExplainSelection;
+window.closeExplanationModal = closeExplanationModal;
+window.copyExplanation = copyExplanation;
+window.showAddCommentsPrompt = showAddCommentsPrompt;
+window.closeAddCommentsModal = closeAddCommentsModal;
+window.executeAddComments = executeAddComments;
 
 /**
  * Show context menu for editor
@@ -799,6 +1218,20 @@ function showEditorContextMenu(x, y) {
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
             </svg>
             AI Rewrite Selection
+        </div>
+        <div class="context-menu-item" onclick="showExplainSelectionPrompt(); closeEditorContextMenu();">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            Explain Selection
+        </div>
+        <div class="context-menu-item" onclick="showAddCommentsPrompt(); closeEditorContextMenu();">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Add Comments
         </div>
     `;
     
@@ -1709,12 +2142,35 @@ function renderEditorContent() {
     return `
         <div class="editor-with-toolbar">
             <div class="editor-toolbar">
-                <button class="editor-toolbar-btn" id="aiRewriteBtn" title="AI Rewrite Selection (Cmd/Ctrl+Enter)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
-                    </svg>
-                    AI Rewrite
-                </button>
+                <div class="ai-tools-group">
+                    <button class="editor-toolbar-btn" id="aiRewriteBtn" title="AI Rewrite Selection (Cmd/Ctrl+Enter)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                        </svg>
+                        AI Rewrite
+                    </button>
+                    <button class="editor-toolbar-btn-dropdown" id="aiToolsDropdownBtn" title="More AI Tools">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+                    <div class="ai-tools-dropdown" id="aiToolsDropdown" style="display: none;">
+                        <button class="ai-tool-option" data-action="explain">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            Explain Selection
+                        </button>
+                        <button class="ai-tool-option" data-action="add-comments">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            Add Comments
+                        </button>
+                    </div>
+                </div>
             </div>
             <textarea class="code-textarea" id="codeEditor" spellcheck="false">${activeTab.content || ''}</textarea>
         </div>
@@ -2196,8 +2652,16 @@ function setupDashboardListeners() {
 
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
+        // Cmd/Ctrl + Shift + Enter for Explain Selection
+        if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'Enter') {
+            const editor = document.getElementById('codeEditor');
+            if (editor && document.activeElement === editor) {
+                e.preventDefault();
+                showExplainSelectionPrompt();
+            }
+        }
         // Cmd/Ctrl + Enter for AI inline rewrite
-        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
             const editor = document.getElementById('codeEditor');
             if (editor && document.activeElement === editor) {
                 e.preventDefault();
@@ -2228,6 +2692,39 @@ function setupDashboardListeners() {
     if (aiRewriteBtn) {
         aiRewriteBtn.addEventListener('click', function() {
             showInlineRewritePrompt();
+        });
+    }
+    
+    // AI Tools dropdown button
+    const aiToolsDropdownBtn = document.getElementById('aiToolsDropdownBtn');
+    const aiToolsDropdown = document.getElementById('aiToolsDropdown');
+    if (aiToolsDropdownBtn && aiToolsDropdown) {
+        aiToolsDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isVisible = aiToolsDropdown.style.display === 'block';
+            aiToolsDropdown.style.display = isVisible ? 'none' : 'block';
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (aiToolsDropdown && !aiToolsDropdownBtn.contains(e.target) && !aiToolsDropdown.contains(e.target)) {
+                aiToolsDropdown.style.display = 'none';
+            }
+        });
+        
+        // Handle dropdown option clicks
+        aiToolsDropdown.querySelectorAll('.ai-tool-option').forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const action = this.dataset.action;
+                aiToolsDropdown.style.display = 'none';
+                
+                if (action === 'explain') {
+                    showExplainSelectionPrompt();
+                } else if (action === 'add-comments') {
+                    showAddCommentsPrompt();
+                }
+            });
         });
     }
     
