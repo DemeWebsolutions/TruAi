@@ -1,9 +1,31 @@
 # TruAi Phase 5: Inline AI Rewrite Feature - Polish & UX Tightening
 
 ## Overview
+
 This document describes Phase 5 enhancements to the Inline AI Rewrite feature, focusing on polish, UX improvements, and safety guardrails.
 
-## Phase 5 Enhancements
+**For complete operator documentation, see the [V1 Operator Guide](./V1_OPERATOR_GUIDE.md).**
+
+## Phase 5 Enhancements Summary
+
+Phase 5 added the following polish and safety features to the AI Rewrite tool:
+
+- **Empty Selection Handling:** Button disabled when no text selected
+- **Maximum Selection Size Guard:** 4000 character limit with helpful messaging
+- **Suggested Prompt Chips:** Six common rewrite suggestions
+- **Session Instruction Preservation:** Last instruction pre-filled (session only)
+- **Forensic ID Display:** Prominent display with click-to-copy
+- **Line Wrapping Toggle:** User control over diff view wrapping
+- **Keyboard Accessibility:** Escape and Enter key handling
+- **Button State Management:** Dynamic enable/disable based on selection
+
+## Quick Links
+
+- **[V1 Operator Guide](./V1_OPERATOR_GUIDE.md)** - Complete documentation
+- **[Development Testing](./DEV_TESTING.md#phase-5-polish--ux-tightening-tests)** - Phase 5 test procedures
+- **[Selection Tools](./SELECTION_TOOLS.md)** - Overview of all three tools
+
+## Implementation Highlights
 
 ### A) Selection Rewrite Guardrails
 
