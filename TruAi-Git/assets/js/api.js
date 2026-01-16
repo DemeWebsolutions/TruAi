@@ -85,10 +85,24 @@ class TruAiAPI {
     }
 
     // Task endpoints
-    async createTask(prompt, context = null, preferredTier = 'auto') {
+    async createTask(prompt, context = null, preferredTier = 'auto', metadata = null) {
+        const body = { 
+            prompt, 
+            context, 
+            preferred_tier: preferredTier 
+        };
+        
+        // Add optional governed metadata if provided
+        if (metadata) {
+            if (metadata.model) body.model = metadata.model;
+            if (metadata.intent) body.intent = metadata.intent;
+            if (metadata.risk) body.risk = metadata.risk;
+            if (metadata.forensic_id) body.forensic_id = metadata.forensic_id;
+        }
+        
         return this.request('/task/create', {
             method: 'POST',
-            body: { prompt, context, preferred_tier: preferredTier }
+            body
         });
     }
 
@@ -111,10 +125,25 @@ class TruAiAPI {
     }
 
     // Chat endpoints
-    async sendMessage(message, conversationId = null, model = 'auto') {
+    async sendMessage(message, conversationId = null, model = 'auto', metadata = null) {
+        const body = { 
+            message, 
+            conversation_id: conversationId, 
+            model 
+        };
+        
+        // Add optional governed metadata if provided
+        if (metadata) {
+            if (metadata.intent) body.intent = metadata.intent;
+            if (metadata.risk) body.risk = metadata.risk;
+            if (metadata.forensic_id) body.forensic_id = metadata.forensic_id;
+            // Model can also be passed via metadata (takes precedence)
+            if (metadata.model) body.model = metadata.model;
+        }
+        
         return this.request('/chat/message', {
             method: 'POST',
-            body: { message, conversation_id: conversationId, model }
+            body
         });
     }
 

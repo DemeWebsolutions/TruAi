@@ -9,6 +9,8 @@
 
 console.log('Legal notice popup script loaded, DOM state:', document.readyState);
 
+let dashboardInitialized = false; // Guard against double initialization
+
 function initializeLegalNotice() {
     console.log('Initializing legal notice...');
     // Check if user has already acknowledged
@@ -122,21 +124,14 @@ function showLegalNoticePopup() {
                     pointer-events: auto !important;
                     z-index: 100001 !important;
                     position: relative !important;
-                " onmouseover="this.style.background='#3a8eef'" onmouseout="this.style.background='#4a9eff'" onclick="
-                    console.log('Button onclick handler fired');
-                    if (typeof window.handleAcknowledge === 'function') {
-                        window.handleAcknowledge();
-                    } else {
-                        console.error('handleAcknowledge function not found!');
-                    }
-                ">
+                " onmouseover="this.style.background='#3a8eef'" onmouseout="this.style.background='#4a9eff'">
                     I Acknowledge and Agree
                 </button>
             </div>
         </div>
     `;
 
-    // Define handle function BEFORE creating popup (so it's available for onclick)
+    // Define acknowledge handler
     function handleButtonClick(e) {
         if (e) {
             if (e.preventDefault) e.preventDefault();
@@ -160,18 +155,12 @@ function showLegalNoticePopup() {
         initializeDashboard();
     }
     
-    // Global function for onclick handler - MUST be set before popup is added to DOM
-    window.handleAcknowledge = function() {
-        console.log('handleAcknowledge() called via onclick');
-        handleButtonClick(null);
-    };
-    
     // Add popup to overlay, then overlay to body
     overlay.appendChild(popup);
     document.body.appendChild(overlay);
     console.log('Legal notice popup created and added to DOM');
 
-    // Wait for button to be in DOM, then attach event listener
+    // Attach single event listener to button
     setTimeout(function() {
         const acknowledgeBtn = document.getElementById('acknowledgeBtn');
         if (!acknowledgeBtn) {
@@ -180,49 +169,21 @@ function showLegalNoticePopup() {
         }
         
         console.log('Acknowledge button found, attaching listener...');
-        
-        // Attach event listener
         acknowledgeBtn.addEventListener('click', handleButtonClick);
-        
-        // Also attach to mousedown as backup
-        acknowledgeBtn.addEventListener('mousedown', function(e) {
-            console.log('Button mousedown event');
-            e.preventDefault();
-        });
-        
-        console.log('Event listeners attached to acknowledge button');
+        console.log('Event listener attached to acknowledge button');
     }, 100);
-
-    // Prevent overlay from intercepting button clicks
-    overlay.addEventListener('click', function(e) {
-        // If clicking on the popup itself (not overlay), don't prevent
-        if (e.target.closest('#legal-notice-popup')) {
-            return;
-        }
-        // If clicking outside popup, optionally prevent closing
-        if (e.target === overlay) {
-            // Allow closing by clicking outside (optional)
-            // Uncomment to require button click:
-            // e.stopPropagation();
-            // return;
-        }
-    });
-    
-    // Also add direct onclick as fallback
-    popup.addEventListener('click', function(e) {
-        if (e.target.id === 'acknowledgeBtn' || e.target.closest('#acknowledgeBtn')) {
-            e.stopPropagation();
-            const btn = document.getElementById('acknowledgeBtn');
-            if (btn) {
-                console.log('Fallback: Button clicked via popup click handler');
-                btn.click();
-            }
-        }
-    });
 }
 
 function initializeDashboard() {
+    // Guard against double initialization
+    if (dashboardInitialized) {
+        console.log('Dashboard already initialized, skipping...');
+        return;
+    }
+    
     console.log('Initializing dashboard...');
+    dashboardInitialized = true;
+    
     // Store acknowledgment
     sessionStorage.setItem('truai_legal_acknowledged', 'true');
     
