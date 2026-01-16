@@ -45,7 +45,12 @@ async function sendTestMessage() {
     if (risk) metadata.risk = risk;
     if (forensicId) metadata.forensic_id = forensicId;
     if (scope) metadata.scope = scope;
-    if (selectionLength) metadata.selection_length = parseInt(selectionLength, 10);
+    if (selectionLength) {
+        const parsedLength = parseInt(selectionLength, 10);
+        if (!isNaN(parsedLength) && parsedLength >= 0) {
+            metadata.selection_length = parsedLength;
+        }
+    }
 
     // Build request payload for preview
     const requestPayload = {

@@ -147,7 +147,11 @@ class TruAiAPI {
             if (metadata.scope) body.scope = metadata.scope;
             
             // Context metadata
-            if (metadata.selection_length !== undefined) body.selection_length = metadata.selection_length;
+            if (metadata.selection_length !== undefined && 
+                typeof metadata.selection_length === 'number' && 
+                !isNaN(metadata.selection_length)) {
+                body.selection_length = metadata.selection_length;
+            }
             
             // Allow conversation_id override via metadata if needed
             if (metadata.conversation_id) body.conversation_id = metadata.conversation_id;
