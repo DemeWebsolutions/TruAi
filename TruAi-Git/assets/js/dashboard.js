@@ -36,6 +36,11 @@ let activeSettingsTab = 'general'; // general, models, features, beta
 // Inline AI Rewrite state
 let showDiffPreview = false;
 let diffPreviewData = null; // { original, rewritten, selectionStart, selectionEnd }
+let lastRewriteInstruction = ''; // Session-only storage for last instruction
+let diffWrapLines = true; // Line wrapping toggle for diff preview
+
+// Constants
+const MAX_SELECTION_SIZE = 4000; // Maximum characters for selection rewrite
 
 /**
  * Generate forensic ID for tracking AI operations
@@ -80,9 +85,28 @@ function showInlineRewritePrompt() {
     const selection = getEditorSelection();
     
     if (!selection) {
-        showNotification('Please select some code to rewrite', 'info');
+        showNotification('Select text to rewrite', 'info');
         return;
     }
+    
+    // Check maximum selection size
+    if (selection.text.length > MAX_SELECTION_SIZE) {
+        showNotification(
+            `Selection too large (${selection.text.length} chars). Please reduce to ${MAX_SELECTION_SIZE} chars or less.`,
+            'warning'
+        );
+        return;
+    }
+    
+    // Suggested prompt chips
+    const suggestions = [
+        'Refactor',
+        'Fix bug',
+        'Improve readability',
+        'Add comments',
+        'Optimize performance',
+        'Add error handling'
+    ];
     
     // Create prompt modal
     const modal = document.createElement('div');
@@ -99,12 +123,15 @@ function showInlineRewritePrompt() {
                     <div class="preview-label">Selected Code (${selection.text.length} chars):</div>
                     <pre class="code-preview">${escapeHtml(selection.text.substring(0, 200))}${selection.text.length > 200 ? '...' : ''}</pre>
                 </div>
+                <div class="prompt-chips">
+                    ${suggestions.map(s => `<button class="prompt-chip" onclick="insertPromptSuggestion('${escapeHtml(s)}')">${escapeHtml(s)}</button>`).join('')}
+                </div>
                 <textarea 
                     id="rewriteInstruction" 
                     class="rewrite-instruction" 
                     placeholder="Enter instructions for how to rewrite this code (e.g., 'Add error handling', 'Optimize for performance', 'Add comments')"
                     rows="3"
-                ></textarea>
+                >${escapeHtml(lastRewriteInstruction)}</textarea>
                 <div class="inline-rewrite-actions">
                     <button class="btn-secondary" onclick="closeInlineRewriteModal()">Cancel</button>
                     <button class="btn-primary" onclick="executeInlineRewrite()">Generate Rewrite</button>
@@ -117,8 +144,29 @@ function showInlineRewritePrompt() {
     
     // Focus the instruction input
     setTimeout(() => {
-        document.getElementById('rewriteInstruction')?.focus();
+        const instructionField = document.getElementById('rewriteInstruction');
+        if (instructionField) {
+            instructionField.focus();
+            // Place cursor at end
+            instructionField.setSelectionRange(instructionField.value.length, instructionField.value.length);
+        }
     }, 100);
+}
+
+/**
+ * Insert a prompt suggestion into the instruction field
+ */
+function insertPromptSuggestion(suggestion) {
+    const instructionField = document.getElementById('rewriteInstruction');
+    if (!instructionField) return;
+    
+    const currentValue = instructionField.value.trim();
+    if (currentValue) {
+        instructionField.value = currentValue + ', ' + suggestion;
+    } else {
+        instructionField.value = suggestion;
+    }
+    instructionField.focus();
 }
 
 /**
@@ -148,6 +196,9 @@ async function executeInlineRewrite() {
         closeInlineRewriteModal();
         return;
     }
+    
+    // Save instruction for session
+    lastRewriteInstruction = instruction;
     
     // Show loading state
     const executeBtn = document.querySelector('#inline-rewrite-modal .btn-primary');
@@ -224,6 +275,8 @@ async function executeInlineRewrite() {
 function showDiffPreviewModal() {
     if (!diffPreviewData) return;
     
+    const wrapClass = diffWrapLines ? 'wrap-lines' : 'no-wrap';
+    
     const modal = document.createElement('div');
     modal.id = 'diff-preview-modal';
     modal.className = 'diff-preview-modal';
@@ -238,27 +291,95 @@ function showDiffPreviewModal() {
                     <strong>Instruction:</strong> ${escapeHtml(diffPreviewData.instruction)}
                 </div>
                 <div class="diff-forensic">
-                    <small>Forensic ID: ${escapeHtml(diffPreviewData.forensicId)}</small>
+                    <strong style="color: var(--text-secondary);">Forensic ID:</strong> 
+                    <code class="forensic-id" title="Click to copy">${escapeHtml(diffPreviewData.forensicId)}</code>
+                    <button class="btn-copy-forensic" onclick="copyForensicId('${escapeHtml(diffPreviewData.forensicId)}')" title="Copy to clipboard">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="diff-controls">
+                    <label class="wrap-toggle">
+                        <input type="checkbox" id="wrapLinesToggle" ${diffWrapLines ? 'checked' : ''} onchange="toggleLineWrap()">
+                        <span>Wrap lines</span>
+                    </label>
                 </div>
                 <div class="diff-view">
                     <div class="diff-column">
                         <div class="diff-column-header">Original</div>
-                        <pre class="diff-code original-code">${escapeHtml(diffPreviewData.original)}</pre>
+                        <pre class="diff-code original-code ${wrapClass}">${escapeHtml(diffPreviewData.original)}</pre>
                     </div>
                     <div class="diff-column">
                         <div class="diff-column-header">Rewritten</div>
-                        <pre class="diff-code rewritten-code">${escapeHtml(diffPreviewData.rewritten)}</pre>
+                        <pre class="diff-code rewritten-code ${wrapClass}">${escapeHtml(diffPreviewData.rewritten)}</pre>
                     </div>
                 </div>
                 <div class="diff-preview-actions">
-                    <button class="btn-secondary" onclick="rejectDiff()">Reject</button>
-                    <button class="btn-primary" onclick="applyDiff()">Apply Changes</button>
+                    <button class="btn-secondary" onclick="rejectDiff()" id="rejectBtn">Reject</button>
+                    <button class="btn-primary" onclick="applyDiff()" id="applyBtn">Apply Changes</button>
                 </div>
             </div>
         </div>
     `;
     
     document.body.appendChild(modal);
+    
+    // Add keyboard event listener for Esc and Enter
+    setupDiffKeyboardHandlers();
+}
+
+/**
+ * Setup keyboard handlers for diff preview
+ */
+function setupDiffKeyboardHandlers() {
+    const diffModal = document.getElementById('diff-preview-modal');
+    if (!diffModal) return;
+    
+    const keyHandler = (e) => {
+        // Esc to close
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeDiffPreview();
+        }
+        // Enter to apply only if Apply button is focused
+        if (e.key === 'Enter' && document.activeElement?.id === 'applyBtn') {
+            e.preventDefault();
+            applyDiff();
+        }
+    };
+    
+    diffModal.addEventListener('keydown', keyHandler);
+}
+
+/**
+ * Toggle line wrapping in diff preview
+ */
+function toggleLineWrap() {
+    diffWrapLines = !diffWrapLines;
+    const codes = document.querySelectorAll('.diff-code');
+    codes.forEach(code => {
+        if (diffWrapLines) {
+            code.classList.remove('no-wrap');
+            code.classList.add('wrap-lines');
+        } else {
+            code.classList.remove('wrap-lines');
+            code.classList.add('no-wrap');
+        }
+    });
+}
+
+/**
+ * Copy forensic ID to clipboard
+ */
+function copyForensicId(forensicId) {
+    navigator.clipboard.writeText(forensicId).then(() => {
+        showNotification('Forensic ID copied to clipboard', 'success');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        showNotification('Failed to copy forensic ID', 'error');
+    });
 }
 
 /**
@@ -353,6 +474,9 @@ window.executeInlineRewrite = executeInlineRewrite;
 window.closeDiffPreview = closeDiffPreview;
 window.rejectDiff = rejectDiff;
 window.applyDiff = applyDiff;
+window.insertPromptSuggestion = insertPromptSuggestion;
+window.toggleLineWrap = toggleLineWrap;
+window.copyForensicId = copyForensicId;
 
 /**
  * Show context menu for editor
@@ -1581,6 +1705,28 @@ function setupDashboardListeners() {
                 }
             }
         });
+        
+        // Update AI Rewrite button state on selection change
+        const updateRewriteButtonState = () => {
+            const aiRewriteBtn = document.getElementById('aiRewriteBtn');
+            if (aiRewriteBtn) {
+                const selection = getEditorSelection();
+                if (selection) {
+                    aiRewriteBtn.disabled = false;
+                    aiRewriteBtn.classList.remove('disabled');
+                } else {
+                    aiRewriteBtn.disabled = true;
+                    aiRewriteBtn.classList.add('disabled');
+                }
+            }
+        };
+        
+        codeEditor.addEventListener('select', updateRewriteButtonState);
+        codeEditor.addEventListener('mouseup', updateRewriteButtonState);
+        codeEditor.addEventListener('keyup', updateRewriteButtonState);
+        
+        // Initial state
+        updateRewriteButtonState();
     }
 
     // Welcome screen actions
