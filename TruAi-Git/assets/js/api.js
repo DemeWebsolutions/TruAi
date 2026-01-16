@@ -42,12 +42,17 @@ class TruAiAPI {
             }
 
             if (!response.ok) {
-                throw new Error(data.error || `Request failed with status ${response.status}`);
+                // Safe error logging - do not log response data which may contain sensitive info
+                const sanitizedError = data.error || `Request failed with status ${response.status}`;
+                console.error(`API Error [${options.method || 'GET'} ${endpoint}]: ${response.status}`);
+                throw new Error(sanitizedError);
             }
 
             return data;
         } catch (error) {
-            console.error('API Error:', error);
+            // Safe error logging - do not log full request/response which may contain PII or secrets
+            console.error(`API Error [${options.method || 'GET'} ${endpoint}]:`, error.message);
+            
             // Re-throw with a user-friendly message if it's a network error
             if (error.name === 'TypeError' && error.message.includes('fetch')) {
                 throw new Error('Network error: Unable to connect to server');
@@ -133,11 +138,31 @@ class TruAiAPI {
         };
         
         // Add optional governed metadata if provided
+        // ALLOWLIST: Only these metadata keys are forwarded to the API
         if (metadata) {
+            // Governance metadata
             if (metadata.intent) body.intent = metadata.intent;
             if (metadata.risk) body.risk = metadata.risk;
             if (metadata.forensic_id) body.forensic_id = metadata.forensic_id;
-            // Model can also be passed via metadata (takes precedence)
+            if (metadata.scope) body.scope = metadata.scope;
+            
+            // Context metadata
+            if (metadata.selection_length !== undefined && 
+                typeof metadata.selection_length === 'number' && 
+                !isNaN(metadata.selection_length) && 
+                metadata.selection_length >= 0) {
+                body.selection_length = metadata.selection_length;
+            }
+            
+            // Allow conversation_id override via metadata if needed
+            // This allows callers to pass conversation_id in metadata for consistency
+            // with other metadata fields, but the direct parameter takes precedence
+            if (metadata.conversation_id && !conversationId) {
+                body.conversation_id = metadata.conversation_id;
+            }
+            
+            // NOTE: Model routing should NOT be exposed in production UI
+            // This is for internal/dev use only. Production code should use the model parameter.
             if (metadata.model) body.model = metadata.model;
         }
         
