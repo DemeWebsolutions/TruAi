@@ -38,6 +38,8 @@ let showDiffPreview = false;
 let diffPreviewData = null; // { original, rewritten, selectionStart, selectionEnd }
 let lastRewriteInstruction = ''; // Session-only storage for last instruction
 let diffWrapLines = true; // Line wrapping toggle for diff preview
+let inlineRewriteAbortController = null; // AbortController for canceling requests
+let inlineRewritePending = false; // Track if rewrite is in progress
 
 // Constants
 const MAX_SELECTION_SIZE = 4000; // Maximum characters for selection rewrite
@@ -197,19 +199,45 @@ async function executeInlineRewrite() {
         return;
     }
     
+    // Check if already pending
+    if (inlineRewritePending) {
+        showNotification('A rewrite request is already in progress', 'warning');
+        return;
+    }
+    
     // Save instruction for session
     lastRewriteInstruction = instruction;
     
     // Show loading state
     const executeBtn = document.querySelector('#inline-rewrite-modal .btn-primary');
+    const cancelBtn = document.querySelector('#inline-rewrite-modal .btn-secondary');
     if (executeBtn) {
         executeBtn.disabled = true;
         executeBtn.textContent = 'Generating...';
     }
+    if (cancelBtn) {
+        cancelBtn.textContent = 'Cancel Request';
+        cancelBtn.onclick = cancelInlineRewrite;
+    }
+    
+    // Mark as pending
+    inlineRewritePending = true;
+    
+    // Create abort controller for timeout and cancel
+    inlineRewriteAbortController = new AbortController();
+    const timeoutId = setTimeout(() => {
+        if (inlineRewriteAbortController) {
+            inlineRewriteAbortController.abort();
+        }
+    }, 30000); // 30 second timeout
     
     try {
         const api = new TruAiAPI();
         const forensicId = generateForensicId();
+        
+        // Store original editor content for stale detection
+        const editor = document.getElementById('codeEditor');
+        const originalEditorContent = editor ? editor.value : '';
         
         // Sanitize instruction to prevent prompt injection
         const sanitizedInstruction = instruction.replace(/["'`\\]/g, '').substring(0, 500);
@@ -220,52 +248,122 @@ async function executeInlineRewrite() {
         // Get model from settings
         const model = (settings && settings.ai && settings.ai.model) ? settings.ai.model : 'gpt-4';
         
-        // Send request with metadata
+        // Send request with metadata and abort signal
         const response = await api.sendMessage(message, null, model, {
             intent: 'inline_rewrite',
             scope: 'selection',
             risk: 'SAFE',
             forensic_id: forensicId,
             selection_length: selection.text.length
-        });
+        }, inlineRewriteAbortController.signal);
         
-        if (response.message && response.message.content) {
-            // Clean up the response - remove markdown code blocks if present
-            let rewrittenCode = response.message.content.trim();
-            // Remove opening code fence (```language or ```)
-            rewrittenCode = rewrittenCode.replace(/^```[\w]*\n?/, '');
-            // Remove closing code fence
-            rewrittenCode = rewrittenCode.replace(/\n?```$/, '');
-            rewrittenCode = rewrittenCode.trim();
-            
-            // Store diff preview data
-            diffPreviewData = {
-                original: selection.text,
-                rewritten: rewrittenCode,
-                selectionStart: selection.start,
-                selectionEnd: selection.end,
-                forensicId: forensicId,
-                instruction: instruction
-            };
-            
-            // Close prompt modal
-            closeInlineRewriteModal();
-            
-            // Show diff preview
-            showDiffPreviewModal();
-        } else {
-            throw new Error('Invalid response from AI');
+        // Clear timeout since request completed
+        clearTimeout(timeoutId);
+        
+        // Parse response with multiple fallbacks
+        const rewrittenCode = parseRewriteResponse(response);
+        
+        if (!rewrittenCode) {
+            throw new Error('Unable to parse AI response. Please try again.');
         }
         
-    } catch (error) {
-        console.error('Inline rewrite error:', error);
-        showNotification(`Error: ${error.message}`, 'error');
+        // Store diff preview data with original content for stale detection
+        diffPreviewData = {
+            original: selection.text,
+            rewritten: rewrittenCode,
+            selectionStart: selection.start,
+            selectionEnd: selection.end,
+            forensicId: forensicId,
+            instruction: instruction,
+            originalEditorContent: originalEditorContent, // For stale detection
+            originalContentLength: originalEditorContent.length
+        };
         
-        // Reset button
+        // Close prompt modal
+        closeInlineRewriteModal();
+        
+        // Show diff preview
+        showDiffPreviewModal();
+        
+    } catch (error) {
+        clearTimeout(timeoutId);
+        
+        // Handle abort/timeout specifically
+        if (error.name === 'AbortError') {
+            showNotification('Request canceled or timed out after 30 seconds', 'info');
+        } else {
+            console.error('Inline rewrite error:', error);
+            showNotification(`Error: ${error.message}`, 'error');
+        }
+        
+        // Reset button state
         if (executeBtn) {
             executeBtn.disabled = false;
             executeBtn.textContent = 'Generate Rewrite';
         }
+        if (cancelBtn) {
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.onclick = closeInlineRewriteModal;
+        }
+    } finally {
+        // Clean up
+        inlineRewritePending = false;
+        inlineRewriteAbortController = null;
+    }
+}
+
+/**
+ * Parse AI rewrite response with multiple fallback strategies
+ * Supports: { reply }, { message }, { content }, { data: { reply } }, etc.
+ */
+function parseRewriteResponse(response) {
+    if (!response) return null;
+    
+    let content = null;
+    
+    // Try various response shapes
+    if (response.message && response.message.content) {
+        content = response.message.content;
+    } else if (response.reply) {
+        content = response.reply;
+    } else if (response.content) {
+        content = response.content;
+    } else if (response.message && typeof response.message === 'string') {
+        content = response.message;
+    } else if (response.data && response.data.reply) {
+        content = response.data.reply;
+    } else if (response.data && response.data.content) {
+        content = response.data.content;
+    } else if (response.data && response.data.message) {
+        content = response.data.message;
+    }
+    
+    if (!content || typeof content !== 'string') {
+        return null;
+    }
+    
+    // Clean up the response - remove markdown code blocks if present
+    let rewrittenCode = content.trim();
+    // Remove opening code fence (```language or ```)
+    rewrittenCode = rewrittenCode.replace(/^```[\w]*\n?/, '');
+    // Remove closing code fence
+    rewrittenCode = rewrittenCode.replace(/\n?```$/, '');
+    rewrittenCode = rewrittenCode.trim();
+    
+    // Return null if empty after cleanup
+    return rewrittenCode.length > 0 ? rewrittenCode : null;
+}
+
+/**
+ * Cancel inline rewrite request
+ */
+function cancelInlineRewrite() {
+    if (inlineRewriteAbortController) {
+        inlineRewriteAbortController.abort();
+        inlineRewritePending = false;
+        inlineRewriteAbortController = null;
+        closeInlineRewriteModal();
+        showNotification('Rewrite request canceled', 'info');
     }
 }
 
@@ -315,6 +413,22 @@ function showDiffPreviewModal() {
                         <div class="diff-column-header">Rewritten</div>
                         <pre class="diff-code rewritten-code ${wrapClass}">${escapeHtml(diffPreviewData.rewritten)}</pre>
                     </div>
+                </div>
+                <div class="diff-clipboard-actions">
+                    <button class="btn-clipboard" onclick="copyRewrittenText()" title="Copy rewritten text to clipboard">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy Rewritten
+                    </button>
+                    <button class="btn-clipboard" onclick="copyDiffPatch()" title="Copy unified diff patch to clipboard">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        </svg>
+                        Copy Diff Patch
+                    </button>
                 </div>
                 <div class="diff-preview-actions">
                     <button class="btn-secondary" onclick="rejectDiff()" id="rejectBtn">Reject</button>
@@ -445,6 +559,40 @@ function applyDiff() {
         return;
     }
     
+    // Stale selection protection: check if editor content has changed
+    const currentEditorContent = editor.value;
+    if (diffPreviewData.originalEditorContent !== currentEditorContent) {
+        // Content has changed since request was made
+        const lengthDiff = Math.abs(currentEditorContent.length - diffPreviewData.originalContentLength);
+        
+        if (lengthDiff > 0) {
+            // Show warning and require confirmation
+            if (!confirm(
+                `Warning: Editor content has changed since the rewrite was generated.\n\n` +
+                `Content length changed by ${lengthDiff} characters.\n\n` +
+                `This may result in applying changes to the wrong location.\n\n` +
+                `Do you want to apply anyway? (Recommended: Reject and re-run)`
+            )) {
+                showNotification('Apply canceled. Please re-run the rewrite with current content.', 'info');
+                return;
+            }
+        }
+    }
+    
+    // Check if the selected range still exists and contains expected content
+    const selectedText = editor.value.substring(diffPreviewData.selectionStart, diffPreviewData.selectionEnd);
+    if (selectedText !== diffPreviewData.original) {
+        // Selection content doesn't match - likely stale
+        if (!confirm(
+            `Warning: The selected text has changed since the rewrite was generated.\n\n` +
+            `This may result in incorrect changes.\n\n` +
+            `Do you want to apply anyway? (Recommended: Reject and re-run)`
+        )) {
+            showNotification('Apply canceled. Please re-run the rewrite.', 'info');
+            return;
+        }
+    }
+    
     // Replace the selected range with rewritten code
     const before = editor.value.substring(0, diffPreviewData.selectionStart);
     const after = editor.value.substring(diffPreviewData.selectionEnd);
@@ -467,6 +615,108 @@ function applyDiff() {
     
     closeDiffPreview();
     showNotification('Changes applied successfully', 'success');
+}
+
+/**
+ * Copy rewritten text to clipboard
+ */
+function copyRewrittenText() {
+    if (!diffPreviewData || !diffPreviewData.rewritten) {
+        showNotification('No rewritten text available', 'error');
+        return;
+    }
+    
+    copyToClipboard(diffPreviewData.rewritten, 'Rewritten text copied to clipboard');
+}
+
+/**
+ * Copy unified diff patch to clipboard
+ */
+function copyDiffPatch() {
+    if (!diffPreviewData) {
+        showNotification('No diff available', 'error');
+        return;
+    }
+    
+    // Generate simple unified diff format
+    const patch = generateUnifiedDiff(
+        diffPreviewData.original,
+        diffPreviewData.rewritten,
+        diffPreviewData.forensicId,
+        diffPreviewData.instruction
+    );
+    
+    copyToClipboard(patch, 'Diff patch copied to clipboard');
+}
+
+/**
+ * Generate a simple unified diff format
+ */
+function generateUnifiedDiff(original, rewritten, forensicId, instruction) {
+    const timestamp = new Date().toISOString();
+    
+    // Split into lines
+    const originalLines = original.split('\n');
+    const rewrittenLines = rewritten.split('\n');
+    
+    // Build header
+    let diff = `--- Original\n`;
+    diff += `+++ Rewritten\n`;
+    diff += `@@ Forensic ID: ${forensicId}\n`;
+    diff += `@@ Instruction: ${instruction}\n`;
+    diff += `@@ Timestamp: ${timestamp}\n`;
+    diff += `@@ -1,${originalLines.length} +1,${rewrittenLines.length} @@\n`;
+    
+    // Simple line-by-line diff (not a full diff algorithm, just showing changes)
+    const maxLines = Math.max(originalLines.length, rewrittenLines.length);
+    for (let i = 0; i < maxLines; i++) {
+        if (i < originalLines.length && i < rewrittenLines.length) {
+            if (originalLines[i] === rewrittenLines[i]) {
+                diff += ` ${originalLines[i]}\n`;
+            } else {
+                diff += `-${originalLines[i]}\n`;
+                diff += `+${rewrittenLines[i]}\n`;
+            }
+        } else if (i < originalLines.length) {
+            diff += `-${originalLines[i]}\n`;
+        } else {
+            diff += `+${rewrittenLines[i]}\n`;
+        }
+    }
+    
+    return diff;
+}
+
+/**
+ * Copy text to clipboard with fallback
+ */
+function copyToClipboard(text, successMessage) {
+    // Feature detection for clipboard API
+    if (!navigator.clipboard) {
+        // Fallback for older browsers or non-HTTPS contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showNotification(successMessage || 'Copied to clipboard', 'success');
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+            showNotification('Failed to copy to clipboard', 'error');
+        }
+        document.body.removeChild(textArea);
+        return;
+    }
+    
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification(successMessage || 'Copied to clipboard', 'success');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        showNotification('Failed to copy to clipboard', 'error');
+    });
 }
 
 /**
@@ -502,11 +752,14 @@ function showNotification(message, type = 'info') {
 // Make functions globally accessible for onclick handlers
 window.closeInlineRewriteModal = closeInlineRewriteModal;
 window.executeInlineRewrite = executeInlineRewrite;
+window.cancelInlineRewrite = cancelInlineRewrite;
 window.closeDiffPreview = closeDiffPreview;
 window.rejectDiff = rejectDiff;
 window.applyDiff = applyDiff;
 window.insertPromptSuggestion = insertPromptSuggestion;
 window.toggleLineWrap = toggleLineWrap;
+window.copyRewrittenText = copyRewrittenText;
+window.copyDiffPatch = copyDiffPatch;
 
 /**
  * Show context menu for editor
