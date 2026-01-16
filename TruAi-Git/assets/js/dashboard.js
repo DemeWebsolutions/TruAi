@@ -160,8 +160,11 @@ async function executeInlineRewrite() {
         const api = new TruAiAPI();
         const forensicId = generateForensicId();
         
+        // Sanitize instruction to prevent prompt injection
+        const sanitizedInstruction = instruction.replace(/["'`\\]/g, '').substring(0, 500);
+        
         // Prepare the message with context
-        const message = `Please rewrite the following code according to these instructions: "${instruction}"\n\nCode to rewrite:\n\`\`\`\n${selection.text}\n\`\`\`\n\nProvide ONLY the rewritten code without explanations or markdown formatting.`;
+        const message = `Please rewrite the following code according to these instructions: ${sanitizedInstruction}\n\nCode to rewrite:\n\`\`\`\n${selection.text}\n\`\`\`\n\nProvide ONLY the rewritten code without explanations or markdown formatting.`;
         
         // Get model from settings
         const model = (settings && settings.ai && settings.ai.model) ? settings.ai.model : 'gpt-4';
@@ -178,7 +181,11 @@ async function executeInlineRewrite() {
         if (response.message && response.message.content) {
             // Clean up the response - remove markdown code blocks if present
             let rewrittenCode = response.message.content.trim();
-            rewrittenCode = rewrittenCode.replace(/^```[\w]*\n?/gm, '').replace(/\n?```$/gm, '').trim();
+            // Remove opening code fence (```language or ```)
+            rewrittenCode = rewrittenCode.replace(/^```[\w]*\n?/, '');
+            // Remove closing code fence
+            rewrittenCode = rewrittenCode.replace(/\n?```$/, '');
+            rewrittenCode = rewrittenCode.trim();
             
             // Store diff preview data
             diffPreviewData = {
