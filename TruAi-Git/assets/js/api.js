@@ -143,7 +143,7 @@ class TruAiAPI {
         
         return this.request('/chat/message', {
             method: 'POST',
-            body
+            body: body
         });
     }
 

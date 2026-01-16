@@ -68,6 +68,7 @@ if (!$auth->isAuthenticated()) {
     <link rel="stylesheet" href="/assets/css/settings.css">
     <link rel="stylesheet" href="/assets/css/data-sharing.css">
     <link rel="stylesheet" href="/assets/css/theme-preview.css">
+    <link rel="stylesheet" href="/assets/css/inline-rewrite.css">
     <style>
         * {
             margin: 0;
