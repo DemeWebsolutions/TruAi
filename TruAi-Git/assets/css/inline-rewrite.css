@@ -44,6 +44,11 @@
     border-color: var(--accent-blue);
 }
 
+.editor-toolbar-btn:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
 .editor-toolbar-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -459,6 +464,11 @@
     background: #0066cc;
 }
 
+.btn-primary:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
 .btn-primary:disabled {
     background: var(--bg-hover);
     color: var(--text-tertiary);
@@ -475,6 +485,11 @@
 .btn-secondary:hover {
     background: var(--bg-hover);
     border-color: var(--accent-blue);
+}
+
+.btn-secondary:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
 }
 
 /* Pending state indicator */
@@ -711,4 +726,45 @@
     .diff-preview-content {
         width: 95%;
     }
+}
+
+/* Focus-visible styles for keyboard navigation accessibility */
+.inline-rewrite-close:focus-visible,
+.diff-preview-close:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+.prompt-chip:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+.rewrite-instruction:focus-visible {
+    border-color: var(--accent-blue);
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+.btn-copy-forensic:focus-visible,
+.btn-clipboard:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+.wrap-toggle input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+.editor-toolbar-btn-dropdown:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+.ai-tool-option:focus-visible,
+.context-menu-item:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+    background: var(--bg-hover);
 }
