@@ -111,10 +111,21 @@ class TruAiAPI {
     }
 
     // Chat endpoints
-    async sendMessage(message, conversationId = null, model = 'auto') {
+    async sendMessage(message, conversationId = null, model = 'auto', metadata = null) {
+        const body = { 
+            message, 
+            conversation_id: conversationId, 
+            model 
+        };
+        
+        // Add metadata if provided (for inline rewrite, forensic tracking, etc.)
+        if (metadata) {
+            body.metadata = metadata;
+        }
+        
         return this.request('/chat/message', {
             method: 'POST',
-            body: { message, conversation_id: conversationId, model }
+            body: body
         });
     }
 
