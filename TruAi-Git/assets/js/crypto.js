@@ -1,7 +1,8 @@
 /**
  * TruAi Encryption Utilities
  * 
- * Client-side encryption for secure authentication (Phantom.ai style)
+ * Client-side encryption for secure authentication
+ * Uses AES-256-GCM for credential encryption (not hybrid RSA+AES in this implementation)
  * 
  * @package TruAi
  * @version 1.0.0
@@ -51,6 +52,7 @@ class TruAiCrypto {
 
     /**
      * Encrypt credentials for transmission
+     * Uses AES-256-GCM encryption with generated session key
      */
     async encryptCredentials(username, password) {
         // Hash password first
@@ -64,7 +66,7 @@ class TruAiCrypto {
             session_key: this.sessionKey
         });
 
-        // Encrypt with session key (simulated RSA + AES hybrid)
+        // Encrypt with session key using AES-256-GCM
         const encrypted = await this.encryptAES(payload, this.sessionKey);
         
         return {
@@ -74,12 +76,12 @@ class TruAiCrypto {
     }
 
     /**
-     * AES-GCM encryption
+     * AES-GCM encryption (256-bit)
      */
     async encryptAES(data, keyHex) {
         try {
-            // Convert hex key to bytes
-            const keyBytes = this.hexToBytes(keyHex.substring(0, 32)); // Use 256 bits
+            // Convert hex key to bytes (use full 64 hex chars = 256 bits = 32 bytes)
+            const keyBytes = this.hexToBytes(keyHex.substring(0, 64));
             
             // Import key
             const key = await crypto.subtle.importKey(
