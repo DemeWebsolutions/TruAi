@@ -72,6 +72,11 @@ function getEditorSelection() {
  * Show inline rewrite prompt modal
  */
 function showInlineRewritePrompt() {
+    // Check if modal already exists
+    if (document.getElementById('inline-rewrite-modal')) {
+        return; // Prevent duplicate modals
+    }
+    
     const selection = getEditorSelection();
     
     if (!selection) {
@@ -1747,9 +1752,9 @@ function setupDashboardListeners() {
     }
     
     // Context menu for code editor
-    const codeEditor = document.getElementById('codeEditor');
-    if (codeEditor) {
-        codeEditor.addEventListener('contextmenu', function(e) {
+    const editorElement = document.getElementById('codeEditor');
+    if (editorElement) {
+        editorElement.addEventListener('contextmenu', function(e) {
             const selection = getEditorSelection();
             if (selection) {
                 e.preventDefault();
