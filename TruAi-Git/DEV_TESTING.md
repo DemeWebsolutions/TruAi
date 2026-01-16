@@ -465,3 +465,330 @@ If any test fails or unexpected behavior occurs:
 
 **Last Updated:** 2026-01-16
 **Version:** 1.0.0
+
+## Phase 6: Inline Rewrite Reliability & Hardening Tests
+
+### Test 6.1: Timeout Handling
+
+**Purpose:** Verify that long-running rewrite requests timeout gracefully.
+
+**Steps:**
+1. Open TruAi dashboard and log in
+2. Open a code file and select text
+3. Click "AI Rewrite" button
+4. Enter instruction and click "Generate Rewrite"
+5. If the request takes longer than 30 seconds, observe behavior
+
+**Expected Results:**
+- Request times out after exactly 30 seconds
+- Toast notification shows: "Request canceled or timed out after 30 seconds"
+- Modal closes automatically
+- No error in console
+- User can retry with a new request
+
+**Note:** To simulate timeout, you may need to temporarily set timeout to 5 seconds for testing, or use a slow/unresponsive API endpoint.
+
+### Test 6.2: Cancel Request
+
+**Purpose:** Verify that users can cancel in-progress rewrite requests.
+
+**Steps:**
+1. Open TruAi dashboard and log in
+2. Open a code file and select text
+3. Click "AI Rewrite" button
+4. Enter instruction and click "Generate Rewrite"
+5. While request is pending, click "Cancel Request" button
+6. Observe behavior
+
+**Expected Results:**
+- "Cancel" button changes to "Cancel Request" when request starts
+- Clicking "Cancel Request" immediately aborts the fetch
+- Toast notification shows: "Rewrite request canceled"
+- Modal closes
+- No diff preview displayed
+- User can start a new request immediately
+
+### Test 6.3: Malformed Response Handling
+
+**Purpose:** Verify graceful handling of unexpected API response formats.
+
+**Steps:**
+1. Use dev harness or browser console to test various response shapes:
+   ```javascript
+   // In browser console after opening dashboard
+   const api = new TruAiAPI();
+   
+   // Test 1: Missing content field
+   // Test 2: Empty response
+   // Test 3: Response with { reply: "code" }
+   // Test 4: Response with { content: "code" }
+   // Test 5: Response with { data: { reply: "code" } }
+   ```
+2. Observe how the system handles each case
+
+**Expected Results:**
+- Response parser tries multiple field names: `message.content`, `reply`, `content`, `message`, `data.reply`, `data.content`, `data.message`
+- If none found, shows toast: "Unable to parse AI response. Please try again."
+- No diff preview opens for unparseable responses
+- No JavaScript errors in console
+- User can retry
+
+### Test 6.4: Empty Response Handling
+
+**Purpose:** Verify handling of empty or whitespace-only responses.
+
+**Steps:**
+1. Complete a rewrite operation that returns empty or whitespace-only content
+2. Observe behavior
+
+**Expected Results:**
+- Empty responses after cleanup are rejected
+- Toast shows: "Unable to parse AI response. Please try again."
+- No diff preview opens
+- User can retry
+
+### Test 6.5: Stale Selection Detection - Content Changed
+
+**Purpose:** Verify that changes to editor content are detected before applying.
+
+**Steps:**
+1. Open a code file with at least 100 characters
+2. Select 20-30 characters in the middle
+3. Click "AI Rewrite" and enter instruction
+4. While request is pending or after diff preview opens:
+5. Manually add or remove text elsewhere in the editor (before or after the selection)
+6. In diff preview, click "Apply Changes"
+7. Observe warning dialog
+
+**Expected Results:**
+- Warning dialog appears stating: "Editor content has changed since the rewrite was generated"
+- Shows character count difference
+- Gives option to proceed or cancel
+- If canceled, shows toast: "Apply canceled. Please re-run the rewrite with current content."
+- Changes NOT applied if canceled
+- If proceeded, changes applied at original positions (may be incorrect)
+
+### Test 6.6: Stale Selection Detection - Selection Changed
+
+**Purpose:** Verify that changes to the selected text itself are detected.
+
+**Steps:**
+1. Open a code file
+2. Select text containing "function myFunction()"
+3. Click "AI Rewrite" and generate rewrite
+4. Before clicking Apply in diff preview:
+5. Close diff preview (Esc)
+6. Edit the selected text to "function yourFunction()"
+7. Re-open the same diff preview (if possible) or simulate by keeping diffPreviewData
+8. Click "Apply Changes"
+
+**Expected Results:**
+- Warning dialog appears: "The selected text has changed since the rewrite was generated"
+- Recommends rejecting and re-running
+- If user proceeds, applies changes (may be incorrect)
+- If user cancels, shows toast and does not apply changes
+
+### Test 6.7: Duplicate Request Prevention
+
+**Purpose:** Verify that multiple simultaneous rewrite requests are prevented.
+
+**Steps:**
+1. Open a code file and select text
+2. Click "AI Rewrite" button
+3. Enter instruction and click "Generate Rewrite"
+4. While request is pending, try to start another rewrite:
+   - Click "AI Rewrite" button again (if possible)
+   - Or press Cmd/Ctrl+Enter
+5. Observe behavior
+
+**Expected Results:**
+- Second request is blocked
+- Toast shows: "A rewrite request is already in progress"
+- Original request continues unaffected
+- After first request completes, new requests can be made
+
+### Test 6.8: Copy Rewritten Text
+
+**Purpose:** Verify copying rewritten text to clipboard works.
+
+**Steps:**
+1. Complete a rewrite to open diff preview
+2. Locate "Copy Rewritten" button
+3. Click "Copy Rewritten" button
+4. Paste into external text editor (Cmd/Ctrl+V)
+
+**Expected Results:**
+- Toast shows: "Rewritten text copied to clipboard"
+- Pasted text exactly matches rewritten code from diff preview
+- No extra formatting or characters
+- Works in all major browsers
+
+### Test 6.9: Copy Diff Patch
+
+**Purpose:** Verify copying unified diff patch works correctly.
+
+**Steps:**
+1. Complete a rewrite to open diff preview
+2. Locate "Copy Diff Patch" button
+3. Click "Copy Diff Patch" button
+4. Paste into external text editor
+
+**Expected Results:**
+- Toast shows: "Diff patch copied to clipboard"
+- Pasted content is in unified diff format:
+  - Header: `--- Original` and `+++ Rewritten`
+  - Contains forensic ID in header
+  - Contains instruction in header
+  - Contains timestamp
+  - Shows line changes with `-` and `+` prefixes
+  - Unchanged lines prefixed with space
+- Format is readable and can be manually applied
+- Works in all major browsers
+
+### Test 6.10: Forensic ID in Diff Patch
+
+**Purpose:** Verify forensic ID is included in copied diff patch.
+
+**Steps:**
+1. Complete a rewrite and note the forensic ID from diff preview
+2. Click "Copy Diff Patch"
+3. Paste into text editor
+4. Search for the forensic ID
+
+**Expected Results:**
+- Forensic ID appears in patch header
+- Format: `@@ Forensic ID: TRUAI_<timestamp>_<hash>`
+- ID matches what was displayed in diff preview
+- ID is on its own line in the header
+
+### Test 6.11: Clipboard Fallback (Non-HTTPS)
+
+**Purpose:** Verify clipboard operations work without modern Clipboard API.
+
+**Steps:**
+1. Disable clipboard API (browser dev tools or HTTP context)
+2. Complete a rewrite to open diff preview
+3. Click "Copy Rewritten" button
+4. Attempt to paste
+
+**Expected Results:**
+- Fallback method uses execCommand('copy')
+- Success toast still appears
+- Text is copied successfully
+- Works in older browsers or non-HTTPS contexts
+
+### Test 6.12: Response Shape Compatibility - { reply }
+
+**Purpose:** Test backward compatibility with { reply: string } responses.
+
+**Steps:**
+1. Mock API response to return `{ reply: "rewritten code" }`
+2. Complete rewrite operation
+3. Observe handling
+
+**Expected Results:**
+- Response parsed successfully
+- Rewritten code extracted from `reply` field
+- Diff preview displays correctly
+
+### Test 6.13: Response Shape Compatibility - { data: { reply } }
+
+**Purpose:** Test nested response shape support.
+
+**Steps:**
+1. Mock API response to return `{ data: { reply: "rewritten code" } }`
+2. Complete rewrite operation
+3. Observe handling
+
+**Expected Results:**
+- Response parsed successfully
+- Rewritten code extracted from nested structure
+- Diff preview displays correctly
+
+### Test 6.14: AbortController Browser Compatibility
+
+**Purpose:** Verify AbortController works in supported browsers.
+
+**Steps:**
+1. Test in Chrome, Firefox, Safari, Edge
+2. Complete a rewrite and cancel it
+3. Verify cancellation works in each browser
+
+**Expected Results:**
+- Cancel functionality works in all modern browsers
+- AbortError handled gracefully
+- No browser-specific errors
+- Older browsers without AbortController may need polyfill (not required by spec)
+
+### Test 6.15: Multiple Diff Operations in Session
+
+**Purpose:** Verify multiple sequential rewrites work correctly.
+
+**Steps:**
+1. Complete first rewrite and apply changes
+2. Select different text
+3. Complete second rewrite and apply changes
+4. Select third piece of text
+5. Complete third rewrite but reject it
+6. Verify state is clean
+
+**Expected Results:**
+- Each rewrite works independently
+- No state contamination between operations
+- Forensic IDs are unique for each operation
+- Stale detection works for each operation
+- Rejecting one doesn't affect next operation
+
+### Test 6.16: Long-Running Request Visual Feedback
+
+**Purpose:** Verify user has clear feedback during pending requests.
+
+**Steps:**
+1. Start a rewrite request
+2. Observe the UI during pending state
+3. Note all visual indicators
+
+**Expected Results:**
+- "Generate Rewrite" button changes to "Generating..." and is disabled
+- "Cancel" button changes to "Cancel Request"
+- Button states are visually distinct
+- User clearly understands request is pending
+- No ambiguity about current state
+
+### Test 6.17: Network Error Handling
+
+**Purpose:** Verify graceful handling of network failures.
+
+**Steps:**
+1. Disconnect from internet or stop backend server
+2. Attempt to start a rewrite
+3. Observe error handling
+
+**Expected Results:**
+- Error caught gracefully
+- Toast shows user-friendly message (not raw network error)
+- Modal state resets (button enabled, text restored)
+- User can retry once connection restored
+- No JavaScript crashes
+
+### Test 6.18: Concurrent Rewrite + Chat
+
+**Purpose:** Verify inline rewrite doesn't interfere with chat functionality.
+
+**Steps:**
+1. Start an inline rewrite request
+2. While pending, open AI chat panel
+3. Send a chat message
+4. Verify both operations complete
+
+**Expected Results:**
+- Chat request uses separate API call
+- Both requests can be in flight simultaneously
+- Inline rewrite abort doesn't affect chat
+- Chat messages appear correctly
+- No cross-contamination of state
+
+---
+
+**Last Updated:** 2026-01-16
+**Version:** 1.1.0

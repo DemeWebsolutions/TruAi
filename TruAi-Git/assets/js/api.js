@@ -130,7 +130,7 @@ class TruAiAPI {
     }
 
     // Chat endpoints
-    async sendMessage(message, conversationId = null, model = 'auto', metadata = null) {
+    async sendMessage(message, conversationId = null, model = 'auto', metadata = null, signal = null) {
         const body = { 
             message, 
             conversation_id: conversationId, 
@@ -166,10 +166,17 @@ class TruAiAPI {
             if (metadata.model) body.model = metadata.model;
         }
         
-        return this.request('/chat/message', {
+        // Add signal to options if provided
+        const options = {
             method: 'POST',
             body: body
-        });
+        };
+        
+        if (signal) {
+            options.signal = signal;
+        }
+        
+        return this.request('/chat/message', options);
     }
 
     async getConversations() {
