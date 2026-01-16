@@ -23,6 +23,7 @@ function initializeConsentOnFirstUse() {
 // Initialize consent on script load
 initializeConsentOnFirstUse();
 
+// Initialize state variables after auto-initialization
 let dataSharingConsentShown = localStorage.getItem('truai_data_sharing_consent_shown') === 'true';
 let dataSharingEnabled = localStorage.getItem('truai_data_sharing_enabled') === 'true';
 
@@ -52,4 +53,5 @@ function handleDataSharingConsent(enabled) {
 
 // Make functions globally accessible
 window.showDataSharingConsent = showDataSharingConsent;
+window.hideDataSharingConsent = hideDataSharingConsent;
 window.handleDataSharingConsent = handleDataSharingConsent;
