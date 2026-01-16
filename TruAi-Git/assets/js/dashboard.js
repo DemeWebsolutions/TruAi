@@ -175,6 +175,13 @@ function insertPromptSuggestion(suggestion) {
  * Close inline rewrite modal
  */
 function closeInlineRewriteModal() {
+    // If there's a pending request, cancel it
+    if (inlineRewritePending && inlineRewriteAbortController) {
+        inlineRewriteAbortController.abort();
+        inlineRewritePending = false;
+        inlineRewriteAbortController = null;
+    }
+    
     const modal = document.getElementById('inline-rewrite-modal');
     if (modal) {
         modal.remove();
