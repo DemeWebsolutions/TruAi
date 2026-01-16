@@ -2,6 +2,7 @@
  * Data Sharing Consent Modal
  * 
  * Cursor IDE style data sharing consent
+ * Implements "first day off" via timestamp logic
  * 
  * @package TruAi
  * @version 1.0.0
@@ -9,10 +10,30 @@
 
 let dataSharingConsentShown = localStorage.getItem('truai_data_sharing_consent_shown') === 'true';
 let dataSharingEnabled = localStorage.getItem('truai_data_sharing_enabled') === 'true';
+let firstUseTimestamp = localStorage.getItem('truai_first_use_timestamp');
 
 function showDataSharingConsent() {
-    // Only show once per session or if not yet consented
-    if (dataSharingConsentShown && dataSharingEnabled) {
+    // First use: set timestamp, grant implicit consent, don't show modal
+    if (!firstUseTimestamp) {
+        const now = Date.now();
+        localStorage.setItem('truai_first_use_timestamp', now.toString());
+        localStorage.setItem('truai_data_sharing_enabled', 'true');
+        localStorage.setItem('truai_data_sharing_consent_shown', 'true');
+        dataSharingConsentShown = true;
+        dataSharingEnabled = true;
+        firstUseTimestamp = now.toString();
+        return false;
+    }
+    
+    // Check if less than 24 hours since first use
+    const hoursSinceFirstUse = (Date.now() - parseInt(firstUseTimestamp)) / (1000 * 60 * 60);
+    if (hoursSinceFirstUse < 24) {
+        // First day - don't show modal
+        return false;
+    }
+    
+    // After first day: only show if consent not yet shown
+    if (dataSharingConsentShown) {
         return false;
     }
     
@@ -40,7 +61,7 @@ function showDataSharingConsent() {
             
             <div class="data-sharing-content">
                 <p class="data-sharing-intro">
-                    By default, TruAi learns from code to help you get the best experience possible.
+                    TruAi learns from code to help you get the best experience possible.
                 </p>
                 
                 <ul class="data-sharing-points">
@@ -48,7 +69,7 @@ function showDataSharingConsent() {
                         <strong>You're in control.</strong> Turn off anytime in Settings → Privacy.
                     </li>
                     <li>
-                        <strong>Data sharing is off the first day.</strong> After one day of use, TruAi stores and learns from your prompts, codebase, edit history, and other usage data to improve the product.
+                        <strong>Data sharing is off the first day.</strong> After one day of use, TruAi may store and learn from your prompts, codebase, edit history, and other usage data to improve the product.
                     </li>
                 </ul>
                 
@@ -85,11 +106,20 @@ function showDataSharingConsent() {
     if (privacyLink) {
         privacyLink.addEventListener('click', function(e) {
             e.preventDefault();
-            // Open settings to privacy section
-            if (typeof renderDashboard === 'function') {
-                activePanel = 'settings';
-                activeSettingsTab = 'general';
-                renderDashboard();
+            // Route to Settings → General (Privacy section)
+            if (typeof window.renderDashboard === 'function') {
+                window.activePanel = 'settings';
+                window.activeSettingsTab = 'general';
+                window.renderDashboard();
+                // Try to focus Privacy section if it exists
+                setTimeout(function() {
+                    const privacySection = document.querySelector('[data-section="privacy"]') 
+                        || document.querySelector('.privacy-section')
+                        || document.getElementById('privacySection');
+                    if (privacySection && privacySection.scrollIntoView) {
+                        privacySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 100);
             }
             hideDataSharingConsent();
         });
