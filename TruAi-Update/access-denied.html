@@ -253,7 +253,7 @@
         const errorMessage = urlParams.get('error') || urlParams.get('message');
         
         if (errorMessage) {
-            document.getElementById('errorReason').textContent = decodeURIComponent(errorMessage);
+            document.getElementById('errorReason').textContent = errorMessage;
         }
 
         // Countdown timer

@@ -34,6 +34,7 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json)$/i'
             'svg' => 'image/svg+xml',
             'css' => 'text/css',
             'js' => 'application/javascript',
+            'json' => 'application/json',
             'ico' => 'image/x-icon'
         ];
         if (isset($mimeTypes[$ext])) {
@@ -111,22 +112,6 @@ if (strpos($requestUri, '/api/') !== false) {
     
     // Enforce localhost access
     Auth::enforceLocalhost();
-    
-    // TEMPORARY: Auto-authenticate as admin for API requests if not authenticated
-    $tempAuth = new Auth();
-    if (!$tempAuth->isAuthenticated()) {
-        $db = Database::getInstance();
-        $users = $db->query("SELECT * FROM users WHERE username = 'admin' LIMIT 1");
-        if (!empty($users)) {
-            $user = $users[0];
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['role'] = $user['role'];
-            $_SESSION['logged_in'] = true;
-            $_SESSION['login_time'] = time();
-            $_SESSION['session_token'] = bin2hex(random_bytes(32));
-        }
-    }
     
     // Handle API request
     $router = new Router();

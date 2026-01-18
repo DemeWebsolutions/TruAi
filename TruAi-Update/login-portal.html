@@ -440,7 +440,12 @@
         document.querySelectorAll('.input-field').forEach(function(input) {
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+                    e.preventDefault();
+                    const form = document.getElementById('loginForm');
+                    if (!form.classList.contains('submitting')) {
+                        form.classList.add('submitting');
+                        form.dispatchEvent(new Event('submit'));
+                    }
                 }
             });
         });
