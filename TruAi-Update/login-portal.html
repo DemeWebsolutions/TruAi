@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi Gateway - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #34383C;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .login-card {
+            position: relative;
+            width: 400px;
+            max-width: 100%;
+            border: 1.5px solid #6B7280;
+            border-radius: 20px;
+            padding: 40px 48px;
+            background-color: #3F4449;
+        }
+
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-image {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .title {
+            color: white;
+            font-size: 40px;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .divider-line {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .divider-dot {
+            width: 4px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+        }
+
+        .divider-bar {
+            width: 80px;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .small-icon {
+            width: 16px;
+            height: 20px;
+            border: 1px solid #0E94E8;
+            border-radius: 2px;
+            margin-bottom: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .small-icon-bar {
+            width: 100%;
+            height: 2px;
+            background-color: #0E94E8;
+        }
+
+        .tagline {
+            color: #0E94E8;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+
+        .website {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            margin-bottom: 32px;
+        }
+
+        .login-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .login-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 300;
+            margin-bottom: 0;
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 300;
+        }
+
+        .fingerprint-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+
+        .fingerprint {
+            width: 70px;
+            height: 70px;
+            position: relative;
+        }
+
+        .fingerprint img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0.7;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: transparent;
+            border: 1px solid #6B7280;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #8B92A0;
+        }
+
+        .input-field::placeholder {
+            color: transparent;
+        }
+
+        .input-label {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 300;
+        }
+
+        .submit-button {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        .placeholder-logo {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .placeholder-fingerprint {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            position: relative;
+        }
+
+        .placeholder-fingerprint::before {
+            content: '🔒';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            opacity: 0.5;
+        }
+
+        .error-message {
+            color: #f44336;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 8px;
+            padding: 8px;
+            background-color: rgba(244, 67, 54, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .loading {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            text-align: center;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <!-- Logo/Icon Section -->
+        <div class="logo-section">
+            <!-- Logo Image -->
+            <div class="logo-image">
+                <img src="/TruAi/assets/images/TruAi-transparent-bg.png" alt="TruAi Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="placeholder-logo" style="display: none;">T</div>
+            </div>
+
+            <!-- TruAi Text -->
+            <h1 class="title">TruAi</h1>
+
+            <!-- Divider Line with dots -->
+            <div class="divider-line">
+                <div class="divider-dot"></div>
+                <div class="divider-bar"></div>
+                <div class="divider-dot"></div>
+            </div>
+
+            <!-- Small Icon -->
+            <div class="small-icon">
+                <div class="small-icon-bar"></div>
+                <div class="small-icon-bar"></div>
+            </div>
+
+            <!-- Tagline -->
+            <p class="tagline">WEB SOLUTIONS MADE SIMPLE</p>
+
+            <!-- Website -->
+            <p class="website">GENIOUSWDSOLUTIONS.COM</p>
+        </div>
+
+        <!-- Login Section -->
+        <div class="login-header">
+            <h2 class="login-title">Login</h2>
+            <p class="login-subtitle">Access Restricted</p>
+        </div>
+
+        <!-- Fingerprint Icon -->
+        <div class="fingerprint-container">
+            <div class="fingerprint">
+                <div class="placeholder-fingerprint"></div>
+            </div>
+        </div>
+
+        <!-- Login Form -->
+        <form class="login-form" id="loginForm">
+            <!-- Username Field -->
+            <div class="input-wrapper">
+                <input
+                    id="username"
+                    type="text"
+                    class="input-field"
+                    placeholder="Username"
+                    autocomplete="username"
+                    required
+                    autofocus
+                />
+            </div>
+
+            <!-- User Label -->
+            <div class="input-label">
+                <label for="username">User</label>
+            </div>
+
+            <!-- Password Field -->
+            <div class="input-wrapper">
+                <input
+                    id="password"
+                    type="password"
+                    class="input-field"
+                    placeholder="Password"
+                    autocomplete="current-password"
+                    required
+                />
+            </div>
+
+            <!-- Password Label -->
+            <div class="input-label">
+                <label for="password">Password</label>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message"></div>
+
+            <!-- Loading Message -->
+            <div id="loadingMessage" class="loading"></div>
+
+            <!-- Submit Button - Hidden but functional -->
+            <button type="submit" class="submit-button">Login</button>
+        </form>
+    </div>
+
+    <script src="/TruAi/assets/js/api.js"></script>
+    <script src="/TruAi/assets/js/crypto.js"></script>
+    <script>
+        // Initialize API and Crypto
+        const api = new TruAiAPI();
+        const crypto = new TruAiCrypto();
+        
+        // Check if encryption is supported
+        const encryptionSupported = TruAiCrypto.isSupported();
+        let encryptionReady = false;
+        
+        if (encryptionSupported) {
+            crypto.initialize().then(ready => {
+                encryptionReady = ready;
+                if (ready) {
+                    console.log('🔒 Encrypted login enabled');
+                }
+            });
+        }
+
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            
+            // Hide error, show loading
+            errorMessage.classList.remove('show');
+            loadingMessage.classList.add('show');
+            loadingMessage.textContent = encryptionReady ? '🔒 Encrypting & Signing in...' : 'Signing in...';
+            
+            // Disable inputs
+            usernameInput.disabled = true;
+            passwordInput.disabled = true;
+            
+            try {
+                let result;
+                
+                if (encryptionReady) {
+                    // Encrypted login
+                    const encryptedCredentials = await crypto.encryptCredentials(username, password);
+                    result = await api.loginEncrypted(
+                        encryptedCredentials.encrypted_data,
+                        encryptedCredentials.session_id
+                    );
+                } else {
+                    // Standard login
+                    result = await api.login(username, password);
+                }
+                
+                if (result.success) {
+                    // Update CSRF token
+                    if (window.TRUAI_CONFIG) {
+                        window.TRUAI_CONFIG.CSRF_TOKEN = result.csrf_token;
+                        window.TRUAI_CONFIG.IS_AUTHENTICATED = true;
+                        window.TRUAI_CONFIG.USERNAME = result.username;
+                    }
+                    
+                    // Show success and redirect
+                    loadingMessage.textContent = '✅ Login successful! Redirecting...';
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/TruAi/';
+                    }, 500);
+                } else {
+                    throw new Error(result.message || 'Login failed');
+                }
+            } catch (error) {
+                // Redirect to Access Denied page with error message
+                const errorMsg = encodeURIComponent(error.message || 'Login failed. Please check your credentials.');
+                window.location.href = `/TruAi/access-denied.html?error=${errorMsg}`;
+            }
+        });
+
+        // Add enter key support for form submission
+        document.querySelectorAll('.input-field').forEach(function(input) {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+
+        // Check if already authenticated
+        window.addEventListener('DOMContentLoaded', function() {
+            fetch('/TruAi/api/v1/auth/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        // Already authenticated, redirect to dashboard
+                        window.location.href = '/TruAi/';
+                    }
+                })
+                .catch(err => {
+                    // Not authenticated or API error, show login form
+                    console.log('Authentication check failed, showing login form');
+                });
+        });
+    </script>
+</body>
+</html>
