@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi - Loading</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #34383C;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .loading-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .loading-gif {
+            max-width: 100%;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .loading-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-weight: 300;
+            margin-top: 24px;
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% {
+                content: '.';
+            }
+            40% {
+                content: '..';
+            }
+            60%, 80% {
+                content: '...';
+            }
+            100% {
+                content: '';
+            }
+        }
+
+        .username-display {
+            color: #0E94E8;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 16px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <img 
+            src="/TruAi/assets/images/TruAi-Loading-Entrance.gif" 
+            alt="Loading TruAi" 
+            class="loading-gif"
+            onerror="this.style.display='none'; document.querySelector('.loading-text').textContent='Loading TruAi...';"
+        />
+        
+        <div class="loading-text">
+            Loading TruAi<span class="loading-dots"></span>
+        </div>
+
+        <div class="username-display" id="usernameDisplay"></div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect') || '/TruAi/';
+        const username = urlParams.get('username') || '';
+
+        // Display username if provided
+        if (username) {
+            document.getElementById('usernameDisplay').textContent = `Welcome, ${username}`;
+        }
+
+        // Wait for GIF to play (estimate 3-5 seconds for typical loading animation)
+        // Then redirect to target URL
+        const gif = document.querySelector('.loading-gif');
+        let redirectTimer;
+
+        // Try to detect when GIF finishes (if it loops, redirect after a set time)
+        // Most loading GIFs loop, so we'll redirect after a reasonable duration
+        const loadingDuration = 4000; // 4 seconds - adjust based on your GIF length
+
+        redirectTimer = setTimeout(() => {
+            // Redirect to welcome page first, then to dashboard
+            window.location.href = `/TruAi/welcome.html?username=${encodeURIComponent(username)}&redirect=${encodeURIComponent(redirectUrl)}`;
+        }, loadingDuration);
+
+        // If user clicks anywhere, redirect to welcome page
+        document.addEventListener('click', () => {
+            clearTimeout(redirectTimer);
+            window.location.href = `/TruAi/welcome.html?username=${encodeURIComponent(username)}&redirect=${encodeURIComponent(redirectUrl)}`;
+        });
+
+        // Also redirect on any keypress
+        document.addEventListener('keydown', () => {
+            clearTimeout(redirectTimer);
+            window.location.href = `/TruAi/welcome.html?username=${encodeURIComponent(username)}&redirect=${encodeURIComponent(redirectUrl)}`;
+        });
+
+        // Fallback: if GIF fails to load, redirect after 2 seconds
+        gif.addEventListener('error', () => {
+            clearTimeout(redirectTimer);
+            setTimeout(() => {
+                window.location.href = `/TruAi/welcome.html?username=${encodeURIComponent(username)}&redirect=${encodeURIComponent(redirectUrl)}`;
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
