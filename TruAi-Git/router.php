@@ -12,19 +12,94 @@
 
 // Get the requested file path
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// Handle /TruAi/ prefix for static files
 $requestFile = __DIR__ . $requestUri;
+if (strpos($requestUri, '/TruAi/') === 0) {
+    // Remove /TruAi prefix for file lookup
+    $requestFile = __DIR__ . preg_replace('#^/TruAi#', '', $requestUri);
+}
 
 // Check if this is a static file request (CSS, JS, images, etc.)
 if (preg_match('/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json)$/i', $requestUri)) {
     // Check if file exists
     if (file_exists($requestFile) && is_file($requestFile)) {
+        // Set appropriate content type
+        $ext = strtolower(pathinfo($requestFile, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'json' => 'application/json',
+            'ico' => 'image/x-icon'
+        ];
+        if (isset($mimeTypes[$ext])) {
+            header('Content-Type: ' . $mimeTypes[$ext]);
+        }
         // Serve static file directly
-        return false; // Let PHP built-in server handle it
+        readfile($requestFile);
+        return true;
     }
     // File doesn't exist, return 404
     http_response_code(404);
-    echo "File not found";
+    echo "File not found: " . htmlspecialchars($requestUri);
     return true;
+}
+
+// Check if this is a welcome page request
+if (strpos($requestUri, '/welcome') !== false || strpos($requestUri, '/welcome.html') !== false) {
+    if (file_exists(__DIR__ . '/welcome.html')) {
+        readfile(__DIR__ . '/welcome.html');
+        return true;
+    }
+}
+
+// Check if this is a loading page request
+if (strpos($requestUri, '/loading') !== false || strpos($requestUri, '/loading.html') !== false) {
+    if (file_exists(__DIR__ . '/loading.html')) {
+        readfile(__DIR__ . '/loading.html');
+        return true;
+    }
+}
+
+// Check if this is an access page request
+if (strpos($requestUri, '/access-granted') !== false || strpos($requestUri, '/access-granted.html') !== false) {
+    if (file_exists(__DIR__ . '/access-granted.html')) {
+        readfile(__DIR__ . '/access-granted.html');
+        return true;
+    }
+}
+
+if (strpos($requestUri, '/access-denied') !== false || strpos($requestUri, '/access-denied.html') !== false) {
+    if (file_exists(__DIR__ . '/access-denied.html')) {
+        readfile(__DIR__ . '/access-denied.html');
+        return true;
+    }
+}
+
+// Check if this is a login portal request
+if (strpos($requestUri, '/login-portal') !== false || strpos($requestUri, '/login-portal.html') !== false) {
+    // Serve login portal page
+    if (file_exists(__DIR__ . '/login-portal.html')) {
+        readfile(__DIR__ . '/login-portal.html');
+        return true;
+    }
+}
+
+// Check if this is a gateway request
+if (strpos($requestUri, '/gateway') !== false || strpos($requestUri, '/gateway.php') !== false || strpos($requestUri, '/gateway.html') !== false) {
+    // Serve gateway page
+    if (file_exists(__DIR__ . '/gateway.html')) {
+        readfile(__DIR__ . '/gateway.html');
+        return true;
+    } elseif (file_exists(__DIR__ . '/gateway.php')) {
+        require_once __DIR__ . '/gateway.php';
+        return true;
+    }
 }
 
 // Check if this is an API request
@@ -35,6 +110,18 @@ if (strpos($requestUri, '/api/') !== false) {
     require_once __DIR__ . '/backend/auth.php';
     require_once __DIR__ . '/backend/router.php';
     
+    // Enforce localhost access
+    Auth::enforceLocalhost();
+    
+    // Handle API request
+    $router = new Router();
+    $router->dispatch();
+    return true;
+}
+
+// All other requests go to index.php for frontend
+require_once __DIR__ . '/index.php';
+return true;    
     // Enforce localhost access
     Auth::enforceLocalhost();
     
