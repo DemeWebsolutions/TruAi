@@ -4,7 +4,55 @@
 
 TruAi provides three manual, selection-scoped AI tools for code editing and understanding. All tools require explicit user action, send only selected text to the AI, and follow strict governance constraints.
 
-## Available Tools
+**For complete documentation, see the [V1 Operator Guide](./V1_OPERATOR_GUIDE.md).**
+
+## Quick Reference
+
+### Available Tools
+
+1. **[AI Rewrite](./V1_OPERATOR_GUIDE.md#1-ai-rewrite)** - Transform code with manual approval
+   - Keyboard: `Cmd/Ctrl+Enter`
+   - Context menu or toolbar button
+   - Side-by-side diff preview
+
+2. **[Explain Selection](./V1_OPERATOR_GUIDE.md#2-explain-selection)** - Get read-only code explanation
+   - Keyboard: `Cmd/Ctrl+Shift+Enter`
+   - Dropdown menu or context menu
+   - No code modifications
+
+3. **[Add Comments](./V1_OPERATOR_GUIDE.md#3-add-comments)** - Generate commented code with approval
+   - Dropdown menu or context menu
+   - Preserves all functionality
+   - Manual apply/reject
+
+## Key Features
+
+- **Selection-Scoped:** Maximum 4000 characters, no whole-file analysis
+- **Manual-Only:** No automatic suggestions or background processes
+- **Forensic Tracking:** Every operation has unique ID (format: `TRUAI_<timestamp>_<hash>`)
+- **Keyboard Accessible:** Full keyboard navigation with focus trap
+- **No Auto-Apply:** All changes require explicit approval
+
+## Constraints
+
+✅ No new endpoints  
+✅ No new frameworks/libraries  
+✅ Manual-only triggers  
+✅ Model routing hidden from users  
+✅ Selection-scoped requests only  
+✅ Never auto-apply changes
+
+## Documentation
+
+- **[V1 Operator Guide](./V1_OPERATOR_GUIDE.md)** - Complete feature and usage documentation
+- **[Development Testing](./DEV_TESTING.md)** - Manual testing procedures
+- **[Inline Rewrite Feature](./INLINE_REWRITE_FEATURE.md)** - Phase 5 implementation details
+
+---
+
+**Last Updated:** 2026-01-16  
+**Version:** Phase 8  
+**Status:** Documentation consolidated into V1 Operator Guide
 
 ### 1. AI Rewrite (Phase 5)
 **Purpose:** Transform selected code according to user instructions with manual approval.

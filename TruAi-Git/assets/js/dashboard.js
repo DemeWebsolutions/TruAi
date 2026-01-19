@@ -44,6 +44,9 @@ let inlineRewritePending = false; // Track if rewrite is in progress
 // Constants
 const MAX_SELECTION_SIZE = 4000; // Maximum characters for selection rewrite
 
+// Focus trap state
+let lastFocusedElement = null; // Store element that opened modal for focus restoration
+
 // AI Prompt Templates
 const AI_PROMPTS = {
     EXPLAIN: (additionalContext) => 
@@ -61,6 +64,43 @@ function generateForensicId() {
     const randomPart = Math.random().toString(36).substring(2, 15);
     const hash = btoa(timestamp + randomPart).substring(0, 16).replace(/[^a-zA-Z0-9]/g, '');
     return `TRUAI_${timestamp}_${hash}`;
+}
+
+/**
+ * Setup focus trap for modal accessibility
+ * Ensures Tab key cycles within modal and doesn't escape to background
+ */
+function setupFocusTrap(modalElement) {
+    const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    
+    const keyHandler = (e) => {
+        if (e.key !== 'Tab') return;
+        
+        const focusableElements = Array.from(modalElement.querySelectorAll(focusableSelectors))
+            .filter(el => !el.disabled && el.offsetParent !== null);
+        
+        if (focusableElements.length === 0) return;
+        
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        if (e.shiftKey) {
+            // Shift+Tab: if on first element, wrap to last
+            if (document.activeElement === firstElement) {
+                e.preventDefault();
+                lastElement.focus();
+            }
+        } else {
+            // Tab: if on last element, wrap to first
+            if (document.activeElement === lastElement) {
+                e.preventDefault();
+                firstElement.focus();
+            }
+        }
+    };
+    
+    modalElement.addEventListener('keydown', keyHandler);
+    return keyHandler; // Return for cleanup if needed
 }
 
 /**
@@ -87,6 +127,9 @@ function getEditorSelection() {
  * Show inline rewrite prompt modal
  */
 function showInlineRewritePrompt() {
+    // Store currently focused element for restoration
+    lastFocusedElement = document.activeElement;
+    
     // Check if modal already exists
     if (document.getElementById('inline-rewrite-modal')) {
         return; // Prevent duplicate modals
@@ -123,10 +166,10 @@ function showInlineRewritePrompt() {
     modal.id = 'inline-rewrite-modal';
     modal.className = 'inline-rewrite-modal';
     modal.innerHTML = `
-        <div class="inline-rewrite-content">
+        <div class="inline-rewrite-content" role="dialog" aria-modal="true" aria-labelledby="rewrite-modal-title">
             <div class="inline-rewrite-header">
-                <h3>AI Rewrite - Selected Text</h3>
-                <button class="inline-rewrite-close" onclick="closeInlineRewriteModal()">×</button>
+                <h3 id="rewrite-modal-title">AI Rewrite - Selected Text</h3>
+                <button class="inline-rewrite-close" onclick="closeInlineRewriteModal()" aria-label="Close modal">×</button>
             </div>
             <div class="inline-rewrite-body">
                 <div class="selected-code-preview">
@@ -141,6 +184,7 @@ function showInlineRewritePrompt() {
                     class="rewrite-instruction" 
                     placeholder="Enter instructions for how to rewrite this code (e.g., 'Add error handling', 'Optimize for performance', 'Add comments')"
                     rows="3"
+                    aria-label="Rewrite instructions"
                 >${escapeHtml(lastRewriteInstruction)}</textarea>
                 <div class="inline-rewrite-actions">
                     <button class="btn-secondary" onclick="closeInlineRewriteModal()">Cancel</button>
@@ -151,6 +195,18 @@ function showInlineRewritePrompt() {
     `;
     
     document.body.appendChild(modal);
+    
+    // Setup focus trap
+    setupFocusTrap(modal);
+    
+    // Setup Escape key handler
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeInlineRewriteModal();
+        }
+    };
+    modal.addEventListener('keydown', escapeHandler);
     
     // Focus the instruction input
     setTimeout(() => {
@@ -193,6 +249,12 @@ function closeInlineRewriteModal() {
     const modal = document.getElementById('inline-rewrite-modal');
     if (modal) {
         modal.remove();
+    }
+    
+    // Restore focus to previously focused element
+    if (lastFocusedElement && lastFocusedElement.focus) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
     }
 }
 
@@ -388,16 +450,19 @@ function cancelInlineRewrite() {
 function showDiffPreviewModal() {
     if (!diffPreviewData) return;
     
+    // Store currently focused element for restoration
+    lastFocusedElement = document.activeElement;
+    
     const wrapClass = diffWrapLines ? 'wrap-lines' : 'no-wrap';
     
     const modal = document.createElement('div');
     modal.id = 'diff-preview-modal';
     modal.className = 'diff-preview-modal';
     modal.innerHTML = `
-        <div class="diff-preview-content">
+        <div class="diff-preview-content" role="dialog" aria-modal="true" aria-labelledby="diff-modal-title">
             <div class="diff-preview-header">
-                <h3>Code Rewrite Preview</h3>
-                <button class="diff-preview-close" onclick="closeDiffPreview()">×</button>
+                <h3 id="diff-modal-title">Code Rewrite Preview</h3>
+                <button class="diff-preview-close" onclick="closeDiffPreview()" aria-label="Close modal">×</button>
             </div>
             <div class="diff-preview-body">
                 <div class="diff-instruction">
@@ -406,7 +471,7 @@ function showDiffPreviewModal() {
                 <div class="diff-forensic">
                     <strong style="color: var(--text-secondary);">Forensic ID:</strong> 
                     <code class="forensic-id" title="Click to copy">${escapeHtml(diffPreviewData.forensicId)}</code>
-                    <button class="btn-copy-forensic" id="copyForensicBtn" data-forensic-id="${escapeHtml(diffPreviewData.forensicId)}" title="Copy to clipboard">
+                    <button class="btn-copy-forensic" id="copyForensicBtn" data-forensic-id="${escapeHtml(diffPreviewData.forensicId)}" title="Copy to clipboard" aria-label="Copy forensic ID">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -415,7 +480,7 @@ function showDiffPreviewModal() {
                 </div>
                 <div class="diff-controls">
                     <label class="wrap-toggle">
-                        <input type="checkbox" id="wrapLinesToggle" ${diffWrapLines ? 'checked' : ''} onchange="toggleLineWrap()">
+                        <input type="checkbox" id="wrapLinesToggle" ${diffWrapLines ? 'checked' : ''} onchange="toggleLineWrap()" aria-label="Wrap lines in diff view">
                         <span>Wrap lines</span>
                     </label>
                 </div>
@@ -430,14 +495,14 @@ function showDiffPreviewModal() {
                     </div>
                 </div>
                 <div class="diff-clipboard-actions">
-                    <button class="btn-clipboard" onclick="copyRewrittenText()" title="Copy rewritten text to clipboard">
+                    <button class="btn-clipboard" onclick="copyRewrittenText()" title="Copy rewritten text to clipboard" aria-label="Copy rewritten text to clipboard">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                         </svg>
                         Copy Rewritten
                     </button>
-                    <button class="btn-clipboard" onclick="copyDiffPatch()" title="Copy unified diff patch to clipboard">
+                    <button class="btn-clipboard" onclick="copyDiffPatch()" title="Copy unified diff patch to clipboard" aria-label="Copy unified diff patch to clipboard">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
                             <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -454,6 +519,9 @@ function showDiffPreviewModal() {
     `;
     
     document.body.appendChild(modal);
+    
+    // Setup focus trap
+    setupFocusTrap(modal);
     
     // Add keyboard event listener for Esc and Enter
     setupDiffKeyboardHandlers();
@@ -551,6 +619,12 @@ function closeDiffPreview() {
         modal.remove();
     }
     diffPreviewData = null;
+    
+    // Restore focus to previously focused element
+    if (lastFocusedElement && lastFocusedElement.focus) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
+    }
 }
 
 /**
@@ -738,6 +812,9 @@ function copyToClipboard(text, successMessage) {
  * Show Explain Selection prompt modal
  */
 function showExplainSelectionPrompt() {
+    // Store currently focused element for restoration
+    lastFocusedElement = document.activeElement;
+    
     // Check if modal already exists
     if (document.getElementById('explain-selection-modal')) {
         return;
@@ -764,10 +841,10 @@ function showExplainSelectionPrompt() {
     modal.id = 'explain-selection-modal';
     modal.className = 'inline-rewrite-modal';
     modal.innerHTML = `
-        <div class="inline-rewrite-content">
+        <div class="inline-rewrite-content" role="dialog" aria-modal="true" aria-labelledby="explain-modal-title">
             <div class="inline-rewrite-header">
-                <h3>Explain Selection</h3>
-                <button class="inline-rewrite-close" onclick="closeExplainSelectionModal()">×</button>
+                <h3 id="explain-modal-title">Explain Selection</h3>
+                <button class="inline-rewrite-close" onclick="closeExplainSelectionModal()" aria-label="Close modal">×</button>
             </div>
             <div class="inline-rewrite-body">
                 <div class="selected-code-preview">
@@ -779,6 +856,7 @@ function showExplainSelectionPrompt() {
                     class="rewrite-instruction" 
                     placeholder="Optional: Add specific questions or context (or leave empty for general explanation)"
                     rows="2"
+                    aria-label="Additional questions or context"
                 ></textarea>
                 <div class="inline-rewrite-actions">
                     <button class="btn-secondary" onclick="closeExplainSelectionModal()">Cancel</button>
@@ -789,6 +867,18 @@ function showExplainSelectionPrompt() {
     `;
     
     document.body.appendChild(modal);
+    
+    // Setup focus trap
+    setupFocusTrap(modal);
+    
+    // Setup Escape key handler
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeExplainSelectionModal();
+        }
+    };
+    modal.addEventListener('keydown', escapeHandler);
     
     // Focus the instruction input
     setTimeout(() => {
@@ -806,6 +896,12 @@ function closeExplainSelectionModal() {
     const modal = document.getElementById('explain-selection-modal');
     if (modal) {
         modal.remove();
+    }
+    
+    // Restore focus to previously focused element
+    if (lastFocusedElement && lastFocusedElement.focus) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
     }
 }
 
@@ -884,20 +980,23 @@ async function executeExplainSelection() {
  * Show explanation result modal
  */
 function showExplanationModal(explanation, forensicId) {
+    // Store currently focused element for restoration
+    lastFocusedElement = document.activeElement;
+    
     const modal = document.createElement('div');
     modal.id = 'explanation-result-modal';
     modal.className = 'diff-preview-modal';
     modal.innerHTML = `
-        <div class="diff-preview-content">
+        <div class="diff-preview-content" role="dialog" aria-modal="true" aria-labelledby="explanation-modal-title">
             <div class="diff-preview-header">
-                <h3>Code Explanation</h3>
-                <button class="diff-preview-close" id="closeExplanationBtn">×</button>
+                <h3 id="explanation-modal-title">Code Explanation</h3>
+                <button class="diff-preview-close" id="closeExplanationBtn" aria-label="Close modal">×</button>
             </div>
             <div class="diff-preview-body">
                 <div class="diff-forensic">
                     <strong style="color: var(--text-secondary);">Forensic ID:</strong> 
                     <code class="forensic-id" title="Click to copy">${escapeHtml(forensicId)}</code>
-                    <button class="btn-copy-forensic" id="copyExplanationForensicBtn" title="Copy to clipboard">
+                    <button class="btn-copy-forensic" id="copyExplanationForensicBtn" title="Copy to clipboard" aria-label="Copy forensic ID">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -908,7 +1007,7 @@ function showExplanationModal(explanation, forensicId) {
                     <pre class="explanation-text">${escapeHtml(explanation)}</pre>
                 </div>
                 <div class="diff-preview-actions">
-                    <button class="btn-clipboard" id="copyExplanationTextBtn">
+                    <button class="btn-clipboard" id="copyExplanationTextBtn" aria-label="Copy explanation to clipboard">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -925,6 +1024,9 @@ function showExplanationModal(explanation, forensicId) {
     
     // Store explanation for copy function
     window.currentExplanation = explanation;
+    
+    // Setup focus trap
+    setupFocusTrap(modal);
     
     // Setup event listeners
     const closeBtn = document.getElementById('closeExplanationBtn');
@@ -964,6 +1066,12 @@ function closeExplanationModal() {
         modal.remove();
     }
     window.currentExplanation = null;
+    
+    // Restore focus to previously focused element
+    if (lastFocusedElement && lastFocusedElement.focus) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
+    }
 }
 
 /**
@@ -979,6 +1087,9 @@ function copyExplanation() {
  * Show Add Comments prompt modal
  */
 function showAddCommentsPrompt() {
+    // Store currently focused element for restoration
+    lastFocusedElement = document.activeElement;
+    
     // Check if modal already exists
     if (document.getElementById('add-comments-modal')) {
         return;
@@ -1005,10 +1116,10 @@ function showAddCommentsPrompt() {
     modal.id = 'add-comments-modal';
     modal.className = 'inline-rewrite-modal';
     modal.innerHTML = `
-        <div class="inline-rewrite-content">
+        <div class="inline-rewrite-content" role="dialog" aria-modal="true" aria-labelledby="add-comments-modal-title">
             <div class="inline-rewrite-header">
-                <h3>Add Comments/Docstrings</h3>
-                <button class="inline-rewrite-close" onclick="closeAddCommentsModal()">×</button>
+                <h3 id="add-comments-modal-title">Add Comments/Docstrings</h3>
+                <button class="inline-rewrite-close" onclick="closeAddCommentsModal()" aria-label="Close modal">×</button>
             </div>
             <div class="inline-rewrite-body">
                 <div class="selected-code-preview">
@@ -1020,6 +1131,7 @@ function showAddCommentsPrompt() {
                     class="rewrite-instruction" 
                     placeholder="Optional: Specify comment style or focus areas (e.g., 'JSDoc style', 'focus on complex logic')"
                     rows="2"
+                    aria-label="Comment style instructions"
                 ></textarea>
                 <div class="inline-rewrite-actions">
                     <button class="btn-secondary" onclick="closeAddCommentsModal()">Cancel</button>
@@ -1030,6 +1142,18 @@ function showAddCommentsPrompt() {
     `;
     
     document.body.appendChild(modal);
+    
+    // Setup focus trap
+    setupFocusTrap(modal);
+    
+    // Setup Escape key handler
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeAddCommentsModal();
+        }
+    };
+    modal.addEventListener('keydown', escapeHandler);
     
     // Focus the instruction input
     setTimeout(() => {
@@ -1047,6 +1171,12 @@ function closeAddCommentsModal() {
     const modal = document.getElementById('add-comments-modal');
     if (modal) {
         modal.remove();
+    }
+    
+    // Restore focus to previously focused element
+    if (lastFocusedElement && lastFocusedElement.focus) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
     }
 }
 
@@ -1200,6 +1330,7 @@ function showEditorContextMenu(x, y) {
     const menu = document.createElement('div');
     menu.id = 'editor-context-menu';
     menu.className = 'editor-context-menu';
+    menu.setAttribute('role', 'menu');
     menu.style.cssText = `
         position: fixed;
         left: ${x}px;
@@ -1213,29 +1344,73 @@ function showEditorContextMenu(x, y) {
     `;
     
     menu.innerHTML = `
-        <div class="context-menu-item" onclick="showInlineRewritePrompt(); closeEditorContextMenu();">
+        <button class="context-menu-item" role="menuitem" tabindex="0" data-action="rewrite">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
             </svg>
             AI Rewrite Selection
-        </div>
-        <div class="context-menu-item" onclick="showExplainSelectionPrompt(); closeEditorContextMenu();">
+        </button>
+        <button class="context-menu-item" role="menuitem" tabindex="-1" data-action="explain">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
             </svg>
             Explain Selection
-        </div>
-        <div class="context-menu-item" onclick="showAddCommentsPrompt(); closeEditorContextMenu();">
+        </button>
+        <button class="context-menu-item" role="menuitem" tabindex="-1" data-action="add-comments">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
             Add Comments
-        </div>
+        </button>
     `;
     
     document.body.appendChild(menu);
+    
+    // Add keyboard navigation
+    menu.addEventListener('keydown', function(e) {
+        const items = Array.from(menu.querySelectorAll('.context-menu-item'));
+        const currentIndex = items.indexOf(document.activeElement);
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+            items[nextIndex].focus();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+            items[prevIndex].focus();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeEditorContextMenu();
+        } else if (e.key === 'Enter' && document.activeElement.classList.contains('context-menu-item')) {
+            e.preventDefault();
+            document.activeElement.click();
+        }
+    });
+    
+    // Add click handlers
+    menu.querySelectorAll('.context-menu-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const action = this.dataset.action;
+            closeEditorContextMenu();
+            
+            if (action === 'rewrite') {
+                showInlineRewritePrompt();
+            } else if (action === 'explain') {
+                showExplainSelectionPrompt();
+            } else if (action === 'add-comments') {
+                showAddCommentsPrompt();
+            }
+        });
+    });
+    
+    // Focus first item
+    const firstItem = menu.querySelector('.context-menu-item');
+    if (firstItem) {
+        setTimeout(() => firstItem.focus(), 10);
+    }
     
     // Close menu when clicking outside
     setTimeout(() => {
@@ -2703,12 +2878,43 @@ function setupDashboardListeners() {
             e.stopPropagation();
             const isVisible = aiToolsDropdown.style.display === 'block';
             aiToolsDropdown.style.display = isVisible ? 'none' : 'block';
+            
+            // Focus first option when dropdown opens
+            if (!isVisible) {
+                const firstOption = aiToolsDropdown.querySelector('.ai-tool-option');
+                if (firstOption) {
+                    setTimeout(() => firstOption.focus(), 10);
+                }
+            }
         });
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             if (aiToolsDropdown && !aiToolsDropdownBtn.contains(e.target) && !aiToolsDropdown.contains(e.target)) {
                 aiToolsDropdown.style.display = 'none';
+            }
+        });
+        
+        // Keyboard navigation for dropdown
+        aiToolsDropdown.addEventListener('keydown', function(e) {
+            const options = Array.from(aiToolsDropdown.querySelectorAll('.ai-tool-option'));
+            const currentIndex = options.indexOf(document.activeElement);
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextIndex = currentIndex < options.length - 1 ? currentIndex + 1 : 0;
+                options[nextIndex].focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevIndex = currentIndex > 0 ? currentIndex - 1 : options.length - 1;
+                options[prevIndex].focus();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                aiToolsDropdown.style.display = 'none';
+                aiToolsDropdownBtn.focus();
+            } else if (e.key === 'Enter' && document.activeElement.classList.contains('ai-tool-option')) {
+                e.preventDefault();
+                document.activeElement.click();
             }
         });
         

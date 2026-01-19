@@ -2,13 +2,50 @@
 
 ## Overview
 
-This document describes manual test procedures for validating TruAi's governed AI API integration. These tests ensure that the unified TruAi Core integration behaves correctly with metadata and that governance constraints are properly enforced.
+This document describes manual test procedures for validating TruAi's selection-scoped AI tools and governed API integration. For comprehensive information about the AI tools, features, and constraints, see the **[V1 Operator Guide](./V1_OPERATOR_GUIDE.md)**.
+
+**Purpose:** Focused testing procedures for developers validating TruAi functionality  
+**Version:** 1.2.0  
+**Last Updated:** 2026-01-16
+
+## Quick Links
+
+- **[V1 Operator Guide](./V1_OPERATOR_GUIDE.md)** - Complete feature documentation and operator information
+- **Dev Test Harness:** `TruAi-Git/dev/ai-api-harness.html`
+- **Selection Tools:** AI Rewrite, Explain Selection, Add Comments
+- **Accessibility:** Keyboard navigation and ARIA compliance
 
 ## Prerequisites
 
 - TruAi application running locally
 - Valid API keys configured in settings
 - Admin access to the TruAi dashboard
+- Modern browser with JavaScript enabled
+
+## Testing Quick Start
+
+### 1. Start TruAi
+
+```bash
+cd TruAi-Git
+./start.sh
+```
+
+### 2. Access Points
+
+- **Main Dashboard:** `http://localhost:8000/index.php`
+- **Dev Harness:** `http://localhost:8000/dev/ai-api-harness.html` (DEV ONLY)
+
+### 3. Test Coverage Areas
+
+- ✅ Selection-scoped AI tools (Rewrite, Explain, Add Comments)
+- ✅ Accessibility and keyboard navigation
+- ✅ Guardrails and safety constraints
+- ✅ Privacy toggle persistence
+- ✅ Metadata passthrough and allowlisting
+- ✅ Forensic ID tracking
+
+---
 
 ## Dev Test Harness
 
