@@ -21,10 +21,12 @@ class SettingsService {
             'minimapEnabled' => true
         ],
         'ai' => [
+            'provider' => 'openai',
             'openaiApiKey' => '',
             'anthropicApiKey' => '',
             'model' => 'gpt-4',
-            'temperature' => 0.7
+            'temperature' => 0.7,
+            'enableStreaming' => false
         ],
         'appearance' => [
             'theme' => 'dark'

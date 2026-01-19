@@ -49,6 +49,9 @@ class Router {
     public function dispatch() {
         $method = $_SERVER['REQUEST_METHOD'];
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        
+        // Strip /TruAi prefix if present
+        $path = preg_replace('#^/TruAi#', '', $path);
 
         // Handle CORS
         if (CORS_ENABLED) {
