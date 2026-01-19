@@ -210,6 +210,32 @@ if (!$auth->isAuthenticated() && $page !== 'login') {
             display: block;
         }
 
+        .status-info {
+            color: #8b8d98;
+        }
+
+        .status-success {
+            color: #4ade80;
+        }
+
+        .status-error {
+            color: #f87171;
+        }
+
+        #saveSettings:hover {
+            background: #0077b3;
+        }
+
+        #resetSettings:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #revealApiKey:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
 
         .text-entry {
             width: 100%;
@@ -378,6 +404,96 @@ if (!$auth->isAuthenticated() && $page !== 'login') {
 
         <!-- Center Panel: Text Entry for AI -->
         <div class="panel center-panel" id="centerPanel" style="background: rgba(0, 0, 0, 0.07);">
+            <!-- Settings Panel (hidden by default, shown when expanded) -->
+            <div class="settings-panel">
+                <form id="aiSettingsForm" aria-label="AI Settings Configuration">
+                    <div style="margin-bottom: 16px;">
+                        <label for="aiProvider" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                            Provider
+                        </label>
+                        <input 
+                            type="text" 
+                            id="aiProvider" 
+                            name="provider"
+                            placeholder="openai"
+                            style="width: 100%; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px;"
+                            aria-required="true"
+                        />
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label for="aiApiKey" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                            API Key
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input 
+                                type="password" 
+                                id="aiApiKey" 
+                                name="api_key"
+                                placeholder="sk-..."
+                                style="flex: 1; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px; font-family: 'Monaco', 'Menlo', monospace;"
+                                aria-required="true"
+                            />
+                            <button 
+                                type="button" 
+                                id="revealApiKey"
+                                style="padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #8b8d98; font-size: 12px; cursor: pointer; white-space: nowrap;"
+                                aria-label="Toggle API key visibility"
+                            >
+                                Reveal
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label for="aiModel" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                            Default Model
+                        </label>
+                        <input 
+                            type="text" 
+                            id="aiModel" 
+                            name="default_model"
+                            placeholder="gpt-4"
+                            style="width: 100%; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px;"
+                            aria-required="true"
+                        />
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input 
+                                type="checkbox" 
+                                id="enableStreaming" 
+                                name="enable_streaming"
+                                style="width: 18px; height: 18px; cursor: pointer;"
+                                aria-label="Enable streaming responses"
+                            />
+                            <span style="color: #e8e9eb; font-size: 13px;">Enable Streaming</span>
+                        </label>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button 
+                            type="button" 
+                            id="saveSettings"
+                            style="padding: 10px 20px; background: #008ed6; border: none; border-radius: 6px; color: white; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s;"
+                            aria-label="Save settings"
+                        >
+                            Save
+                        </button>
+                        <button 
+                            type="button" 
+                            id="resetSettings"
+                            style="padding: 10px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; color: #e8e9eb; font-size: 13px; cursor: pointer; transition: all 0.2s;"
+                            aria-label="Reset settings to defaults"
+                        >
+                            Reset
+                        </button>
+                        <span id="settingsStatus" role="status" aria-live="polite" style="margin-left: 12px; font-size: 12px; color: #8b8d98;"></span>
+                    </div>
+                </form>
+            </div>
+            
             <textarea class="text-entry" id="aiTextEntry" placeholder="Standing by for instructions..." rows="4"></textarea>
             
             <div class="icon-row">
@@ -483,6 +599,7 @@ if (!$auth->isAuthenticated() && $page !== 'login') {
 
     <!-- Wire the AI client and enable accessible live region updates -->
     <script src="/TruAi/assets/js/ai-client.js"></script>
+    <script src="/TruAi/assets/js/settings-client.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         try {
