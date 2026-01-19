@@ -380,6 +380,12 @@
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Prevent double submission
+            if (this.classList.contains('submitting')) {
+                return;
+            }
+            this.classList.add('submitting');
+            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
@@ -436,14 +442,8 @@
             }
         });
 
-        // Add enter key support for form submission
-        document.querySelectorAll('.input-field').forEach(function(input) {
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-                }
-            });
-        });
+        // Enter key already triggers form submit via browser default behavior
+        // No need for manual handling - prevent duplicate submission by guarding in submit handler above
 
         // Check if already authenticated
         window.addEventListener('DOMContentLoaded', function() {
