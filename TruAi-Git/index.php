@@ -498,5 +498,13 @@ if (!$auth->isAuthenticated() && $page !== 'login') {
             settingsLink.classList.toggle('active');
         });
     </script>
+    <script src="/TruAi/assets/js/ai-client.js"></script>
+<script>
+  // initialize after TRUAI_CONFIG is present
+  document.addEventListener('DOMContentLoaded', () => {
+    const client = new TruAiAIClient(window.TRUAI_CONFIG);
+    client.attachToUI({ textareaId: 'aiTextEntry', responseId: 'aiResponse' });
+  });
+</script>
 </body>
 </html>
