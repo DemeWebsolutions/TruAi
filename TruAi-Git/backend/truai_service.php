@@ -119,14 +119,16 @@ class TruAiService {
         if (!empty($executions)) {
             $latestExecution = $executions[0];
             
-            // Get artifact content
-            $artifact = $this->db->query(
-                "SELECT content FROM artifacts WHERE id = :id LIMIT 1",
-                [':id' => $latestExecution['output_artifact']]
-            );
-            
-            if (!empty($artifact)) {
-                $task['output'] = $artifact[0]['content'];
+            // Get artifact content if output_artifact exists
+            if (!empty($latestExecution['output_artifact'])) {
+                $artifact = $this->db->query(
+                    "SELECT content FROM artifacts WHERE id = :id LIMIT 1",
+                    [':id' => $latestExecution['output_artifact']]
+                );
+                
+                if (!empty($artifact)) {
+                    $task['output'] = $artifact[0]['content'];
+                }
             }
         }
         

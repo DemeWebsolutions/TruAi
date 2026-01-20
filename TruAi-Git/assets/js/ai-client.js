@@ -73,9 +73,9 @@ class TruAiAIClient {
     // Create
     const createResp = await this.createTask(prompt, context);
 
-    // Check if backend returned immediate output
-    if (createResp.output && createResp.output.trim() !== '') {
-      // Task was auto-executed, return immediately
+    // Check if task was auto-executed (has output or EXECUTED status)
+    if ((createResp.output && createResp.output.trim() !== '') || createResp.status === 'EXECUTED') {
+      // Task was auto-executed, return immediately with normalized status
       return {
         ...createResp,
         status: 'completed' // Normalize status for frontend
@@ -85,15 +85,6 @@ class TruAiAIClient {
     // Otherwise expect a task_id to poll
     if (!createResp.task_id) {
       throw new Error('No task_id returned from create endpoint');
-    }
-    
-    // Check if status is already EXECUTED
-    if (createResp.status === 'EXECUTED') {
-      // No need to poll, task already executed
-      return {
-        ...createResp,
-        status: 'completed'
-      };
     }
     
     const final = await this.pollForResult(createResp.task_id, onProgress);
