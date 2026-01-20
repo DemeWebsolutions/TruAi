@@ -1,0 +1,845 @@
+<?php
+/**
+ * TruAi Server - Main Entry Point
+ * 
+ * HTML Server Version of Tru.ai
+ * 
+ * @package TruAi
+ * @version 1.0.0
+ * @copyright My Deme, LLC © 2026
+ */
+
+// Load configuration and dependencies
+require_once __DIR__ . '/backend/config.php';
+require_once __DIR__ . '/backend/database.php';
+require_once __DIR__ . '/backend/auth.php';
+require_once __DIR__ . '/backend/router.php';
+
+// Enforce localhost access
+Auth::enforceLocalhost();
+
+// Check if this is a gateway request
+$requestUri = $_SERVER['REQUEST_URI'];
+if (strpos($requestUri, '/gateway') !== false || strpos($requestUri, '/gateway.php') !== false) {
+    // Serve gateway page
+    require_once __DIR__ . '/gateway.php';
+    exit;
+}
+
+// Check if this is an API request
+if (strpos($requestUri, '/api/') !== false) {
+    // Handle API request
+    $router = new Router();
+    $router->dispatch();
+    exit;
+}
+
+// Check if this is a static asset request (CSS, JS, images)
+if (preg_match('/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i', $requestUri)) {
+    // Let PHP built-in server handle static files
+    return false;
+}
+
+// Serve frontend
+$page = $_GET['page'] ?? 'login';
+$auth = new Auth();
+
+// Check authentication - redirect to login portal if not authenticated
+if (!$auth->isAuthenticated() && $page !== 'login') {
+    // Redirect to login portal
+    header('Location: /TruAi/login-portal.html');
+    exit;
+}
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi - Start New Project</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: url('/TruAi/assets/images/TruAi-Background.jpg') center center / cover no-repeat fixed;
+            background-color: #1a1d23; /* Fallback color */
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            margin: 0;
+        }
+
+        .header-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px 20px;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .logo-container img {
+            width: 64px;
+            height: auto;
+            display: block;
+        }
+
+        .project-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #e8e9eb;
+        }
+
+        /* Full-width AI response area */
+        .ai-response-area {
+            width: 100%;
+            flex: 1;
+            padding: 20px 40px;
+            overflow-y: auto;
+            min-height: 300px;
+        }
+
+        .ai-response-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            color: rgba(231, 232, 235, 0.72);
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .ai-response-content.empty {
+            color: #8b8d98;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        /* Bottom panels container - 100% width */
+        .panels-container {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+            padding: 20px 40px 40px;
+            align-items: flex-start;
+        }
+
+        .panel {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .panel-label {
+            font-size: 12px;
+            color: #8b8d98;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        /* Left panel - Mini content view */
+        .content-panel {
+            flex: 0 0 200px;
+            min-height: 200px;
+        }
+
+        .file-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .file-item {
+            padding: 8px 0;
+            font-size: 13px;
+            color: #e8e9eb;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-icon {
+            width: 16px;
+            height: 16px;
+            color: #6b6d78;
+        }
+
+        /* Center panel - Text entry */
+        .center-panel {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .center-panel.expanded {
+            align-self: flex-start;
+            margin-top: auto;
+        }
+
+        .settings-panel {
+            display: none;
+            width: 100%;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .center-panel.expanded .settings-panel {
+            display: block;
+        }
+
+        .status-info {
+            color: #8b8d98;
+        }
+
+        .status-success {
+            color: #4ade80;
+        }
+
+        .status-error {
+            color: #f87171;
+        }
+
+        #saveSettings:hover {
+            background: #0077b3;
+        }
+
+        #resetSettings:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #revealApiKey:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+
+        .text-entry {
+            width: 100%;
+            min-height: 120px;
+            background: none;
+            border-radius: 0px;
+            padding: 16px;
+            font-size: 14px;
+            font-family: inherit;
+            text-align: center;
+            resize: vertical;
+            margin-bottom: 16px;
+            border: none;
+            color: #008ed6;
+            outline: none;
+        }
+
+        .text-entry:focus {
+            width: 100%;
+            min-height: 120px;
+            background: none;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 16px;
+            border: none;
+            color: #008ed6;
+            outline: none;
+        }
+
+        .text-entry::placeholder {
+            color: #8b8d98;
+        }
+
+        .icon-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .icon-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            color: #6b6d78;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: opacity 0.2s, color 0.2s;
+        }
+
+        .icon:hover {
+            opacity: 1;
+            color: #8b8d98;
+        }
+
+        .icon-button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .submit-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #008ed6;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 16px auto;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 142, 214, 0.3);
+        }
+
+        .submit-button:hover {
+            background: #0077b3;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 142, 214, 0.4);
+        }
+
+        .submit-button:active {
+            transform: scale(0.95);
+        }
+
+        .submit-button svg {
+            width: 24px;
+            height: 24px;
+            stroke: white;
+        }
+
+        .settings-link {
+            color: #6b6d78;
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .settings-link:hover,
+        .settings-link.active {
+            color: #008ed6;
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Right panel - Mini code review */
+        .code-review-panel {
+            flex: 0 0 200px;
+            min-height: 200px;
+        }
+
+        .code-review-content {
+            font-size: 12px;
+            color: #8b8d98;
+            line-height: 1.5;
+        }
+
+        .code-snippet {
+            background: rgba(20, 23, 29, 0.6);
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 8px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 11px;
+            color: #6b6d78;
+        }
+
+        @media (max-width: 1024px) {
+            .panels-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .content-panel,
+            .center-panel,
+            .code-review-panel {
+                flex: 1;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .ai-response-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header: Logo and Title -->
+    <div class="header-section">
+        <div class="logo-container">
+            <img src="/TruAi/assets/images/TruAi-dashboard-logo.png" alt="TruAi Logo" />
+        </div>
+        <h1 class="project-title">Start New Project</h1>
+    </div>
+
+    <!-- Full-width AI Response Area -->
+    <div class="ai-response-area">
+        <div class="ai-response-content empty" id="aiResponse" role="status" aria-live="polite" aria-atomic="true">
+            <!-- AI responses will appear here -->
+        </div>
+    </div>
+
+    <!-- Bottom Panels Container - Centered -->
+    <div class="panels-container">
+        <!-- Left Panel: Mini Content View (Files being worked on) -->
+        <div class="panel content-panel">
+            <div class="panel-label">Content</div>
+            <ul class="file-list" id="fileList">
+                <li class="file-item">
+                    <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <span>No files open</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Center Panel: Text Entry for AI -->
+        <div class="panel center-panel" id="centerPanel" style="background: rgba(0, 0, 0, 0.07);">
+            <!-- Settings Panel (hidden by default, shown when expanded) -->
+            <div class="settings-panel">
+                <form id="aiSettingsForm" aria-label="AI Settings Configuration">
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #e8e9eb; font-size: 14px; font-weight: 500; margin-bottom: 12px;">OpenAI Provider</h3>
+                        <div style="margin-bottom: 12px;">
+                            <label for="aiApiKeyOpenAI" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                                OpenAI API Key
+                            </label>
+                            <div style="display: flex; gap: 8px;">
+                                <input 
+                                    type="password" 
+                                    id="aiApiKeyOpenAI" 
+                                    name="openai_api_key"
+                                    placeholder="sk-..."
+                                    style="flex: 1; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px; font-family: 'Monaco', 'Menlo', monospace;"
+                                    aria-required="false"
+                                />
+                                <button 
+                                    type="button" 
+                                    id="revealApiKeyOpenAI"
+                                    style="padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #8b8d98; font-size: 12px; cursor: pointer; white-space: nowrap;"
+                                    aria-label="Toggle OpenAI API key visibility"
+                                >
+                                    Reveal
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="aiModelOpenAI" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                                OpenAI Model
+                            </label>
+                            <select 
+                                id="aiModelOpenAI" 
+                                name="openai_model"
+                                style="width: 100%; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px;"
+                            >
+                                <option value="gpt-4o">gpt-4o</option>
+                                <option value="gpt-4">gpt-4</option>
+                                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+                        <h3 style="color: #e8e9eb; font-size: 14px; font-weight: 500; margin-bottom: 12px;">Sonnet Provider (Anthropic)</h3>
+                        <div style="margin-bottom: 12px;">
+                            <label for="aiApiKeySonnet" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                                Sonnet API Key
+                            </label>
+                            <div style="display: flex; gap: 8px;">
+                                <input 
+                                    type="password" 
+                                    id="aiApiKeySonnet" 
+                                    name="sonnet_api_key"
+                                    placeholder="sk-ant-..."
+                                    style="flex: 1; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px; font-family: 'Monaco', 'Menlo', monospace;"
+                                    aria-required="false"
+                                />
+                                <button 
+                                    type="button" 
+                                    id="revealApiKeySonnet"
+                                    style="padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #8b8d98; font-size: 12px; cursor: pointer; white-space: nowrap;"
+                                    aria-label="Toggle Sonnet API key visibility"
+                                >
+                                    Reveal
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="aiModelSonnet" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                                Sonnet Model
+                            </label>
+                            <select 
+                                id="aiModelSonnet" 
+                                name="sonnet_model"
+                                style="width: 100%; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px;"
+                            >
+                                <option value="sonnet-1">sonnet-1</option>
+                                <option value="claude-3-opus">claude-3-opus</option>
+                                <option value="claude-3-sonnet">claude-3-sonnet</option>
+                                <option value="claude-3-haiku">claude-3-haiku</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label for="defaultProvider" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                            Default Provider
+                        </label>
+                        <select 
+                            id="defaultProvider" 
+                            name="default_provider"
+                            style="width: 100%; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px;"
+                        >
+                            <option value="openai">OpenAI</option>
+                            <option value="sonnet">Sonnet (Anthropic)</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input 
+                                type="checkbox" 
+                                id="enableStreaming" 
+                                name="enable_streaming"
+                                style="width: 18px; height: 18px; cursor: pointer;"
+                                aria-label="Enable streaming responses"
+                            />
+                            <span style="color: #e8e9eb; font-size: 13px;">Enable Streaming</span>
+                        </label>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button 
+                            type="button" 
+                            id="saveSettings"
+                            style="padding: 10px 20px; background: #008ed6; border: none; border-radius: 6px; color: white; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s;"
+                            aria-label="Save settings"
+                        >
+                            Save
+                        </button>
+                        <button 
+                            type="button" 
+                            id="resetSettings"
+                            style="padding: 10px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; color: #e8e9eb; font-size: 13px; cursor: pointer; transition: all 0.2s;"
+                            aria-label="Reset settings to defaults"
+                        >
+                            Reset
+                        </button>
+                        <span id="settingsStatus" role="status" aria-live="polite" style="margin-left: 12px; font-size: 12px; color: #8b8d98;"></span>
+                    </div>
+                </form>
+            </div>
+            
+            <textarea class="text-entry" id="aiTextEntry" placeholder="Standing by for instructions..." rows="4"></textarea>
+            
+            <!-- Round Submit Button -->
+            <button class="submit-button" id="submitButton" type="button" title="Submit" aria-label="Submit prompt">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+            
+            <div class="icon-row">
+                <div class="icon-group">
+                    <!-- Add Photos icon -->
+                    <button class="icon-button" title="Add Photos">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </button>
+                    <!-- Browser / Add URL icon -->
+                    <button class="icon-button" title="Add URL">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </button>
+                    <!-- Add File / Folder icon -->
+                    <button class="icon-button" title="Add File / Folder">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Settings link (center) -->
+                <a href="#" class="settings-link" id="settingsLink" title="Settings">Settings</a>
+
+                <div class="divider"></div>
+
+                <div class="icon-group">
+                    <!-- Terminal icon -->
+                    <button class="icon-button" title="Terminal">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                    </button>
+                    <!-- GitHub icon -->
+                    <button class="icon-button" title="GitHub">
+                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.46[...]"></path>
+                        </svg>
+                    </button>
+                    <!-- Code View icon -->
+                    <button class="icon-button" title="Code View">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Mini Code Review Section -->
+        <div class="panel code-review-panel">
+            <div class="panel-label">Code Review</div>
+            <div class="code-review-content" id="codeReview">
+                <div>No code review available</div>
+                <div class="code-snippet" style="display: none;">
+                    <!-- Code snippets will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global configuration (preserved for API access if needed)
+        window.TRUAI_CONFIG = {
+            APP_NAME: '<?= APP_NAME ?>',
+            APP_VERSION: '<?= APP_VERSION ?>',
+            API_BASE: window.location.origin + '/TruAi/api/v1',
+            CSRF_TOKEN: '<?= Auth::generateCsrfToken() ?>',
+            IS_AUTHENTICATED: <?= $auth->isAuthenticated() ? 'true' : 'false' ?>,
+            USERNAME: '<?= $auth->getUsername() ?? '' ?>'
+        };
+
+        // Icon button handlers
+        document.querySelectorAll('.icon-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const title = this.getAttribute('title');
+                console.log('Clicked:', title);
+                // TODO: Implement functionality for each icon
+            });
+        });
+
+        // Settings toggle handler
+        const settingsLink = document.getElementById('settingsLink');
+        const centerPanel = document.getElementById('centerPanel');
+        
+        settingsLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            centerPanel.classList.toggle('expanded');
+            settingsLink.classList.toggle('active');
+        });
+
+        // Submit button handler - wait for DOM and AI client to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitButton = document.getElementById('submitButton');
+            const aiTextEntry = document.getElementById('aiTextEntry');
+            const aiResponse = document.getElementById('aiResponse');
+            
+            if (!submitButton || !aiTextEntry || !aiResponse) {
+                console.warn('Submit button or required elements not found');
+                return;
+            }
+
+            // Function to handle submission (same logic as keyboard handler)
+            async function handleSubmission() {
+                const prompt = aiTextEntry.value.trim();
+                if (!prompt) {
+                    console.log('No text to submit');
+                    return;
+                }
+
+                // Wait for AI client to be initialized (with timeout)
+                const maxWait = 5000; // 5 seconds
+                const startTime = Date.now();
+                
+                while (!window.truAiClient && (Date.now() - startTime) < maxWait) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                if (!window.truAiClient) {
+                    console.error('AI client not initialized after timeout');
+                    aiResponse.textContent = 'Error: AI client not ready. Please refresh the page.';
+                    aiResponse.classList.remove('empty');
+                    return;
+                }
+
+                try {
+                    // Disable UI
+                    aiTextEntry.disabled = true;
+                    aiTextEntry.classList.add('disabled');
+                    submitButton.disabled = true;
+                    submitButton.style.opacity = '0.5';
+                    submitButton.style.cursor = 'not-allowed';
+
+                    // Show loading state
+                    aiResponse.classList.remove('empty');
+                    aiResponse.textContent = 'Submitting prompt...';
+
+                    // Ensure CSRF token is up to date before submission
+                    if (window.truAiClient && window.truAiClient.updateCsrfToken) {
+                      window.truAiClient.updateCsrfToken();
+                      console.log('CSRF token updated before submission');
+                    }
+                    
+                    // Submit prompt using AI client
+                    const result = await window.truAiClient.submitPrompt(prompt, null, (progress) => {
+                        // Update progress status
+                        if (progress && progress.status && progress.status !== 'pending') {
+                            aiResponse.textContent = `Status: ${progress.status}...`;
+                        }
+                    });
+
+                    // Display result
+                    const output = result.output ?? result.results ?? result.text ?? JSON.stringify(result);
+                    aiResponse.textContent = output;
+                    aiResponse.classList.remove('empty');
+
+                } catch (err) {
+                    console.error('Submission error:', err);
+                    let errorMessage = err.message;
+                    
+                    // Check if it's an authentication error
+                    if (errorMessage.includes('Unauthorized') || errorMessage.includes('Session expired')) {
+                        errorMessage = 'Session expired. Please refresh the page and log in again.';
+                        // Optionally redirect after a delay
+                        setTimeout(() => {
+                            if (confirm('Your session has expired. Would you like to go to the login page?')) {
+                                window.location.href = '/TruAi/login-portal.html';
+                            }
+                        }, 2000);
+                    }
+                    
+                    aiResponse.textContent = `Error: ${errorMessage}`;
+                    aiResponse.classList.remove('empty');
+                } finally {
+                    // Re-enable UI
+                    aiTextEntry.disabled = false;
+                    aiTextEntry.classList.remove('disabled');
+                    submitButton.disabled = false;
+                    submitButton.style.opacity = '1';
+                    submitButton.style.cursor = 'pointer';
+                    
+                    // Clear textarea and refocus
+                    aiTextEntry.value = '';
+                    aiTextEntry.focus();
+                }
+            }
+
+            // Wire submit button click
+            submitButton.addEventListener('click', handleSubmission);
+
+            // Also allow Cmd/Ctrl+Enter to trigger submit button
+            aiTextEntry.addEventListener('keydown', function(e) {
+                const metaPressed = e.metaKey || e.ctrlKey;
+                if (e.key === 'Enter' && metaPressed) {
+                    e.preventDefault();
+                    handleSubmission();
+                }
+            });
+
+            console.log('✅ Submit button wired to AI client');
+        });
+    </script>
+
+    <!-- Wire the AI client and enable accessible live region updates -->
+    <script src="/TruAi/assets/js/ai-client.js"></script>
+    <script src="/TruAi/assets/js/settings-client.js"></script>
+    <script>
+      // Initialize AI client immediately (before DOMContentLoaded if possible)
+      // This ensures it's available as soon as possible
+      (function() {
+        try {
+          if (window.TRUAI_CONFIG && window.TruAiAIClient) {
+            window.truAiClient = new TruAiAIClient(window.TRUAI_CONFIG);
+            console.log('✅ AI client created with CSRF:', window.TRUAI_CONFIG.CSRF_TOKEN ? 'present' : 'missing');
+          }
+        } catch (err) {
+          console.error('❌ Failed to create AI client:', err);
+        }
+      })();
+
+      document.addEventListener('DOMContentLoaded', () => {
+        try {
+          // Attach AI client to UI elements
+          if (window.truAiClient) {
+            window.truAiClient.attachToUI({ textareaId: 'aiTextEntry', responseId: 'aiResponse' });
+            console.log('✅ AI client attached to UI');
+          } else if (window.TRUAI_CONFIG && window.TruAiAIClient) {
+            // Fallback: create if not already created
+            window.truAiClient = new TruAiAIClient(window.TRUAI_CONFIG);
+            window.truAiClient.attachToUI({ textareaId: 'aiTextEntry', responseId: 'aiResponse' });
+            console.log('✅ AI client created and attached to UI');
+          }
+          
+          // Initialize settings client with config
+          if (window.TruAiSettingsClient && window.TRUAI_CONFIG) {
+            window.TruAiSettingsClient.init(window.TRUAI_CONFIG);
+            console.log('✅ Settings client initialized with config');
+          }
+          
+          // Log authentication status for debugging
+          console.log('Auth status:', {
+            isAuthenticated: window.TRUAI_CONFIG?.IS_AUTHENTICATED,
+            hasCsrfToken: !!window.TRUAI_CONFIG?.CSRF_TOKEN,
+            csrfTokenLength: window.TRUAI_CONFIG?.CSRF_TOKEN?.length || 0
+          });
+        } catch (err) {
+          console.error('❌ Failed to initialize clients:', err);
+        }
+      });
+    </script>
+</body>
+</html>

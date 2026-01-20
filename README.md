@@ -1,190 +1,93 @@
-# TruAi HTML Server (Internal)
-
-**Internal Version:** 1.0
-**Ownership:** My Deme, LLC © 2026
-**Classification:** Proprietary / Confidential
-**Developed by:** DemeWebsolutions.com
-
----
+# TruAi - AI-Powered Development Assistant
 
 ## Overview
+TruAi is an AI-powered development assistant with secure authentication, multi-provider AI support, and a modern web interface.
 
-TruAi HTML Server is a **self-hosted, proprietary AI orchestration environment** designed for controlled, high-assurance AI-assisted development and operations.
-It exposes TruAi Core through a browser-based interface while enforcing **strict governance, auditability, and risk controls**.
-
-This system is **not a public framework** and is intended solely for **authorized internal use**.
-
----
-
-## System Purpose
-
-* Centralize AI execution behind a governed control plane
-* Enforce risk-aware decision making before AI output reaches production
-* Provide deterministic audit trails for compliance and legal defensibility
-* Enable cost-aware, tiered AI utilization without exposing provider internals
-
----
-
-## Core Capabilities (Abstracted)
-
-* **TruAi Core Orchestration Engine**
-  Central decision layer for task evaluation, routing, execution, and approval.
-
-* **Risk-Governed AI Execution**
-  All tasks are classified, constrained, and processed according to internal risk policy.
-
-* **Single-Authority Control Model**
-  Designed for tightly controlled environments with explicit accountability.
-
-* **Production-Safe by Default**
-  No AI output reaches production targets without satisfying governance requirements.
-
-* **Tiered Intelligence Routing**
-  Tasks are dynamically routed across internal intelligence tiers based on complexity, sensitivity, and cost controls.
-
-* **Immutable Audit Layer**
-  All actions are permanently logged for traceability and review.
-
----
-
-## Architectural Summary
-
-> Exact implementation details are intentionally withheld.
-
-* **Execution Model:** Stateless request handling with stateful governance
-* **Persistence Layer:** Localized embedded datastore
-* **Interface Layer:** Browser-based administrative console
-* **Security Model:** Session isolation, request validation, and access restriction
-* **Deployment Scope:** Private environments only (local, on-prem, or controlled cloud)
-
----
-
-## Intelligence Providers
-
-TruAi HTML Server supports **multiple external intelligence backends** via an internal abstraction layer.
-
-Key characteristics:
-
-* Providers are interchangeable
-* No provider-specific logic leaks into application code
-* Automatic failover and degradation handling
-* Provider credentials are never stored in source control
-
-> Provider identities, models, and credentials are considered **deployment secrets** and are excluded from this documentation.
-
----
-
-## Intelligence Capabilities
-
-* Context-aware response generation
-* Code and artifact synthesis
-* Long-form reasoning and analysis
-* Multi-step task execution
-* Cost-optimized model selection
-* Deterministic fallback behavior
-
----
-
-## Governance Model
-
-### Task Lifecycle
+## Project Structure
 
 ```
-Submit → Classify → Route → Execute → Review → Approve / Reject → Apply
+TruAi Git/
+├── backend/           # PHP backend services
+│   ├── auth.php      # Authentication & session management
+│   ├── router.php    # API routing
+│   ├── ai_client.php # AI provider integration
+│   ├── settings_service.php
+│   └── ...
+├── assets/           # Frontend assets
+│   ├── js/          # JavaScript files
+│   ├── css/         # Stylesheets
+│   └── images/      # Images and icons
+├── index.php         # Main dashboard
+├── login-portal.html # Login page
+├── router.php        # PHP built-in server router
+└── ...
 ```
 
-Each stage is enforced by TruAi Core and cannot be bypassed.
+## Quick Start
 
----
+### 1. Start Server
+```bash
+cd "TruAi Git"
+php -S localhost:8080 router.php
+```
 
-### Risk Classification
+### 2. Access Application
+- **Dashboard**: http://localhost:8080/TruAi/
+- **Login**: http://localhost:8080/TruAi/login-portal.html
+- **Default Credentials**: `admin` / `admin123`
 
-* **Low Risk**
+### 3. Configure API Keys
+After logging in:
+- Click "Settings" in the center panel
+- Enter your OpenAI and/or Anthropic API keys
+- Select models and default provider
+- Click "Save Settings"
 
-  * Non-destructive, informational, or formatting operations
-  * May auto-resolve under policy
+Or use the terminal script:
+```bash
+./update_api_keys.sh
+```
 
-* **Medium Risk**
+## Features
 
-  * Logic changes or system modifications
-  * Explicit human review required
+- ✅ Secure authentication with session management
+- ✅ Multi-provider AI support (OpenAI, Anthropic)
+- ✅ CSRF protection
+- ✅ CORS configured for credentials
+- ✅ Modern responsive UI
+- ✅ Settings management
+- ✅ Task-based AI execution
 
-* **High Risk**
+## Security
 
-  * Security, deployment, or production-impacting actions
-  * Manual authorization mandatory
+- Session-based authentication (1-hour timeout)
+- HttpOnly cookies
+- CSRF token protection
+- CORS with specific origins (credentials enabled)
+- Localhost-only access enforcement
 
-Risk policies are **internal IP** and configurable per deployment.
+## API Endpoints
 
----
+- `POST /api/v1/auth/login` - User login
+- `GET /api/v1/auth/status` - Check authentication
+- `POST /api/v1/task/create` - Create AI task
+- `GET /api/v1/task/{id}` - Get task status
+- `POST /api/v1/task/execute` - Execute task
+- `GET /api/v1/settings` - Get user settings
+- `POST /api/v1/settings` - Save user settings
 
-## Administrative Controls
+## Development
 
-* Controlled login with enforced legal acknowledgment
-* Manual override authority for tier and execution paths
-* Execution approval / rejection workflow
-* Full visibility into historical decisions and outputs
+### Requirements
+- PHP 7.4+ with built-in server
+- SQLite (database/truai.db)
+- Modern browser with JavaScript enabled
 
----
+### File Organization
+- All backend logic in `backend/`
+- Frontend assets in `assets/`
+- Entry points: `index.php`, `router.php`
+- Configuration: `backend/config.php`
 
-## Security Posture
-
-* Restricted access scope by default
-* Server-side validation for all inputs
-* Encrypted credential handling
-* Strong password hashing
-* CSRF and session hardening
-* Immutable audit records
-
-This system assumes **zero trust toward AI output**.
-
----
-
-## Data Handling
-
-* No external telemetry by default
-* No training or feedback loops without explicit authorization
-* Localized data storage
-* Operator-controlled retention policies
-
----
-
-## Intellectual Property Notice
-
-**TruAi**, **TruAi Core**, and all associated systems, logic, workflows, and architecture are:
-
-* Proprietary intellectual property of **My Deme, LLC**
-* Confidential and protected works
-* Not licensed for redistribution, resale, or reverse engineering
-
-Unauthorized access, disclosure, duplication, or use is strictly prohibited.
-
----
-
-## Intended Audience
-
-* Internal engineering teams
-* Authorized operators
-* Legal, compliance, and audit stakeholders
-* NDA-bound partners or evaluators
-
-This documentation is **not end-user documentation**.
-
----
-
-## Version Record
-
-### Internal Release 1.0 – 2026-01-15
-
-* Initial controlled release
-* Governance-first execution model
-* Tiered intelligence routing
-* Full audit enforcement
-* Administrative web interface
-
----
-
-**TruAi HTML Server**
-**Internal AI Control Plane for High-Assurance Operations**
-
----
+## License
+Copyright My Deme, LLC © 2026
