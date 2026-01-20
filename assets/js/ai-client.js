@@ -4,13 +4,18 @@
 //  client.attachToUI({ textareaId: 'aiTextEntry', responseId: 'aiResponse' });
 
 class TruAiAIClient {
+  // Timeout configuration
+  static MIN_POLL_TIMEOUT = 30000;  // 30 seconds minimum
+  static MAX_POLL_TIMEOUT = 600000; // 10 minutes maximum
+  static DEFAULT_POLL_TIMEOUT = 180000; // 3 minutes default
+  
   constructor(config = {}) {
     this.config = config || window.TRUAI_CONFIG || {};
     this.apiBase = this.config.API_BASE || (window.location.origin + '/TruAi/api/v1');
     // Get CSRF token from config or update from window
     this.updateCsrfToken();
     this.pollIntervalMs = 1000;
-    this.pollTimeoutMs = 180000; // 3 minutes (configurable)
+    this.pollTimeoutMs = TruAiAIClient.DEFAULT_POLL_TIMEOUT;
     this.pollMaxBackoffMs = 5000; // Max backoff for exponential polling
     this.failedRequests = []; // Store failed requests for retry
     this.sessionRenewalInProgress = false;
@@ -30,7 +35,10 @@ class TruAiAIClient {
    * Set configurable timeout for polling
    */
   setPollTimeout(timeoutMs) {
-    this.pollTimeoutMs = Math.max(30000, Math.min(timeoutMs, 600000)); // 30s to 10m
+    this.pollTimeoutMs = Math.max(
+      TruAiAIClient.MIN_POLL_TIMEOUT, 
+      Math.min(timeoutMs, TruAiAIClient.MAX_POLL_TIMEOUT)
+    );
   }
   
   /**

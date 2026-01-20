@@ -15,6 +15,7 @@ class LearningService {
     private $db;
     private $maxPatternsPerUser = 1000;
     private $pruneAgeThreshold = 90; // days
+    private $maxPatternLength = 200; // characters for pattern truncation
     
     public function __construct() {
         $this->db = Database::getInstance();
@@ -340,10 +341,13 @@ class LearningService {
     /**
      * Prune old and unused patterns
      * 
-     * @param string $maxAge Maximum age in SQL interval format (default '90 days')
+     * @param int $maxAgeDays Maximum age in days (default 90)
      * @return int Number of patterns pruned
      */
-    public function pruneOldPatterns($maxAge = '90 days') {
+    public function pruneOldPatterns($maxAgeDays = null) {
+        // Use provided age or default
+        $ageDays = $maxAgeDays ?? $this->pruneAgeThreshold;
+        
         // Delete patterns that are old AND have low confidence OR low usage
         $result = $this->db->execute(
             "DELETE FROM learned_patterns 
@@ -354,7 +358,7 @@ class LearningService {
                 (updated_at < datetime('now', '-180 days')
                  AND usage_count < 2)
              )",
-            [':max_age' => $this->pruneAgeThreshold]
+            [':max_age' => $ageDays]
         );
         
         // Also prune old learning events (keep last 6 months)
@@ -511,8 +515,8 @@ class LearningService {
                     ':user_id' => $userId,
                     ':pattern_key' => $patternKey,
                     ':pattern_value' => json_encode([
-                        'original' => substr($context['original_response'], 0, 200),
-                        'corrected' => substr($context['corrected_response'], 0, 200),
+                        'original' => substr($context['original_response'], 0, $this->maxPatternLength),
+                        'corrected' => substr($context['corrected_response'], 0, $this->maxPatternLength),
                         'description' => 'User correction pattern'
                     ])
                 ]

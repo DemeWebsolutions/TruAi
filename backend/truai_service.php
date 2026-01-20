@@ -255,6 +255,7 @@ class TruAiService {
     private function simulateAIExecution($prompt, $model) {
         // Call actual AI API with proper exception handling
         require_once __DIR__ . '/ai_client.php';
+        require_once __DIR__ . '/ai_exceptions.php';
         $aiClient = new AIClient();
         
         try {

@@ -17,6 +17,10 @@ class AIClient {
     private $timeout;
     private $maxRetries;
     private $tokenUsage;
+    
+    // Timeout constraints
+    const MIN_TIMEOUT = 1;
+    const MAX_TIMEOUT = 120;
 
     public function __construct($openaiKey = null, $anthropicKey = null, $timeout = 30) {
         // Use provided keys, or fall back to environment variables, or settings
@@ -27,7 +31,7 @@ class AIClient {
             'anthropic' => 'https://api.anthropic.com/v1'
         ];
         // Timeout configuration (default 30s, max 120s)
-        $this->timeout = min(max($timeout, 1), 120);
+        $this->timeout = min(max($timeout, self::MIN_TIMEOUT), self::MAX_TIMEOUT);
         $this->maxRetries = 3;
         $this->tokenUsage = [];
     }

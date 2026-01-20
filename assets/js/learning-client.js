@@ -183,6 +183,10 @@ class TruAiLearningClient {
       return;
     }
     
+    // Store original content for extraction
+    const originalContent = responseElement.textContent.trim();
+    responseElement.setAttribute('data-original-content', originalContent);
+    
     const feedbackContainer = document.createElement('div');
     feedbackContainer.className = 'learning-feedback-buttons';
     feedbackContainer.style.cssText = `
@@ -286,7 +290,9 @@ class TruAiLearningClient {
    * Show improve dialog
    */
   showImproveDialog(responseElement, taskId) {
-    const originalResponse = responseElement.textContent.replace(/Was this helpful\?.*/, '').trim();
+    // Get original response from data attribute or text content
+    const originalResponse = responseElement.getAttribute('data-original-content') || 
+                            responseElement.textContent.trim();
     
     // Create modal
     const overlay = document.createElement('div');
