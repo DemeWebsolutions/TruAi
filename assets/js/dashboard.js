@@ -3420,11 +3420,24 @@ async function adminOverride(taskId) {
 
 /**
  * Verify admin authentication
+ * TODO: Implement proper admin authentication with session verification
+ * Current implementation is a placeholder for demonstration purposes
  */
 async function verifyAdminAuth() {
     // Check if user has admin privileges
-    // In this implementation, we'll prompt for confirmation
-    return confirm('Admin privileges required. Continue?');
+    // In production, this should verify the user's role from the server
+    // For now, we use a confirmation dialog as a placeholder
+    const confirmed = confirm('Admin privileges required. This action requires elevated permissions.\n\nIn production, this would verify your admin role.\n\nContinue?');
+    
+    if (confirmed) {
+        // In production, make an API call to verify admin status
+        // const api = new TruAiAPI();
+        // const result = await api.request('/api/auth/verify-admin', 'POST');
+        // return result.isAdmin;
+        return true;
+    }
+    
+    return false;
 }
 
 // Wait for DOM and config to be ready

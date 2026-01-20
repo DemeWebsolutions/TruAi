@@ -277,8 +277,6 @@ class TruAiService {
      * Apply personality-driven execution rules
      */
     private function applyPersonalityExecution($taskId, $riskLevel, $tier) {
-        $task = $this->getTask($taskId);
-        
         // SAFE tier (🟢) - Silent execution
         if ($riskLevel === RISK_LOW) {
             try {
@@ -293,6 +291,13 @@ class TruAiService {
                 ];
             } catch (Exception $e) {
                 error_log('Silent execution failed: ' . $e->getMessage());
+                // Return task info if execution fails
+                return [
+                    'task_id' => $taskId,
+                    'risk_level' => $riskLevel,
+                    'assigned_tier' => $tier,
+                    'status' => 'CREATED'
+                ];
             }
         }
         
@@ -305,7 +310,7 @@ class TruAiService {
                 'assigned_tier' => $tier,
                 'ui_interruption' => 'side_panel', // Side panel, not modal
                 'requires_approval' => true,
-                'explanation' => $this->generateMinimalExplanation($task), // ONE short rationale
+                'explanation' => $this->generateMinimalExplanation($tier), // ONE short rationale
                 'approval_prompt' => 'Approve to execute. Reject to cancel.'
             ];
         }
@@ -318,7 +323,7 @@ class TruAiService {
                 'risk_level' => $riskLevel,
                 'assigned_tier' => $tier,
                 'ui_interruption' => 'modal_blocking', // Modal interrupt
-                'halt_reason' => $this->generateStopReason($task),
+                'halt_reason' => $this->generateStopReason($riskLevel),
                 'requires_admin' => true,
                 'kill_switch_visible' => true
             ];
@@ -336,20 +341,17 @@ class TruAiService {
     /**
      * Generate minimal explanation (ELEVATED tier only)
      */
-    private function generateMinimalExplanation($task) {
-        // ONE sentence max
-        return sprintf(
-            "Multi-file change detected. Review before execution."
-        );
+    private function generateMinimalExplanation($tier) {
+        // ONE sentence max - generic but appropriate for medium risk
+        return "Multi-file change detected. Review before execution.";
     }
 
     /**
      * Generate clear stop reason (LOCKED tier only)
      */
-    private function generateStopReason($task) {
-        return sprintf(
-            "Production secrets or policy violation detected. Admin approval required."
-        );
+    private function generateStopReason($riskLevel) {
+        // Clear reason for high-risk halt
+        return "Production secrets or policy violation detected. Admin approval required.";
     }
 
     private function assessROI($prompt) {
@@ -370,12 +372,17 @@ class TruAiService {
 
     private function assessLongTermCost($prompt, $riskLevel) {
         // Higher risk = higher long-term cost
-        return match($riskLevel) {
-            RISK_LOW => 'minimal',
-            RISK_MEDIUM => 'moderate',
-            RISK_HIGH => 'significant',
-            default => 'unknown'
-        };
+        // Using switch for PHP 7 compatibility
+        switch ($riskLevel) {
+            case RISK_LOW:
+                return 'minimal';
+            case RISK_MEDIUM:
+                return 'moderate';
+            case RISK_HIGH:
+                return 'significant';
+            default:
+                return 'unknown';
+        }
     }
 }
 

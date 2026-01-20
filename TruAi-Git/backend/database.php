@@ -81,7 +81,7 @@ class Database {
             tier TEXT NOT NULL,
             status TEXT DEFAULT 'CREATED',
             context TEXT,
-            strategic_context TEXT,
+            strategic_context TEXT, -- JSON: execution_bias, approach, suppress_exploration, dependencies, roi_assessment, scope_creep_risk, long_term_cost
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
