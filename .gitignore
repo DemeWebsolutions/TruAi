@@ -1,0 +1,41 @@
+# Environment variables
+.env
+.env.local
+
+# Database files (keep structure, exclude data)
+# database/truai.db
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (if used for development tools)
+node_modules/
+
+# PHP
+vendor/
+composer.lock
+
+# Backups
+*.bak
+*.backup
+
+# API keys and sensitive data
+encryption_keys.json
+# database/encryption_keys.json
