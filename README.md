@@ -1,4 +1,3 @@
-Here is a tighter, more confidential rewrite that reduces implementation exposure while retaining internal usefulness. Wording is intentionally guarded, abstracted, and less operationally explicit.
 
 ⸻
 
