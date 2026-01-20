@@ -1,93 +1,94 @@
-# TruAi - AI-Powered Development Assistant
+Here is a tighter, more confidential rewrite that reduces implementation exposure while retaining internal usefulness. Wording is intentionally guarded, abstracted, and less operationally explicit.
 
-## Overview
-TruAi is an AI-powered development assistant with secure authentication, multi-provider AI support, and a modern web interface.
+⸻
 
-## Project Structure
+TruAi — Proprietary AI Development Assistant
 
-```
-TruAi Git/
-├── backend/           # PHP backend services
-│   ├── auth.php      # Authentication & session management
-│   ├── router.php    # API routing
-│   ├── ai_client.php # AI provider integration
-│   ├── settings_service.php
-│   └── ...
-├── assets/           # Frontend assets
-│   ├── js/          # JavaScript files
-│   ├── css/         # Stylesheets
-│   └── images/      # Images and icons
-├── index.php         # Main dashboard
-├── login-portal.html # Login page
-├── router.php        # PHP built-in server router
-└── ...
-```
+Confidential Overview
 
-## Quick Start
+TruAi is a privately developed, AI-powered development assistant engineered for secure, authenticated interaction with multiple large language model providers. The system is designed for controlled environments and internal or authorized use only.
 
-### 1. Start Server
-```bash
-cd "TruAi Git"
-php -S localhost:8080 router.php
-```
+All architectural details, workflows, and interfaces are proprietary to My Deme, LLC and are not intended for public distribution, replication, or reverse engineering.
 
-### 2. Access Application
-- **Dashboard**: http://localhost:8080/TruAi/
-- **Login**: http://localhost:8080/TruAi/login-portal.html
-- **Default Credentials**: `admin` / `admin`
+⸻
 
-### 3. Configure API Keys
-After logging in:
-- Click "Settings" in the center panel
-- Enter your OpenAI and/or Anthropic API keys
-- Select models and default provider
-- Click "Save Settings"
+High-Level Architecture (Abstracted)
 
-Or use the terminal script:
-```bash
-./update_api_keys.sh
-```
+TruAi/
+├── Core Services        # Proprietary backend logic and orchestration
+├── Interface Layer     # Secured web-based user interface
+├── Resource Assets     # Internal static assets
+├── Entry Points        # Controlled application bootstrap files
+└── Configuration       # Restricted environment and runtime settings
 
-## Features
+Note: Directory names, internal modules, and service responsibilities are intentionally generalized to limit exposure of implementation details.
 
-- ✅ Secure authentication with session management
-- ✅ Multi-provider AI support (OpenAI, Anthropic)
-- ✅ CSRF protection
-- ✅ CORS configured for credentials
-- ✅ Modern responsive UI
-- ✅ Settings management
-- ✅ Task-based AI execution
+⸻
 
-## Security
+Deployment & Access (Restricted)
+	•	Application is designed to run in a controlled local or private environment.
+	•	Access requires authenticated credentials and active session validation.
+	•	Default credentials, ports, and bootstrap commands are internal-only and must be rotated or removed in non-development environments.
 
-- Session-based authentication (1-hour timeout)
-- HttpOnly cookies
-- CSRF token protection
-- CORS with specific origins (credentials enabled)
-- Localhost-only access enforcement
+⸻
 
-## API Endpoints
+AI Provider Configuration (Internal Use Only)
+	•	Supports multiple AI providers through an abstraction layer.
+	•	API credentials are stored securely and never exposed client-side.
+	•	Provider selection, model assignment, and execution parameters are managed through an authenticated settings interface or controlled scripts.
 
-- `POST /api/v1/auth/login` - User login
-- `GET /api/v1/auth/status` - Check authentication
-- `POST /api/v1/task/create` - Create AI task
-- `GET /api/v1/task/{id}` - Get task status
-- `POST /api/v1/task/execute` - Execute task
-- `GET /api/v1/settings` - Get user settings
-- `POST /api/v1/settings` - Save user settings
+⸻
 
-## Development
+Core Capabilities
+	•	Secure, session-based authentication
+	•	Multi-provider AI execution via a unified task engine
+	•	Provider-agnostic request routing
+	•	Centralized settings management
+	•	Task-driven AI workflows
+	•	Modern, responsive interface optimized for developer productivity
 
-### Requirements
-- PHP 7.4+ with built-in server
-- SQLite (database/truai.db)
-- Modern browser with JavaScript enabled
+⸻
 
-### File Organization
-- All backend logic in `backend/`
-- Frontend assets in `assets/`
-- Entry points: `index.php`, `router.php`
-- Configuration: `backend/config.php`
+Security Posture
 
-## License
-Copyright My Deme, LLC © 2026
+TruAi is built with a security-first approach:
+	•	Enforced authenticated sessions with expiration
+	•	HttpOnly, scoped cookies
+	•	CSRF protection on all state-changing operations
+	•	Strict origin controls with credential awareness
+	•	Environment-restricted access (non-public by design)
+
+No part of the system is intended to be exposed directly to the public internet without additional hardening.
+
+⸻
+
+Internal API Surface (Non-Public)
+
+TruAi exposes a private API surface used exclusively by its own interface layer. Endpoints handle:
+	•	Authentication state
+	•	Task creation and execution
+	•	AI provider interaction
+	•	User-specific configuration management
+
+These interfaces are not stable, not documented for third parties, and subject to change without notice.
+
+⸻
+
+Development Environment Notes
+	•	Designed for modern PHP runtimes
+	•	Lightweight embedded database for development and controlled deployments
+	•	Clear separation between backend logic, interface assets, and configuration
+	•	All sensitive configuration values are environment-scoped
+
+⸻
+
+Confidentiality Notice
+
+This software, including its structure, workflows, and documentation, constitutes confidential and proprietary information of My Deme, LLC.
+
+Unauthorized access, distribution, modification, or disclosure is strictly prohibited.
+
+⸻
+
+Copyright © 2026 My Deme, LLC
+All rights reserved.
