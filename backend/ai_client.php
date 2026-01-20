@@ -21,6 +21,7 @@ class AIClient {
     // Timeout constraints
     const MIN_TIMEOUT = 1;
     const MAX_TIMEOUT = 120;
+    const CONNECT_TIMEOUT = 10; // Connection timeout in seconds
 
     public function __construct($openaiKey = null, $anthropicKey = null, $timeout = 30) {
         // Use provided keys, or fall back to environment variables, or settings
@@ -198,7 +199,7 @@ class AIClient {
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::CONNECT_TIMEOUT);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -341,7 +342,7 @@ class AIClient {
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::CONNECT_TIMEOUT);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

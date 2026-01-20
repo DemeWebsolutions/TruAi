@@ -32,6 +32,13 @@ class TruAiAIClient {
   }
   
   /**
+   * Convert milliseconds to seconds
+   */
+  toSeconds(ms) {
+    return Math.floor(ms / 1000);
+  }
+  
+  /**
    * Set configurable timeout for polling
    */
   setPollTimeout(timeoutMs) {
@@ -234,7 +241,7 @@ class TruAiAIClient {
       // Show warning when approaching timeout
       if (!warningShown && remaining <= this.timeoutWarningThreshold && remaining > 0) {
         warningShown = true;
-        const shouldExtend = await this.showTimeoutWarning(Math.floor(remaining / 1000));
+        const shouldExtend = await this.showTimeoutWarning(this.toSeconds(remaining));
         if (shouldExtend) {
           // Extend timeout by 2 minutes
           this.pollTimeoutMs += 120000;
@@ -256,8 +263,8 @@ class TruAiAIClient {
         if (onProgress) {
           onProgress({
             ...task,
-            elapsed: Math.floor(elapsed / 1000),
-            remaining: Math.floor(remaining / 1000)
+            elapsed: this.toSeconds(elapsed),
+            remaining: this.toSeconds(remaining)
           });
         }
         
@@ -274,7 +281,7 @@ class TruAiAIClient {
         }
         
         if (Date.now() - start > this.pollTimeoutMs) {
-          throw new Error(`Polling timed out after ${Math.floor(this.pollTimeoutMs / 1000)}s. Task status: ${task.status}. Please try again.`);
+          throw new Error(`Polling timed out after ${this.toSeconds(this.pollTimeoutMs)}s. Task status: ${task.status}. Please try again.`);
         }
         
         // Exponential backoff with max limit

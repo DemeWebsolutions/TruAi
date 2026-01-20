@@ -23,6 +23,15 @@ class TruAiLearningClient {
   }
   
   /**
+   * Extract original response content from element
+   * Uses data attribute if available, falls back to textContent
+   */
+  getResponseContent(responseElement) {
+    return responseElement.getAttribute('data-original-content') || 
+           responseElement.textContent.trim();
+  }
+  
+  /**
    * Record feedback on an AI response
    */
   async recordFeedback(taskId, score) {
@@ -290,9 +299,8 @@ class TruAiLearningClient {
    * Show improve dialog
    */
   showImproveDialog(responseElement, taskId) {
-    // Get original response from data attribute or text content
-    const originalResponse = responseElement.getAttribute('data-original-content') || 
-                            responseElement.textContent.trim();
+    // Get original response using helper method
+    const originalResponse = this.getResponseContent(responseElement);
     
     // Create modal
     const overlay = document.createElement('div');
