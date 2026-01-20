@@ -60,6 +60,30 @@ class TruAiService {
             'tier' => $tier
         ]);
 
+        // Auto-execute low-risk and medium-risk tasks immediately
+        $autoExecute = ($riskLevel === RISK_LOW || $riskLevel === RISK_MEDIUM);
+        
+        if ($autoExecute) {
+            try {
+                // Execute immediately
+                $execution = $this->executeTask($taskId);
+                
+                // Return with immediate output
+                return [
+                    'task_id' => $taskId,
+                    'risk_level' => $riskLevel,
+                    'assigned_tier' => $tier,
+                    'status' => 'EXECUTED',
+                    'output' => $execution['output'],
+                    'execution_id' => $execution['execution_id'],
+                    'auto_executed' => true
+                ];
+            } catch (Exception $e) {
+                error_log('Auto-execution failed: ' . $e->getMessage());
+                // Fall through to return CREATED status
+            }
+        }
+
         return [
             'task_id' => $taskId,
             'risk_level' => $riskLevel,
@@ -85,11 +109,27 @@ class TruAiService {
         
         // Get executions
         $executions = $this->db->query(
-            "SELECT * FROM executions WHERE task_id = :task_id",
+            "SELECT * FROM executions WHERE task_id = :task_id ORDER BY created_at DESC",
             [':task_id' => $taskId]
         );
 
         $task['executions'] = $executions;
+        
+        // Include latest execution output for convenience
+        if (!empty($executions)) {
+            $latestExecution = $executions[0];
+            
+            // Get artifact content
+            $artifact = $this->db->query(
+                "SELECT content FROM artifacts WHERE id = :id LIMIT 1",
+                [':id' => $latestExecution['output_artifact']]
+            );
+            
+            if (!empty($artifact)) {
+                $task['output'] = $artifact[0]['content'];
+            }
+        }
+        
         return $task;
     }
 

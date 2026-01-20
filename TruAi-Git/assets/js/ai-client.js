@@ -47,15 +47,23 @@ class TruAiAIClient {
       const task = await this.getTask(taskId);
       // expected shape: { status: 'pending'|'running'|'completed'|'failed', output: '...' }
       if (onProgress) onProgress(task);
-      if (task.status === 'completed') {
-        return task;
+      
+      // Recognize both 'completed' and 'EXECUTED' as done
+      if (task.status === 'completed' || task.status === 'EXECUTED') {
+        return {
+          ...task,
+          status: 'completed' // Normalize to 'completed'
+        };
       }
-      if (task.status === 'failed') {
+      
+      if (task.status === 'failed' || task.status === 'REJECTED') {
         throw new Error(task.error || 'Task failed');
       }
+      
       if (Date.now() - start > this.pollTimeoutMs) {
-        throw new Error('Polling timed out');
+        throw new Error(`Polling timed out. Task status: ${task.status}. Try refreshing the page.`);
       }
+      
       await new Promise(r => setTimeout(r, this.pollIntervalMs));
     }
   }
@@ -65,15 +73,29 @@ class TruAiAIClient {
     // Create
     const createResp = await this.createTask(prompt, context);
 
-    // If backend returned an immediate output in createResp, show it
+    // Check if backend returned immediate output
     if (createResp.output && createResp.output.trim() !== '') {
-      return createResp;
+      // Task was auto-executed, return immediately
+      return {
+        ...createResp,
+        status: 'completed' // Normalize status for frontend
+      };
     }
 
     // Otherwise expect a task_id to poll
     if (!createResp.task_id) {
       throw new Error('No task_id returned from create endpoint');
     }
+    
+    // Check if status is already EXECUTED
+    if (createResp.status === 'EXECUTED') {
+      // No need to poll, task already executed
+      return {
+        ...createResp,
+        status: 'completed'
+      };
+    }
+    
     const final = await this.pollForResult(createResp.task_id, onProgress);
     return final;
   }
