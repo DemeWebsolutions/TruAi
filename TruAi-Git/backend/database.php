@@ -81,6 +81,7 @@ class Database {
             tier TEXT NOT NULL,
             status TEXT DEFAULT 'CREATED',
             context TEXT,
+            strategic_context TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
