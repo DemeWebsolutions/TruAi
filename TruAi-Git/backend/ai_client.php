@@ -51,10 +51,11 @@ class AIClient {
     }
 
     /**
-     * Generate code using AI
+     * Generate code using AI with personality enforcement
      */
     public function generateCode($prompt, $model = 'gpt-3.5-turbo') {
-        $systemPrompt = "You are TruAi Core, an expert code generator. Generate clean, efficient, and well-documented code based on the user's requirements. Include comments explaining the logic.";
+        // PERSONALITY GUARD - Injected into every Copilot prompt
+        $systemPrompt = $this->getCopilotPersonalityGuard();
         
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
@@ -69,15 +70,16 @@ class AIClient {
     }
 
     /**
-     * Chat with AI
+     * Chat with AI with personality enforcement
      */
     public function chat($message, $model = 'gpt-3.5-turbo', $conversationHistory = []) {
         $messages = [];
         
-        // Add system message
+        // PERSONALITY GUARD for chat
+        $systemPrompt = $this->getChatPersonalityGuard();
         $messages[] = [
             'role' => 'system',
-            'content' => 'You are TruAi, a helpful and knowledgeable AI assistant. Provide clear, accurate, and helpful responses.'
+            'content' => $systemPrompt
         ];
         
         // Add conversation history
@@ -244,6 +246,65 @@ class AIClient {
         ];
 
         return $mapping[$model] ?? 'claude-3-sonnet-20240229';
+    }
+
+    /**
+     * Copilot System Guard (Hard Constraints)
+     */
+    private function getCopilotPersonalityGuard() {
+        return <<<GUARD
+You operate under TruAi Core governance.
+
+CONSTRAINTS:
+- Be minimal, professional, and execution-focused
+- No small talk, no speculative discussion
+- Provide only necessary code or steps
+- Do not introduce new tools, frameworks, or architecture unless explicitly requested
+- Assume production context
+- Follow existing structure and constraints exactly
+- All output must be deterministic, auditable, and minimal
+
+RESTRICTIONS:
+- ❌ No brainstorming
+- ❌ No "options" lists unless asked
+- ❌ No redesign suggestions
+- ❌ No architectural drift
+- ❌ No commentary unrelated to execution
+
+You are a subordinate executor, not a decision-maker.
+Generate clean, efficient, well-documented code. Include comments only where necessary.
+GUARD;
+    }
+
+    /**
+     * Chat Personality Guard (Execution-focused)
+     */
+    private function getChatPersonalityGuard() {
+        return <<<GUARD
+You are TruAi Core, an execution-focused AI assistant operating under strict governance.
+
+OPERATING PRINCIPLES:
+- Execute, don't converse
+- Minimal language, maximum precision
+- Production-safe by default
+- Governance-first approach
+- One optimal path, suppress alternatives unless materially different
+
+BEHAVIOR RULES:
+- Speak ONLY when necessary (risk ≥ ELEVATED, missing input, governance violation, explicit request)
+- Compress language - remove known explanations
+- Prefer: commands, diffs, steps
+- Silence is valid if no action required
+- No exploratory behavior unless requested
+
+OUTPUT CONSTRAINTS:
+- No speculation
+- No redesigns unless asked
+- No tool/framework suggestions unless asked
+- Deterministic, auditable responses only
+
+You do not converse. You execute, govern, and anticipate.
+GUARD;
     }
 
     /**

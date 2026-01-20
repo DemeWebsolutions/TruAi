@@ -3211,6 +3211,235 @@ async function initializeDashboardScript() {
     }
 }
 
+/**
+ * Handle AI response with personality-driven UI interruption
+ */
+async function handleAIResponse(response) {
+    // Check UI interruption rules
+    const uiMode = response.ui_interruption || false;
+    
+    // SAFE tier (🟢) - Silent execution, no UI noise
+    if (!uiMode || uiMode === false) {
+        displayAIOutput(response.output);
+        return; // No interruption
+    }
+    
+    // ELEVATED tier (🟡) - Side panel, one approval prompt
+    if (uiMode === 'side_panel') {
+        showSidePanel({
+            title: 'Review Required',
+            message: response.explanation, // ONE short rationale
+            output: response.output,
+            actions: [
+                { label: 'Approve', action: () => approveTask(response.task_id) },
+                { label: 'Reject', action: () => rejectTask(response.task_id) }
+            ],
+            dismissible: true
+        });
+        return;
+    }
+    
+    // LOCKED tier (🔴) - Modal interrupt, blocking
+    if (uiMode === 'modal_blocking') {
+        showBlockingModal({
+            title: '⛔ Execution Halted',
+            message: response.halt_reason,
+            type: 'error',
+            actions: [
+                { label: 'Admin Override', action: () => adminOverride(response.task_id), requiresAuth: true },
+                { label: 'Cancel Task', action: () => cancelTask(response.task_id), style: 'destructive' }
+            ],
+            dismissible: false, // Cannot be dismissed without action
+            killSwitchVisible: response.kill_switch_visible
+        });
+        return;
+    }
+    
+    // Fallback - inline display
+    displayAIOutput(response.output || 'Task created. Awaiting execution.');
+}
+
+/**
+ * Display AI output inline (SAFE tier)
+ */
+function displayAIOutput(output) {
+    const aiResponse = document.getElementById('aiResponse');
+    if (aiResponse) {
+        aiResponse.textContent = output;
+        aiResponse.classList.remove('empty');
+    }
+}
+
+/**
+ * Show side panel for ELEVATED tier
+ */
+function showSidePanel({ title, message, output, actions, dismissible }) {
+    // Implementation for side panel UI
+    const panel = document.createElement('div');
+    panel.className = 'side-panel elevated-tier';
+    panel.innerHTML = `
+        <div class="panel-header">
+            <h3>${escapeHtml(title)}</h3>
+            ${dismissible ? '<button class="close-btn">×</button>' : ''}
+        </div>
+        <div class="panel-body">
+            <p class="explanation">${escapeHtml(message)}</p>
+            <pre class="output-preview">${escapeHtml(output || '')}</pre>
+        </div>
+        <div class="panel-actions">
+            ${actions.map(a => `<button class="action-btn" data-action="${escapeHtml(a.label)}">${escapeHtml(a.label)}</button>`).join('')}
+        </div>
+    `;
+    document.body.appendChild(panel);
+    
+    // Wire up actions
+    panel.querySelectorAll('.action-btn').forEach(btn => {
+        const action = actions.find(a => a.label === btn.dataset.action);
+        btn.addEventListener('click', () => {
+            action.action();
+            panel.remove();
+        });
+    });
+    
+    if (dismissible) {
+        panel.querySelector('.close-btn')?.addEventListener('click', () => panel.remove());
+    }
+}
+
+/**
+ * Show blocking modal for LOCKED tier
+ */
+function showBlockingModal({ title, message, type, actions, dismissible, killSwitchVisible }) {
+    const modal = document.createElement('div');
+    modal.className = `modal-overlay ${type || ''}`;
+    modal.innerHTML = `
+        <div class="modal-content locked-tier">
+            <div class="modal-header">
+                <h2>${escapeHtml(title)}</h2>
+            </div>
+            <div class="modal-body">
+                <p class="stop-reason">${escapeHtml(message)}</p>
+                ${killSwitchVisible ? '<div class="kill-switch">⏹ Kill Switch Active</div>' : ''}
+            </div>
+            <div class="modal-actions">
+                ${actions.map(a => `
+                    <button class="modal-btn ${a.style || ''}" data-action="${escapeHtml(a.label)}" ${a.requiresAuth ? 'data-requires-auth="true"' : ''}>
+                        ${escapeHtml(a.label)}
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Wire up actions
+    modal.querySelectorAll('.modal-btn').forEach(btn => {
+        const action = actions.find(a => a.label === btn.dataset.action);
+        btn.addEventListener('click', async () => {
+            if (btn.dataset.requiresAuth) {
+                // Check admin authentication
+                const isAdmin = await verifyAdminAuth();
+                if (!isAdmin) {
+                    alert('Admin authorization required');
+                    return;
+                }
+            }
+            action.action();
+            modal.remove();
+        });
+    });
+    
+    // Prevent dismissal if not dismissible
+    if (!dismissible) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        });
+    } else {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+}
+
+/**
+ * Approve task for execution
+ */
+async function approveTask(taskId) {
+    try {
+        const api = new TruAiAPI();
+        await api.request('/api/tasks/approve', 'POST', { task_id: taskId, action: 'APPROVE' });
+        showNotification('Task approved for execution', 'success');
+    } catch (error) {
+        showNotification('Error approving task: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Reject task
+ */
+async function rejectTask(taskId) {
+    try {
+        const api = new TruAiAPI();
+        await api.request('/api/tasks/approve', 'POST', { task_id: taskId, action: 'REJECT' });
+        showNotification('Task rejected', 'info');
+    } catch (error) {
+        showNotification('Error rejecting task: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Cancel task
+ */
+async function cancelTask(taskId) {
+    try {
+        const api = new TruAiAPI();
+        await api.request('/api/tasks/approve', 'POST', { task_id: taskId, action: 'REJECT' });
+        showNotification('Task canceled', 'info');
+    } catch (error) {
+        showNotification('Error canceling task: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Admin override for LOCKED tier tasks
+ */
+async function adminOverride(taskId) {
+    try {
+        const api = new TruAiAPI();
+        await api.request('/api/tasks/approve', 'POST', { task_id: taskId, action: 'APPROVE', override: true });
+        showNotification('Admin override applied', 'success');
+    } catch (error) {
+        showNotification('Error applying admin override: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Verify admin authentication
+ * TODO: Implement proper admin authentication with session verification
+ * Current implementation is a placeholder for demonstration purposes
+ */
+async function verifyAdminAuth() {
+    // Check if user has admin privileges
+    // In production, this should verify the user's role from the server
+    // For now, we use a confirmation dialog as a placeholder
+    const confirmed = confirm('Admin privileges required. This action requires elevated permissions.\n\nIn production, this would verify your admin role.\n\nContinue?');
+    
+    if (confirmed) {
+        // In production, make an API call to verify admin status
+        // const api = new TruAiAPI();
+        // const result = await api.request('/api/auth/verify-admin', 'POST');
+        // return result.isAdmin;
+        return true;
+    }
+    
+    return false;
+}
+
 // Wait for DOM and config to be ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {

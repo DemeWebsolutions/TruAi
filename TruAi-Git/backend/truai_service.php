@@ -20,17 +20,23 @@ class TruAiService {
     }
 
     /**
-     * Create a new task
+     * Create a new task with personality governance
      */
     public function createTask($userId, $prompt, $context = null, $preferredTier = 'auto') {
         if (empty($prompt)) {
             throw new Exception('Prompt is required');
         }
 
-        // Evaluate risk
+        // NEW: Context Assembly with Dependency Inference
+        $inferredDependencies = $this->inferDependencies($prompt, $context);
+        
+        // Evaluate risk with production-safe bias
         $riskLevel = $this->riskEngine->evaluate($prompt, $context);
         
-        // Assign tier
+        // NEW: Strategic Evaluation - ROI, scope, long-term cost
+        $strategicDecision = $this->evaluateStrategy($prompt, $riskLevel, $inferredDependencies);
+        
+        // Assign tier with governance-first approach
         $tier = ($preferredTier === 'auto') 
             ? $this->tierRouter->assign($riskLevel) 
             : $preferredTier;
@@ -38,10 +44,10 @@ class TruAiService {
         // Generate task ID
         $taskId = 'task_' . date('Ymd_His') . '_' . substr(md5(uniqid()), 0, 8);
 
-        // Store task
+        // Store task with strategic context
         $this->db->execute(
-            "INSERT INTO tasks (id, user_id, prompt, risk_level, tier, status, context) 
-             VALUES (:id, :user_id, :prompt, :risk, :tier, :status, :context)",
+            "INSERT INTO tasks (id, user_id, prompt, risk_level, tier, status, context, strategic_context) 
+             VALUES (:id, :user_id, :prompt, :risk, :tier, :status, :context, :strategic_context)",
             [
                 ':id' => $taskId,
                 ':user_id' => $userId,
@@ -49,7 +55,8 @@ class TruAiService {
                 ':risk' => $riskLevel,
                 ':tier' => $tier,
                 ':status' => 'CREATED',
-                ':context' => $context ? json_encode($context) : null
+                ':context' => $context ? json_encode($context) : null,
+                ':strategic_context' => json_encode($strategicDecision)
             ]
         );
 
@@ -57,15 +64,12 @@ class TruAiService {
         $this->auditLog($userId, 'TASK_CREATED', 'SYSTEM', [
             'task_id' => $taskId,
             'risk_level' => $riskLevel,
-            'tier' => $tier
+            'tier' => $tier,
+            'inferred_dependencies' => $inferredDependencies
         ]);
 
-        return [
-            'task_id' => $taskId,
-            'risk_level' => $riskLevel,
-            'assigned_tier' => $tier,
-            'status' => 'CREATED'
-        ];
+        // Auto-execute based on risk tier personality rules
+        return $this->applyPersonalityExecution($taskId, $riskLevel, $tier);
     }
 
     /**
@@ -229,38 +233,194 @@ class TruAiService {
             ]
         );
     }
+
+    /**
+     * Infer next dependencies before execution
+     */
+    private function inferDependencies($prompt, $context) {
+        // Analyze prompt for implicit dependencies
+        $dependencies = [];
+        
+        $patterns = [
+            '/create\s+(\w+)/i' => 'May require schema/model definition',
+            '/deploy/i' => 'Requires build, test, staging validation',
+            '/update\s+(\w+)/i' => 'May affect dependent modules',
+            '/refactor/i' => 'May require test updates',
+            '/add\s+feature/i' => 'May require documentation, tests'
+        ];
+        
+        foreach ($patterns as $pattern => $dependency) {
+            if (preg_match($pattern, $prompt)) {
+                $dependencies[] = $dependency;
+            }
+        }
+        
+        return $dependencies;
+    }
+
+    /**
+     * Strategic evaluation with production-safe bias
+     */
+    private function evaluateStrategy($prompt, $riskLevel, $dependencies) {
+        return [
+            'execution_bias' => 'production-safe',
+            'approach' => 'one_optimal_path', // No alternatives unless materially different
+            'suppress_exploration' => true,
+            'dependencies' => $dependencies,
+            'roi_assessment' => $this->assessROI($prompt),
+            'scope_creep_risk' => $this->assessScopeCreep($prompt),
+            'long_term_cost' => $this->assessLongTermCost($prompt, $riskLevel)
+        ];
+    }
+
+    /**
+     * Apply personality-driven execution rules
+     */
+    private function applyPersonalityExecution($taskId, $riskLevel, $tier) {
+        // SAFE tier (🟢) - Silent execution
+        if ($riskLevel === RISK_LOW) {
+            try {
+                $execution = $this->executeTask($taskId);
+                return [
+                    'task_id' => $taskId,
+                    'status' => 'EXECUTED',
+                    'output' => $execution['output'],
+                    'execution_mode' => 'silent_auto',
+                    'ui_interruption' => false, // No UI noise
+                    'explanation' => null // Suppress explanation
+                ];
+            } catch (Exception $e) {
+                error_log('Silent execution failed: ' . $e->getMessage());
+                // Return task info if execution fails
+                return [
+                    'task_id' => $taskId,
+                    'risk_level' => $riskLevel,
+                    'assigned_tier' => $tier,
+                    'status' => 'CREATED'
+                ];
+            }
+        }
+        
+        // ELEVATED tier (🟡) - Speak once, concisely
+        if ($riskLevel === RISK_MEDIUM) {
+            return [
+                'task_id' => $taskId,
+                'status' => 'CREATED',
+                'risk_level' => $riskLevel,
+                'assigned_tier' => $tier,
+                'ui_interruption' => 'side_panel', // Side panel, not modal
+                'requires_approval' => true,
+                'explanation' => $this->generateMinimalExplanation($tier), // ONE short rationale
+                'approval_prompt' => 'Approve to execute. Reject to cancel.'
+            ];
+        }
+        
+        // LOCKED tier (🔴) - Halt execution, require admin
+        if ($riskLevel === RISK_HIGH) {
+            return [
+                'task_id' => $taskId,
+                'status' => 'LOCKED',
+                'risk_level' => $riskLevel,
+                'assigned_tier' => $tier,
+                'ui_interruption' => 'modal_blocking', // Modal interrupt
+                'halt_reason' => $this->generateStopReason($riskLevel),
+                'requires_admin' => true,
+                'kill_switch_visible' => true
+            ];
+        }
+        
+        // Default fallback
+        return [
+            'task_id' => $taskId,
+            'risk_level' => $riskLevel,
+            'assigned_tier' => $tier,
+            'status' => 'CREATED'
+        ];
+    }
+
+    /**
+     * Generate minimal explanation (ELEVATED tier only)
+     */
+    private function generateMinimalExplanation($tier) {
+        // ONE sentence max - generic but appropriate for medium risk
+        return "Multi-file change detected. Review before execution.";
+    }
+
+    /**
+     * Generate clear stop reason (LOCKED tier only)
+     */
+    private function generateStopReason($riskLevel) {
+        // Clear reason for high-risk halt
+        return "Production secrets or policy violation detected. Admin approval required.";
+    }
+
+    private function assessROI($prompt) {
+        // Placeholder - can be enhanced
+        return 'medium';
+    }
+
+    private function assessScopeCreep($prompt) {
+        // Check for overly broad requests
+        $broad_keywords = ['redesign', 'rewrite', 'overhaul', 'complete'];
+        foreach ($broad_keywords as $keyword) {
+            if (stripos($prompt, $keyword) !== false) {
+                return 'high';
+            }
+        }
+        return 'low';
+    }
+
+    private function assessLongTermCost($prompt, $riskLevel) {
+        // Higher risk = higher long-term cost
+        // Using switch for PHP 7 compatibility
+        switch ($riskLevel) {
+            case RISK_LOW:
+                return 'minimal';
+            case RISK_MEDIUM:
+                return 'moderate';
+            case RISK_HIGH:
+                return 'significant';
+            default:
+                return 'unknown';
+        }
+    }
 }
 
 /**
- * Risk Engine - Evaluates task risk level
+ * Risk Engine - Evaluates task risk level with personality governance
  */
 class RiskEngine {
     public function evaluate($prompt, $context = null) {
         $prompt = strtolower($prompt);
         
-        // High-risk keywords
-        $highRiskKeywords = [
-            'deploy', 'delete', 'drop', 'remove', 'production',
-            'database', 'security', 'password', 'credential', 'api key'
+        // LOCKED tier (🔴) - Halt execution
+        $lockedKeywords = [
+            'deploy to production', 'delete production', 'drop production',
+            'remove production', 'production secret', 'api key', 'password',
+            'credential', 'token', 'private key', 'production database',
+            'license violation', 'copyright', 'proprietary'
         ];
         
-        foreach ($highRiskKeywords as $keyword) {
+        foreach ($lockedKeywords as $keyword) {
             if (strpos($prompt, $keyword) !== false) {
                 return RISK_HIGH;
             }
         }
         
-        // Medium-risk keywords
-        $mediumRiskKeywords = [
-            'modify', 'update', 'change', 'refactor', 'config'
+        // ELEVATED tier (🟡) - Speak once, require approval
+        $elevatedKeywords = [
+            'modify', 'update', 'change', 'refactor', 'config',
+            'dependency', 'multi-file', 'security', 'auth'
         ];
         
-        foreach ($mediumRiskKeywords as $keyword) {
+        foreach ($elevatedKeywords as $keyword) {
             if (strpos($prompt, $keyword) !== false) {
                 return RISK_MEDIUM;
             }
         }
         
+        // SAFE tier (🟢) - Silent execution
+        // Default to SAFE for formatting, tests, known patterns
         return RISK_LOW;
     }
 }
