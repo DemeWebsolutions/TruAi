@@ -4,13 +4,22 @@
 //  client.attachToUI({ textareaId: 'aiTextEntry', responseId: 'aiResponse' });
 
 class TruAiAIClient {
+  // Timeout configuration
+  static MIN_POLL_TIMEOUT = 30000;  // 30 seconds minimum
+  static MAX_POLL_TIMEOUT = 600000; // 10 minutes maximum
+  static DEFAULT_POLL_TIMEOUT = 180000; // 3 minutes default
+  
   constructor(config = {}) {
     this.config = config || window.TRUAI_CONFIG || {};
     this.apiBase = this.config.API_BASE || (window.location.origin + '/TruAi/api/v1');
     // Get CSRF token from config or update from window
     this.updateCsrfToken();
     this.pollIntervalMs = 1000;
-    this.pollTimeoutMs = 120000; // 2 minutes
+    this.pollTimeoutMs = TruAiAIClient.DEFAULT_POLL_TIMEOUT;
+    this.pollMaxBackoffMs = 5000; // Max backoff for exponential polling
+    this.failedRequests = []; // Store failed requests for retry
+    this.sessionRenewalInProgress = false;
+    this.timeoutWarningThreshold = 30000; // Warn 30s before timeout
   }
 
   // Update CSRF token from global config (useful after login)
@@ -19,6 +28,136 @@ class TruAiAIClient {
       this.csrf = window.TRUAI_CONFIG.CSRF_TOKEN;
     } else {
       this.csrf = this.config.CSRF_TOKEN || '';
+    }
+  }
+  
+  /**
+   * Convert milliseconds to seconds
+   */
+  toSeconds(ms) {
+    return Math.floor(ms / 1000);
+  }
+  
+  /**
+   * Set configurable timeout for polling
+   */
+  setPollTimeout(timeoutMs) {
+    this.pollTimeoutMs = Math.max(
+      TruAiAIClient.MIN_POLL_TIMEOUT, 
+      Math.min(timeoutMs, TruAiAIClient.MAX_POLL_TIMEOUT)
+    );
+  }
+  
+  /**
+   * Handle session expiration with user-friendly re-authentication flow
+   */
+  async handleSessionExpiration(failedRequest = null) {
+    // Store failed request for retry
+    if (failedRequest) {
+      this.failedRequests.push(failedRequest);
+    }
+    
+    // Clear auth state
+    if (window.TRUAI_CONFIG) {
+      window.TRUAI_CONFIG.IS_AUTHENTICATED = false;
+    }
+    
+    // Show user-friendly modal with options
+    const shouldRedirect = await this.showSessionExpiredDialog();
+    
+    if (shouldRedirect) {
+      // Redirect to login page
+      window.location.href = '/TruAi/login-portal.html';
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Show session expired dialog with user confirmation
+   */
+  async showSessionExpiredDialog() {
+    return new Promise((resolve) => {
+      // Create modal overlay
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      `;
+      
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      `;
+      
+      modal.innerHTML = `
+        <h2 style="margin-top: 0; color: #e53e3e;">Session Expired</h2>
+        <p style="color: #4a5568; margin: 20px 0;">
+          Your session has expired. Please log in again to continue.
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button id="sessionExpiredLogin" style="
+            padding: 10px 20px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+          ">Log In</button>
+          <button id="sessionExpiredCancel" style="
+            padding: 10px 20px;
+            background: #718096;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+          ">Cancel</button>
+        </div>
+      `;
+      
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      
+      document.getElementById('sessionExpiredLogin').onclick = () => {
+        document.body.removeChild(overlay);
+        resolve(true);
+      };
+      
+      document.getElementById('sessionExpiredCancel').onclick = () => {
+        document.body.removeChild(overlay);
+        resolve(false);
+      };
+    });
+  }
+  
+  /**
+   * Retry failed requests after successful re-authentication
+   */
+  async retryFailedRequests() {
+    const requests = [...this.failedRequests];
+    this.failedRequests = [];
+    
+    for (const request of requests) {
+      try {
+        await request.retry();
+      } catch (err) {
+        console.error('Failed to retry request:', err);
+      }
     }
   }
 
@@ -59,15 +198,14 @@ class TruAiAIClient {
       // Handle 401 Unauthorized specifically
       if (res.status === 401) {
         const errorData = await res.json().catch(() => ({ error: 'Unauthorized' }));
-        // Clear auth state
-        if (window.TRUAI_CONFIG) {
-          window.TRUAI_CONFIG.IS_AUTHENTICATED = false;
-        }
-        // Show user-friendly error and suggest login
-        const errorMsg = errorData.error || 'Unauthorized';
-        console.error('401 Unauthorized - Session may have expired');
-        // Don't auto-redirect, let user see the error and decide
-        throw new Error(`Session expired. Please refresh the page and log in again. (${errorMsg})`);
+        console.error('401 Unauthorized - Session expired');
+        
+        // Handle session expiration with user-friendly dialog
+        await this.handleSessionExpiration({
+          retry: () => this.createTask(prompt, context)
+        });
+        
+        throw new Error('Session expired. Please log in to continue.');
       }
       const txt = await res.text();
       throw new Error(`Create task failed: ${res.status} ${txt}`);
@@ -92,29 +230,150 @@ class TruAiAIClient {
   // Poll until the task has a result or times out.
   async pollForResult(taskId, onProgress = null) {
     const start = Date.now();
+    let pollInterval = this.pollIntervalMs;
+    let warningShown = false;
+    let timeoutExtended = false;
+    
     while (true) {
-      const task = await this.getTask(taskId);
-      // expected shape: { status: 'pending'|'running'|'completed'|'failed', output: '...' }
-      if (onProgress) onProgress(task);
+      const elapsed = Date.now() - start;
+      const remaining = this.pollTimeoutMs - elapsed;
       
-      // Recognize both 'completed' and 'EXECUTED' as done
-      if (task.status === 'completed' || task.status === 'EXECUTED') {
-        return {
-          ...task,
-          status: 'completed' // Normalize to 'completed'
-        };
+      // Show warning when approaching timeout
+      if (!warningShown && remaining <= this.timeoutWarningThreshold && remaining > 0) {
+        warningShown = true;
+        const shouldExtend = await this.showTimeoutWarning(this.toSeconds(remaining));
+        if (shouldExtend) {
+          // Extend timeout by 2 minutes
+          this.pollTimeoutMs += 120000;
+          timeoutExtended = true;
+          if (onProgress) {
+            onProgress({ 
+              status: 'extended',
+              message: 'Timeout extended by 2 minutes'
+            });
+          }
+        }
       }
       
-      if (task.status === 'failed' || task.status === 'REJECTED') {
-        throw new Error(task.error || 'Task failed');
+      try {
+        const task = await this.getTask(taskId);
+        // expected shape: { status: 'pending'|'running'|'completed'|'failed', output: '...' }
+        
+        // Provide progress with time remaining
+        if (onProgress) {
+          onProgress({
+            ...task,
+            elapsed: this.toSeconds(elapsed),
+            remaining: this.toSeconds(remaining)
+          });
+        }
+        
+        // Recognize both 'completed' and 'EXECUTED' as done
+        if (task.status === 'completed' || task.status === 'EXECUTED') {
+          return {
+            ...task,
+            status: 'completed' // Normalize to 'completed'
+          };
+        }
+        
+        if (task.status === 'failed' || task.status === 'REJECTED') {
+          throw new Error(task.error || 'Task failed');
+        }
+        
+        if (Date.now() - start > this.pollTimeoutMs) {
+          throw new Error(`Polling timed out after ${this.toSeconds(this.pollTimeoutMs)}s. Task status: ${task.status}. Please try again.`);
+        }
+        
+        // Exponential backoff with max limit
+        pollInterval = Math.min(pollInterval * 1.2, this.pollMaxBackoffMs);
+        await new Promise(r => setTimeout(r, pollInterval));
+        
+      } catch (err) {
+        // Handle session expiration during polling
+        if (err.message && err.message.includes('401')) {
+          await this.handleSessionExpiration({
+            retry: () => this.pollForResult(taskId, onProgress)
+          });
+          throw new Error('Session expired during polling');
+        }
+        throw err;
       }
-      
-      if (Date.now() - start > this.pollTimeoutMs) {
-        throw new Error(`Polling timed out. Task status: ${task.status}. Try refreshing the page.`);
-      }
-      
-      await new Promise(r => setTimeout(r, this.pollIntervalMs));
     }
+  }
+  
+  /**
+   * Show timeout warning with option to extend or cancel
+   */
+  async showTimeoutWarning(secondsRemaining) {
+    return new Promise((resolve) => {
+      // Create modal overlay
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      `;
+      
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      `;
+      
+      modal.innerHTML = `
+        <h2 style="margin-top: 0; color: #f59e0b;">Timeout Warning</h2>
+        <p style="color: #4a5568; margin: 20px 0;">
+          Your task is still processing. Approximately ${secondsRemaining} seconds remaining before timeout.
+        </p>
+        <p style="color: #4a5568; margin: 20px 0; font-size: 14px;">
+          Would you like to extend the timeout by 2 minutes?
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button id="timeoutExtend" style="
+            padding: 10px 20px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+          ">Extend Timeout</button>
+          <button id="timeoutContinue" style="
+            padding: 10px 20px;
+            background: #718096;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+          ">Continue Waiting</button>
+        </div>
+      `;
+      
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      
+      document.getElementById('timeoutExtend').onclick = () => {
+        document.body.removeChild(overlay);
+        resolve(true);
+      };
+      
+      document.getElementById('timeoutContinue').onclick = () => {
+        document.body.removeChild(overlay);
+        resolve(false);
+      };
+    });
   }
 
   // Single entry: submit a prompt and return final output (or throw on error)

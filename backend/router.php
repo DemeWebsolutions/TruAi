@@ -44,6 +44,15 @@ class Router {
         $this->routes['POST']['/api/v1/settings'] = [$this, 'handleSaveSettings'];
         $this->routes['POST']['/api/v1/settings/reset'] = [$this, 'handleResetSettings'];
         $this->routes['POST']['/api/v1/settings/clear-conversations'] = [$this, 'handleClearConversations'];
+        
+        // Learning system endpoints
+        $this->routes['POST']['/api/v1/learning/event'] = [$this, 'handleLearningEvent'];
+        $this->routes['POST']['/api/v1/learning/feedback'] = [$this, 'handleLearningFeedback'];
+        $this->routes['POST']['/api/v1/learning/correction'] = [$this, 'handleLearningCorrection'];
+        $this->routes['GET']['/api/v1/learning/patterns'] = [$this, 'handleLearningPatterns'];
+        $this->routes['GET']['/api/v1/learning/insights'] = [$this, 'handleLearningInsights'];
+        $this->routes['POST']['/api/v1/learning/suggest'] = [$this, 'handleLearningSuggest'];
+        $this->routes['DELETE']['/api/v1/learning/reset'] = [$this, 'handleLearningReset'];
     }
 
     public function dispatch() {
@@ -340,6 +349,161 @@ class Router {
         
         try {
             $service->clearConversations($this->auth->getUserId());
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+    
+    // Learning System Handlers
+    
+    private function handleLearningEvent() {
+        require_once __DIR__ . '/learning_service.php';
+        $service = new LearningService();
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        if (!isset($data['event_type']) || !isset($data['context'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'event_type and context required']);
+            return;
+        }
+        
+        try {
+            $service->recordEvent(
+                $this->auth->getUserId(),
+                $data['event_type'],
+                $data['context']
+            );
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+    
+    private function handleLearningFeedback() {
+        require_once __DIR__ . '/learning_service.php';
+        $service = new LearningService();
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        if (!isset($data['task_id']) || !isset($data['score'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'task_id and score required']);
+            return;
+        }
+        
+        try {
+            $service->recordFeedback(
+                $this->auth->getUserId(),
+                $data['task_id'],
+                intval($data['score'])
+            );
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+    
+    private function handleLearningCorrection() {
+        require_once __DIR__ . '/learning_service.php';
+        $service = new LearningService();
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        if (!isset($data['task_id']) || !isset($data['original_response']) || !isset($data['corrected_response'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'task_id, original_response, and corrected_response required']);
+            return;
+        }
+        
+        try {
+            $service->recordCorrection(
+                $this->auth->getUserId(),
+                $data['task_id'],
+                $data['original_response'],
+                $data['corrected_response']
+            );
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+    
+    private function handleLearningPatterns() {
+        require_once __DIR__ . '/learning_service.php';
+        $service = new LearningService();
+        
+        $patternType = $_GET['type'] ?? null;
+        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+        
+        try {
+            $patterns = $service->getLearnedPatterns(
+                $this->auth->getUserId(),
+                $patternType,
+                $limit
+            );
+            echo json_encode(['patterns' => $patterns]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+    
+    private function handleLearningInsights() {
+        require_once __DIR__ . '/learning_service.php';
+        $service = new LearningService();
+        
+        try {
+            $insights = $service->analyzeUserPreferences($this->auth->getUserId());
+            echo json_encode(['insights' => $insights]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+    
+    private function handleLearningSuggest() {
+        require_once __DIR__ . '/learning_service.php';
+        $service = new LearningService();
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        if (!isset($data['prompt'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'prompt required']);
+            return;
+        }
+        
+        try {
+            $suggestions = $service->suggestImprovement(
+                $this->auth->getUserId(),
+                $data['prompt'],
+                $data['context'] ?? []
+            );
+            echo json_encode(['suggestions' => $suggestions]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+    
+    private function handleLearningReset() {
+        require_once __DIR__ . '/learning_service.php';
+        $service = new LearningService();
+        
+        try {
+            // Delete all learning data for user
+            $db = Database::getInstance();
+            $db->execute(
+                "DELETE FROM learning_events WHERE user_id = :user_id",
+                [':user_id' => $this->auth->getUserId()]
+            );
+            $db->execute(
+                "DELETE FROM learned_patterns WHERE user_id = :user_id",
+                [':user_id' => $this->auth->getUserId()]
+            );
+            
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);

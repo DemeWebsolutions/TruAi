@@ -171,12 +171,65 @@ $status = $aiClient->testConnection();
 
 ### Error Handling
 
-The system includes comprehensive error handling:
+The system includes comprehensive error handling with custom exception types:
 
-1. **API Key Missing:** Clear error message with configuration instructions
-2. **API Error:** Displays specific error from provider
-3. **Network Issues:** Retries and provides fallback responses
-4. **Rate Limiting:** Handles gracefully with user notification
+1. **Configuration Errors (AIConfigurationException):**
+   - Missing API keys
+   - Invalid API key format
+   - Authentication failures
+   - **Action:** Check API keys in Settings or environment variables
+
+2. **Rate Limit Errors (AIRateLimitException):**
+   - API rate limit exceeded
+   - Quota exhausted
+   - **Action:** Wait for specified retry period, then retry
+   - **System Response:** Automatic retry with exponential backoff (max 3 attempts)
+
+3. **Timeout Errors (AITimeoutException):**
+   - Request exceeded timeout limit (default: 30s, max: 120s)
+   - Network latency issues
+   - **Action:** Retry the request
+   - **System Response:** Automatic retry with exponential backoff
+
+4. **Transient Errors (AITransientException):**
+   - Temporary network issues
+   - API server errors (5xx)
+   - **Action:** Retry automatically
+   - **System Response:** Up to 3 retries with exponential backoff (1s, 2s, 4s delays)
+
+5. **Response Errors (AIResponseException):**
+   - Invalid response format
+   - Missing expected data
+   - **Action:** Review prompt and try again
+   - **System Response:** Error logged, no automatic retry
+
+### Automatic Retry Logic
+
+The AI client implements intelligent retry logic:
+
+```php
+// Exponential backoff strategy
+Attempt 1: Immediate
+Attempt 2: 1 second delay
+Attempt 3: 2 seconds delay
+Attempt 4: 4 seconds delay (if applicable)
+
+// Rate limit retry
+- Uses retry-after header if provided
+- Falls back to exponential backoff
+```
+
+### Error Messages
+
+User-friendly error messages are provided:
+
+| Error Type | User Message | Technical Log |
+|------------|--------------|---------------|
+| Configuration | "AI service not configured. Please check API keys in Settings." | "AI Configuration Error: OpenAI API key not configured" |
+| Rate Limit | "AI service rate limit exceeded. Please try again in X seconds." | "AI Rate Limit: 429 Too Many Requests" |
+| Timeout | "AI service request timed out. Please try again." | "AI Timeout: Request exceeded 30s" |
+| Transient | "AI service temporarily unavailable. Please try again." | "AI Transient Error: Network error" |
+| General | "AI service error: [specific message]" | Full exception details |
 
 ### Response Caching
 
@@ -372,6 +425,116 @@ Planned features:
 - [ ] Image generation (DALL-E)
 - [ ] Code execution sandbox
 - [ ] Collaborative AI sessions
+
+## Persistent Learning System
+
+TruAi includes a persistent learning system that improves over time by learning from your interactions.
+
+### Features
+
+1. **Feedback Collection**
+   - Rate AI responses with 👍 or 👎
+   - Provide corrections to improve future responses
+   - System learns from your preferences
+
+2. **Pattern Learning**
+   - Identifies successful prompt patterns
+   - Learns preferred models and tiers
+   - Tracks common keywords and contexts
+
+3. **Intelligent Suggestions**
+   - Suggests improvements to your prompts
+   - Recommends based on past success patterns
+   - Adapts to your coding style
+
+### Using the Learning System
+
+#### Give Feedback on Responses
+
+After receiving an AI response, you'll see feedback buttons:
+
+```
+[👍 Good]  [👎 Poor]  [✏️ Improve]
+```
+
+- **👍 Good:** Marks the response as helpful
+- **👎 Poor:** Marks the response as unhelpful
+- **✏️ Improve:** Opens an editor to provide a corrected version
+
+#### View Learning Insights
+
+Access your learning insights to see:
+- Preferred models (GPT-4, GPT-3.5, Claude, etc.)
+- Preferred tiers (Cheap, Mid, High)
+- Common keywords in successful prompts
+- Total learning events recorded
+
+Insights help you understand what works best for your workflow.
+
+#### Get Prompt Suggestions
+
+When writing a new prompt, the learning system can suggest improvements based on your history:
+
+```javascript
+// API usage
+const suggestions = await learningClient.getSuggestions(yourPrompt);
+```
+
+### Privacy & Data Control
+
+- **User-specific:** Your learning data is private to your account
+- **No sharing:** Learning patterns are not shared with other users
+- **Reset anytime:** Delete all learning data from Settings
+- **Transparent:** View all recorded events in audit logs
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/learning/feedback` | POST | Record feedback on AI response |
+| `/api/v1/learning/correction` | POST | Record user correction |
+| `/api/v1/learning/patterns` | GET | Get learned patterns |
+| `/api/v1/learning/insights` | GET | Get learning insights |
+| `/api/v1/learning/suggest` | POST | Get prompt suggestions |
+| `/api/v1/learning/reset` | DELETE | Reset all learning data |
+
+### Example: Recording Feedback
+
+```javascript
+const learningClient = new TruAiLearningClient();
+
+// Positive feedback
+await learningClient.recordFeedback(taskId, 1);
+
+// Negative feedback
+await learningClient.recordFeedback(taskId, -1);
+
+// Record a correction
+await learningClient.recordCorrection(
+  taskId,
+  originalResponse,
+  correctedResponse
+);
+```
+
+### Pattern Confidence Scoring
+
+The system maintains confidence scores (0.0 to 1.0) for each learned pattern:
+
+- **Initial:** 0.5 (neutral)
+- **Increases:** Each successful use
+- **Decreases:** Each unsuccessful use
+- **Factors:** Usage count × success rate
+
+High-confidence patterns are prioritized for suggestions.
+
+### Automatic Maintenance
+
+The system automatically:
+- Prunes old patterns (>90 days with low confidence)
+- Removes unused patterns (>180 days, <2 uses)
+- Limits patterns per user (max 1,000)
+- Cleans up old events (>6 months)
 
 ## Support
 
