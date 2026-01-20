@@ -159,12 +159,13 @@ class TruAiService {
             throw new Exception('Task cannot be executed in current state');
         }
 
-        // Generate execution ID
+        // Generate execution ID and forensic ID
         $execId = 'exec_' . time() . '_' . substr(md5(uniqid()), 0, 6);
+        $forensicId = 'TRUAI_' . date('Ymd_His') . '_' . substr(md5($taskId . microtime()), 0, 8);
 
         // Simulate AI execution (placeholder for actual AI integration)
         $model = $this->getModelForTier($task['tier']);
-        $output = $this->simulateAIExecution($task['prompt'], $model);
+        $output = $this->simulateAIExecution($task['prompt'], $model, $task['user_id'], $taskId);
 
         // Store execution
         $artifactId = 'artifact_' . date('Ymd_His');
@@ -200,10 +201,13 @@ class TruAiService {
         );
 
         return [
+            'success' => true,
             'execution_id' => $execId,
             'model_used' => $model,
             'output_artifact' => $artifactId,
             'output' => $output,
+            'forensic_id' => $forensicId,
+            'task_id' => $taskId,
             'status' => 'COMPLETED'
         ];
     }
@@ -252,19 +256,47 @@ class TruAiService {
         };
     }
 
-    private function simulateAIExecution($prompt, $model) {
+    private function simulateAIExecution($prompt, $model, $userId = null, $taskId = null) {
         // Call actual AI API with proper exception handling
         require_once __DIR__ . '/ai_client.php';
         require_once __DIR__ . '/ai_exceptions.php';
+        require_once __DIR__ . '/error_handler.php';
+        
         $aiClient = new AIClient();
+        $startTime = microtime(true);
+        $provider = strpos($model, 'claude') !== false ? 'anthropic' : 'openai';
         
         try {
             $response = $aiClient->generateCode($prompt, $model);
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            
+            // Get token usage
+            $tokenUsage = $aiClient->getTokenUsage();
+            $tokensUsed = $tokenUsage['total_tokens'] ?? 0;
+            
+            // Log successful request
+            ErrorHandler::logAiRequest(
+                $taskId,
+                $userId,
+                $provider,
+                $model,
+                $prompt,
+                $response,
+                $tokensUsed,
+                $latencyMs,
+                true,
+                null
+            );
+            
             return $response;
         } catch (AIConfigurationException $e) {
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            ErrorHandler::logAiRequest($taskId, $userId, $provider, $model, $prompt, null, 0, $latencyMs, false, $e->getMessage());
             error_log('AI Configuration Error: ' . $e->getMessage());
             throw new Exception('AI service not configured. Please check API keys in Settings.');
         } catch (AIRateLimitException $e) {
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            ErrorHandler::logAiRequest($taskId, $userId, $provider, $model, $prompt, null, 0, $latencyMs, false, $e->getMessage());
             error_log('AI Rate Limit: ' . $e->getMessage());
             $retryAfter = $e->getRetryAfter();
             $message = 'AI service rate limit exceeded. Please try again';
@@ -275,18 +307,28 @@ class TruAiService {
             }
             throw new Exception($message . '.');
         } catch (AITimeoutException $e) {
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            ErrorHandler::logAiRequest($taskId, $userId, $provider, $model, $prompt, null, 0, $latencyMs, false, $e->getMessage());
             error_log('AI Timeout: ' . $e->getMessage());
             throw new Exception('AI service request timed out. Please try again.');
         } catch (AITransientException $e) {
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            ErrorHandler::logAiRequest($taskId, $userId, $provider, $model, $prompt, null, 0, $latencyMs, false, $e->getMessage());
             error_log('AI Transient Error: ' . $e->getMessage());
             throw new Exception('AI service temporarily unavailable. Please try again.');
         } catch (AIResponseException $e) {
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            ErrorHandler::logAiRequest($taskId, $userId, $provider, $model, $prompt, null, 0, $latencyMs, false, $e->getMessage());
             error_log('AI Response Error: ' . $e->getMessage());
             throw new Exception('AI service returned invalid response. Please try again or contact support.');
         } catch (AIException $e) {
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            ErrorHandler::logAiRequest($taskId, $userId, $provider, $model, $prompt, null, 0, $latencyMs, false, $e->getMessage());
             error_log('AI Error: ' . $e->getMessage());
             throw new Exception('AI service error: ' . $e->getMessage());
         } catch (Exception $e) {
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            ErrorHandler::logAiRequest($taskId, $userId, $provider, $model, $prompt, null, 0, $latencyMs, false, $e->getMessage());
             error_log('Unexpected error in AI execution: ' . $e->getMessage());
             throw new Exception('Unexpected error occurred. Please try again or contact support.');
         }
