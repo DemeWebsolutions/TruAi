@@ -34,7 +34,7 @@ php -S localhost:8080 router.php
 ### 2. Access Application
 - **Dashboard**: http://localhost:8080/TruAi/
 - **Login**: http://localhost:8080/TruAi/login-portal.html
-- **Default Credentials**: `admin` / `admin123`
+- **Default Credentials**: `admin` / `admin`
 
 ### 3. Configure API Keys
 After logging in:
