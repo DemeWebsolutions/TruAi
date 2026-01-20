@@ -42,6 +42,9 @@ class Database {
     }
 
     private function initializeSchema() {
+        // Run migrations first
+        $this->runMigrations();
+        
         $schema = "
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -189,5 +192,61 @@ class Database {
 
     public function lastInsertId() {
         return $this->connection->lastInsertId();
+    }
+
+    /**
+     * Run database migrations
+     */
+    private function runMigrations() {
+        // Create migrations table if not exists
+        $this->connection->exec("
+            CREATE TABLE IF NOT EXISTS migrations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                migration_name TEXT UNIQUE NOT NULL,
+                applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+
+        // Get list of applied migrations
+        $stmt = $this->connection->query("SELECT migration_name FROM migrations");
+        $appliedMigrations = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // Find migration files
+        $migrationsDir = dirname(DB_PATH) . '/migrations';
+        if (!is_dir($migrationsDir)) {
+            return; // No migrations directory
+        }
+
+        $migrationFiles = glob($migrationsDir . '/*.sql');
+        sort($migrationFiles);
+
+        foreach ($migrationFiles as $file) {
+            $migrationName = basename($file, '.sql');
+            
+            // Skip if already applied
+            if (in_array($migrationName, $appliedMigrations)) {
+                continue;
+            }
+
+            // Read and execute migration
+            $sql = file_get_contents($file);
+            if ($sql === false) {
+                error_log("Failed to read migration file: $file");
+                continue;
+            }
+
+            try {
+                // Execute migration in a transaction
+                $this->connection->beginTransaction();
+                $this->connection->exec($sql);
+                $this->connection->commit();
+                
+                error_log("Applied migration: $migrationName");
+            } catch (PDOException $e) {
+                $this->connection->rollBack();
+                error_log("Migration failed: $migrationName - " . $e->getMessage());
+                throw new Exception("Migration $migrationName failed: " . $e->getMessage());
+            }
+        }
     }
 }

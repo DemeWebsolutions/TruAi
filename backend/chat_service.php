@@ -36,8 +36,8 @@ class ChatService {
         $this->saveMessage($conversationId, 'user', $message);
 
         // Get AI response
-        $aiResponse = $this->getAIResponse($message, $model);
-        $this->saveMessage($conversationId, 'assistant', $aiResponse, $model);
+        $result = $this->getAIResponse($message, $model, $userId, $conversationId);
+        $this->saveMessage($conversationId, 'assistant', $result['content'], $result['model']);
 
         // Update conversation timestamp
         $this->db->execute(
@@ -46,11 +46,15 @@ class ChatService {
         );
 
         return [
+            'success' => true,
             'conversation_id' => $conversationId,
+            'reply' => $result['content'],
+            'model_used' => $result['model'],
+            'forensic_id' => $result['forensic_id'],
             'message' => [
                 'role' => 'assistant',
-                'content' => $aiResponse,
-                'model' => $model
+                'content' => $result['content'],
+                'model' => $result['model']
             ]
         ];
     }
@@ -136,9 +140,11 @@ class ChatService {
         return $title;
     }
 
-    private function getAIResponse($message, $model) {
+    private function getAIResponse($message, $model, $userId = null, $conversationId = null) {
         // Call actual AI API
         require_once __DIR__ . '/ai_client.php';
+        require_once __DIR__ . '/error_handler.php';
+        require_once __DIR__ . '/utils.php';
         
         // Get API keys from settings if available
         require_once __DIR__ . '/settings_service.php';
@@ -171,6 +177,10 @@ class ChatService {
         }
         
         $aiClient = new AIClient($openaiKey, $anthropicKey);
+        $startTime = microtime(true);
+        $provider = strpos($model, 'claude') !== false ? 'anthropic' : 'openai';
+        $taskId = 'chat_' . $conversationId . '_' . time();
+        $forensicId = TruAiUtils::generateForensicId('chat', $taskId);
         
         try {
             // Get conversation history for context
@@ -187,11 +197,44 @@ class ChatService {
             }
             
             $response = $aiClient->chat($message, $model, $conversationHistory);
-            return $response;
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            
+            // Get token usage
+            $tokenUsage = $aiClient->getTokenUsage();
+            $tokensUsed = $tokenUsage['total_tokens'] ?? 0;
+            
+            // Log successful request
+            ErrorHandler::logAiRequest(
+                $taskId,
+                $userId,
+                $provider,
+                $model,
+                $message,
+                $response,
+                $tokensUsed,
+                $latencyMs,
+                true,
+                null
+            );
+            
+            return [
+                'content' => $response,
+                'model' => $model,
+                'forensic_id' => $forensicId
+            ];
         } catch (Exception $e) {
+            $latencyMs = round((microtime(true) - $startTime) * 1000);
+            ErrorHandler::logAiRequest($taskId, $userId, $provider, $model, $message, null, 0, $latencyMs, false, $e->getMessage());
             error_log('AI chat failed: ' . $e->getMessage());
+            
             // Fallback response if API fails
-            return "I apologize, but I'm currently unable to process your request. Please ensure your API keys are configured correctly in Settings.\n\nError: " . $e->getMessage();
+            $fallbackMessage = "I apologize, but I'm currently unable to process your request. Please ensure your API keys are configured correctly in Settings.\n\nError: " . $e->getMessage();
+            
+            return [
+                'content' => $fallbackMessage,
+                'model' => $model,
+                'forensic_id' => $forensicId
+            ];
         }
     }
 }

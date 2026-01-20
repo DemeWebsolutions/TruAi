@@ -32,6 +32,36 @@ class TruAiAIClient {
   }
   
   /**
+   * Refresh CSRF token from server
+   */
+  async refreshCsrfToken() {
+    try {
+      const url = `${this.apiBase}/auth/refresh-token`;
+      const res = await fetch(url, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.csrf_token) {
+          this.csrf = data.csrf_token;
+          // Update global config
+          if (window.TRUAI_CONFIG) {
+            window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token;
+          }
+          console.log('✅ CSRF token refreshed successfully');
+          return true;
+        }
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to refresh CSRF token:', err);
+      return false;
+    }
+  }
+  
+  /**
    * Convert milliseconds to seconds
    */
   toSeconds(ms) {
@@ -161,16 +191,25 @@ class TruAiAIClient {
     }
   }
 
-  async createTask(prompt, context = null) {
+  async createTask(prompt, context = null, retryCount = 0) {
+    const MAX_RETRIES = 1; // Maximum number of token refresh retries
+    
     // Update CSRF token before each request (critical after login)
     this.updateCsrfToken();
+    
+    // If no CSRF token, try to refresh it
+    if (!this.csrf) {
+      console.warn('⚠️ No CSRF token available, attempting refresh...');
+      await this.refreshCsrfToken();
+    }
     
     // Debug logging
     console.log('Creating task with:', {
       hasCsrf: !!this.csrf,
       csrfLength: this.csrf?.length || 0,
       apiBase: this.apiBase,
-      credentials: 'include'
+      credentials: 'include',
+      retryCount: retryCount
     });
     
     const url = `${this.apiBase}/task/create`;
@@ -198,11 +237,21 @@ class TruAiAIClient {
       // Handle 401 Unauthorized specifically
       if (res.status === 401) {
         const errorData = await res.json().catch(() => ({ error: 'Unauthorized' }));
-        console.error('401 Unauthorized - Session expired');
+        console.error('401 Unauthorized - Session expired or invalid CSRF token');
         
-        // Handle session expiration with user-friendly dialog
+        // Try refreshing CSRF token first, but only once
+        if (retryCount < MAX_RETRIES) {
+          const refreshed = await this.refreshCsrfToken();
+          if (refreshed) {
+            console.log('CSRF token refreshed, retrying request...');
+            // Retry the request with new token
+            return this.createTask(prompt, context, retryCount + 1);
+          }
+        }
+        
+        // If refresh failed or max retries reached, handle session expiration
         await this.handleSessionExpiration({
-          retry: () => this.createTask(prompt, context)
+          retry: () => this.createTask(prompt, context, 0)
         });
         
         throw new Error('Session expired. Please log in to continue.');
