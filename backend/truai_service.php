@@ -253,19 +253,41 @@ class TruAiService {
     }
 
     private function simulateAIExecution($prompt, $model) {
-        // Call actual AI API
+        // Call actual AI API with proper exception handling
         require_once __DIR__ . '/ai_client.php';
         $aiClient = new AIClient();
         
         try {
             $response = $aiClient->generateCode($prompt, $model);
             return $response;
+        } catch (AIConfigurationException $e) {
+            error_log('AI Configuration Error: ' . $e->getMessage());
+            throw new Exception('AI service not configured. Please check API keys in Settings.');
+        } catch (AIRateLimitException $e) {
+            error_log('AI Rate Limit: ' . $e->getMessage());
+            $retryAfter = $e->getRetryAfter();
+            $message = 'AI service rate limit exceeded. Please try again';
+            if ($retryAfter) {
+                $message .= " in {$retryAfter} seconds";
+            } else {
+                $message .= ' later';
+            }
+            throw new Exception($message . '.');
+        } catch (AITimeoutException $e) {
+            error_log('AI Timeout: ' . $e->getMessage());
+            throw new Exception('AI service request timed out. Please try again.');
+        } catch (AITransientException $e) {
+            error_log('AI Transient Error: ' . $e->getMessage());
+            throw new Exception('AI service temporarily unavailable. Please try again.');
+        } catch (AIResponseException $e) {
+            error_log('AI Response Error: ' . $e->getMessage());
+            throw new Exception('AI service returned invalid response. Please try again or contact support.');
+        } catch (AIException $e) {
+            error_log('AI Error: ' . $e->getMessage());
+            throw new Exception('AI service error: ' . $e->getMessage());
         } catch (Exception $e) {
-            error_log('AI execution failed: ' . $e->getMessage());
-            // Fallback to simulated response if API fails
-            return "// AI execution failed. Please check API configuration.\n" .
-                   "// Error: " . $e->getMessage() . "\n" .
-                   "// Prompt: " . substr($prompt, 0, 50) . "...\n";
+            error_log('Unexpected error in AI execution: ' . $e->getMessage());
+            throw new Exception('Unexpected error occurred. Please try again or contact support.');
         }
     }
 

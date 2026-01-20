@@ -8,12 +8,17 @@
  * @version 1.0.0
  */
 
+require_once __DIR__ . '/ai_exceptions.php';
+
 class AIClient {
     private $openaiKey;
     private $anthropicKey;
     private $baseUrls;
+    private $timeout;
+    private $maxRetries;
+    private $tokenUsage;
 
-    public function __construct($openaiKey = null, $anthropicKey = null) {
+    public function __construct($openaiKey = null, $anthropicKey = null, $timeout = 30) {
         // Use provided keys, or fall back to environment variables, or settings
         $this->openaiKey = $openaiKey ?? OPENAI_API_KEY ?? $this->getApiKeyFromSettings('openai');
         $this->anthropicKey = $anthropicKey ?? ANTHROPIC_API_KEY ?? $this->getApiKeyFromSettings('anthropic');
@@ -21,6 +26,59 @@ class AIClient {
             'openai' => 'https://api.openai.com/v1',
             'anthropic' => 'https://api.anthropic.com/v1'
         ];
+        // Timeout configuration (default 30s, max 120s)
+        $this->timeout = min(max($timeout, 1), 120);
+        $this->maxRetries = 3;
+        $this->tokenUsage = [];
+    }
+    
+    /**
+     * Get token usage statistics
+     */
+    public function getTokenUsage() {
+        return $this->tokenUsage;
+    }
+    
+    /**
+     * Execute with retry logic for transient failures
+     */
+    private function executeWithRetry($callable, $operation = 'API call') {
+        $attempt = 0;
+        $lastException = null;
+        
+        while ($attempt < $this->maxRetries) {
+            try {
+                return $callable();
+            } catch (AIException $e) {
+                $lastException = $e;
+                
+                // Don't retry if not retryable
+                if (!$e->isRetryable()) {
+                    throw $e;
+                }
+                
+                $attempt++;
+                
+                // Last attempt, throw the exception
+                if ($attempt >= $this->maxRetries) {
+                    error_log("Max retries ($this->maxRetries) exceeded for $operation");
+                    throw $e;
+                }
+                
+                // Calculate exponential backoff delay
+                $delay = min(pow(2, $attempt - 1), 8); // Max 8 seconds
+                
+                // For rate limits, use the retry-after header if available
+                if ($e instanceof AIRateLimitException && $e->getRetryAfter()) {
+                    $delay = max($delay, $e->getRetryAfter());
+                }
+                
+                error_log("Retry attempt $attempt/$this->maxRetries for $operation after {$delay}s delay");
+                sleep($delay);
+            }
+        }
+        
+        throw $lastException;
     }
     
     /**
@@ -62,11 +120,13 @@ class AIClient {
             ['role' => 'user', 'content' => $prompt]
         ];
 
-        if ($this->isAnthropicModel($model)) {
-            return $this->callAnthropic($messages, $model);
-        } else {
-            return $this->callOpenAI($messages, $model);
-        }
+        return $this->executeWithRetry(function() use ($messages, $model) {
+            if ($this->isAnthropicModel($model)) {
+                return $this->callAnthropic($messages, $model);
+            } else {
+                return $this->callOpenAI($messages, $model);
+            }
+        }, "generateCode with model $model");
     }
 
     /**
@@ -96,11 +156,13 @@ class AIClient {
             'content' => $message
         ];
 
-        if ($this->isAnthropicModel($model)) {
-            return $this->callAnthropic($messages, $model);
-        } else {
-            return $this->callOpenAI($messages, $model);
-        }
+        return $this->executeWithRetry(function() use ($messages, $model) {
+            if ($this->isAnthropicModel($model)) {
+                return $this->callAnthropic($messages, $model);
+            } else {
+                return $this->callOpenAI($messages, $model);
+            }
+        }, "chat with model $model");
     }
 
     /**
@@ -108,7 +170,10 @@ class AIClient {
      */
     private function callOpenAI($messages, $model) {
         if (empty($this->openaiKey)) {
-            throw new Exception('OpenAI API key not configured. Set OPENAI_API_KEY environment variable.');
+            throw new AIConfigurationException(
+                'OpenAI API key not configured. Please set your API key in Settings.',
+                'OPENAI_KEY_MISSING'
+            );
         }
 
         $url = $this->baseUrls['openai'] . '/chat/completions';
@@ -128,27 +193,96 @@ class AIClient {
             'Authorization: Bearer ' . $this->openaiKey
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
+        $curlError = curl_error($ch);
+        $curlErrno = curl_errno($ch);
         curl_close($ch);
 
-        if ($error) {
-            throw new Exception('OpenAI API request failed: ' . $error);
+        // Handle CURL errors (network issues, timeouts)
+        if ($curlError) {
+            if ($curlErrno === CURLE_OPERATION_TIMEDOUT) {
+                throw new AITimeoutException(
+                    "OpenAI API request timed out after {$this->timeout}s. Please try again.",
+                    'OPENAI_TIMEOUT'
+                );
+            }
+            throw new AITransientException(
+                'OpenAI API request failed: ' . $curlError,
+                'OPENAI_NETWORK_ERROR'
+            );
         }
 
+        // Handle HTTP errors
         if ($httpCode !== 200) {
             $errorData = json_decode($response, true);
             $errorMsg = $errorData['error']['message'] ?? 'Unknown error';
-            throw new Exception('OpenAI API error (' . $httpCode . '): ' . $errorMsg);
+            $errorType = $errorData['error']['type'] ?? null;
+            
+            // Rate limit error
+            if ($httpCode === 429) {
+                $retryAfter = null;
+                if (isset($errorData['error']['retry_after'])) {
+                    $retryAfter = intval($errorData['error']['retry_after']);
+                }
+                throw new AIRateLimitException(
+                    'OpenAI API rate limit exceeded. Please try again later.',
+                    $retryAfter,
+                    'OPENAI_RATE_LIMIT'
+                );
+            }
+            
+            // Authentication error
+            if ($httpCode === 401) {
+                throw new AIConfigurationException(
+                    'OpenAI API authentication failed. Please check your API key in Settings.',
+                    'OPENAI_AUTH_FAILED'
+                );
+            }
+            
+            // Invalid request
+            if ($httpCode === 400) {
+                throw new AIResponseException(
+                    'OpenAI API invalid request: ' . $errorMsg,
+                    'OPENAI_INVALID_REQUEST'
+                );
+            }
+            
+            // Server error (retryable)
+            if ($httpCode >= 500) {
+                throw new AITransientException(
+                    'OpenAI API server error (' . $httpCode . '). Please try again.',
+                    'OPENAI_SERVER_ERROR'
+                );
+            }
+            
+            // Other errors
+            throw new AIException(
+                'OpenAI API error (' . $httpCode . '): ' . $errorMsg,
+                'OPENAI_ERROR_' . $httpCode,
+                false
+            );
         }
 
         $result = json_decode($response, true);
         
         if (!isset($result['choices'][0]['message']['content'])) {
-            throw new Exception('Invalid response from OpenAI API');
+            throw new AIResponseException(
+                'Invalid response from OpenAI API: missing content field',
+                'OPENAI_INVALID_RESPONSE'
+            );
+        }
+        
+        // Track token usage
+        if (isset($result['usage'])) {
+            $this->tokenUsage = [
+                'prompt_tokens' => $result['usage']['prompt_tokens'] ?? 0,
+                'completion_tokens' => $result['usage']['completion_tokens'] ?? 0,
+                'total_tokens' => $result['usage']['total_tokens'] ?? 0
+            ];
         }
 
         return $result['choices'][0]['message']['content'];
@@ -159,7 +293,10 @@ class AIClient {
      */
     private function callAnthropic($messages, $model) {
         if (empty($this->anthropicKey)) {
-            throw new Exception('Anthropic API key not configured. Set ANTHROPIC_API_KEY environment variable.');
+            throw new AIConfigurationException(
+                'Anthropic API key not configured. Please set your API key in Settings.',
+                'ANTHROPIC_KEY_MISSING'
+            );
         }
 
         $url = $this->baseUrls['anthropic'] . '/messages';
@@ -199,27 +336,96 @@ class AIClient {
             'anthropic-version: 2023-06-01'
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
+        $curlError = curl_error($ch);
+        $curlErrno = curl_errno($ch);
         curl_close($ch);
 
-        if ($error) {
-            throw new Exception('Anthropic API request failed: ' . $error);
+        // Handle CURL errors (network issues, timeouts)
+        if ($curlError) {
+            if ($curlErrno === CURLE_OPERATION_TIMEDOUT) {
+                throw new AITimeoutException(
+                    "Anthropic API request timed out after {$this->timeout}s. Please try again.",
+                    'ANTHROPIC_TIMEOUT'
+                );
+            }
+            throw new AITransientException(
+                'Anthropic API request failed: ' . $curlError,
+                'ANTHROPIC_NETWORK_ERROR'
+            );
         }
 
+        // Handle HTTP errors
         if ($httpCode !== 200) {
             $errorData = json_decode($response, true);
             $errorMsg = $errorData['error']['message'] ?? 'Unknown error';
-            throw new Exception('Anthropic API error (' . $httpCode . '): ' . $errorMsg);
+            $errorType = $errorData['error']['type'] ?? null;
+            
+            // Rate limit error
+            if ($httpCode === 429) {
+                $retryAfter = null;
+                if (isset($errorData['error']['retry_after'])) {
+                    $retryAfter = intval($errorData['error']['retry_after']);
+                }
+                throw new AIRateLimitException(
+                    'Anthropic API rate limit exceeded. Please try again later.',
+                    $retryAfter,
+                    'ANTHROPIC_RATE_LIMIT'
+                );
+            }
+            
+            // Authentication error
+            if ($httpCode === 401) {
+                throw new AIConfigurationException(
+                    'Anthropic API authentication failed. Please check your API key in Settings.',
+                    'ANTHROPIC_AUTH_FAILED'
+                );
+            }
+            
+            // Invalid request
+            if ($httpCode === 400) {
+                throw new AIResponseException(
+                    'Anthropic API invalid request: ' . $errorMsg,
+                    'ANTHROPIC_INVALID_REQUEST'
+                );
+            }
+            
+            // Server error (retryable)
+            if ($httpCode >= 500) {
+                throw new AITransientException(
+                    'Anthropic API server error (' . $httpCode . '). Please try again.',
+                    'ANTHROPIC_SERVER_ERROR'
+                );
+            }
+            
+            // Other errors
+            throw new AIException(
+                'Anthropic API error (' . $httpCode . '): ' . $errorMsg,
+                'ANTHROPIC_ERROR_' . $httpCode,
+                false
+            );
         }
 
         $result = json_decode($response, true);
         
         if (!isset($result['content'][0]['text'])) {
-            throw new Exception('Invalid response from Anthropic API');
+            throw new AIResponseException(
+                'Invalid response from Anthropic API: missing content field',
+                'ANTHROPIC_INVALID_RESPONSE'
+            );
+        }
+        
+        // Track token usage
+        if (isset($result['usage'])) {
+            $this->tokenUsage = [
+                'input_tokens' => $result['usage']['input_tokens'] ?? 0,
+                'output_tokens' => $result['usage']['output_tokens'] ?? 0,
+                'total_tokens' => ($result['usage']['input_tokens'] ?? 0) + ($result['usage']['output_tokens'] ?? 0)
+            ];
         }
 
         return $result['content'][0]['text'];
