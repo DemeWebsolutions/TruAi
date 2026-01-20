@@ -191,7 +191,9 @@ class TruAiAIClient {
     }
   }
 
-  async createTask(prompt, context = null) {
+  async createTask(prompt, context = null, retryCount = 0) {
+    const MAX_RETRIES = 1; // Maximum number of token refresh retries
+    
     // Update CSRF token before each request (critical after login)
     this.updateCsrfToken();
     
@@ -206,7 +208,8 @@ class TruAiAIClient {
       hasCsrf: !!this.csrf,
       csrfLength: this.csrf?.length || 0,
       apiBase: this.apiBase,
-      credentials: 'include'
+      credentials: 'include',
+      retryCount: retryCount
     });
     
     const url = `${this.apiBase}/task/create`;
@@ -236,17 +239,19 @@ class TruAiAIClient {
         const errorData = await res.json().catch(() => ({ error: 'Unauthorized' }));
         console.error('401 Unauthorized - Session expired or invalid CSRF token');
         
-        // Try refreshing CSRF token first
-        const refreshed = await this.refreshCsrfToken();
-        if (refreshed) {
-          console.log('CSRF token refreshed, retrying request...');
-          // Retry the request with new token
-          return this.createTask(prompt, context);
+        // Try refreshing CSRF token first, but only once
+        if (retryCount < MAX_RETRIES) {
+          const refreshed = await this.refreshCsrfToken();
+          if (refreshed) {
+            console.log('CSRF token refreshed, retrying request...');
+            // Retry the request with new token
+            return this.createTask(prompt, context, retryCount + 1);
+          }
         }
         
-        // If refresh failed, handle session expiration with user-friendly dialog
+        // If refresh failed or max retries reached, handle session expiration
         await this.handleSessionExpiration({
-          retry: () => this.createTask(prompt, context)
+          retry: () => this.createTask(prompt, context, 0)
         });
         
         throw new Error('Session expired. Please log in to continue.');

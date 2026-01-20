@@ -551,3 +551,279 @@ For AI integration issues:
 **TruAi HTML Server - Full AI Integration**  
 Copyright My Deme, LLC © 2026  
 Developed by DemeWebsolutions.com
+
+## Implementation Details (v1.0)
+
+### AI Client Architecture
+
+TruAi uses a robust AI client implementation with the following features:
+
+#### 1. Multi-Provider Support
+- **OpenAI API**: GPT-3.5 Turbo, GPT-4, GPT-4 Turbo
+- **Anthropic Claude**: Claude 3 Sonnet, Claude 3 Opus, Claude 3 Haiku
+- Automatic provider selection based on model name
+- Fallback support between providers
+
+#### 2. Error Handling & Retry Logic
+- **Automatic Retries**: Up to 3 attempts with exponential backoff
+- **Rate Limit Handling**: Respects retry-after headers
+- **Timeout Management**: Configurable timeouts (default 30s, max 120s)
+- **Error Classification**:
+  - `AIConfigurationException`: Missing or invalid API keys (not retryable)
+  - `AIRateLimitException`: Rate limits exceeded (retryable)
+  - `AITimeoutException`: Request timeouts (retryable)
+  - `AITransientException`: Network/temporary errors (retryable)
+  - `AIResponseException`: Invalid responses (not retryable)
+
+#### 3. Security Features
+- **Sensitive Data Sanitization**: Automatic redaction of API keys, passwords, tokens
+- **Path Sanitization**: Removes full file paths from error messages
+- **Secure Logging**: All logs sanitized before storage
+- **CSRF Protection**: Token refresh on authentication errors
+
+#### 4. Logging & Monitoring
+- **Request/Response Logging**: Full audit trail in `ai_requests` table
+- **Error Tracking**: Centralized error logging in `error_logs` table
+- **API Metrics**: Daily aggregated metrics in `api_metrics` table
+- **Performance Tracking**: Latency and token usage monitoring
+
+#### 5. Database Schema
+
+**ai_requests Table**:
+```sql
+CREATE TABLE ai_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id TEXT,
+    user_id INTEGER,
+    provider TEXT, -- 'openai' or 'anthropic'
+    model TEXT,
+    prompt TEXT,
+    response TEXT,
+    tokens_used INTEGER,
+    latency_ms INTEGER,
+    success BOOLEAN,
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**error_logs Table**:
+```sql
+CREATE TABLE error_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    error_type TEXT,
+    error_message TEXT,
+    stack_trace TEXT,
+    user_id INTEGER,
+    request_path TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**api_metrics Table**:
+```sql
+CREATE TABLE api_metrics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date DATE,
+    provider TEXT,
+    model TEXT,
+    requests_count INTEGER DEFAULT 0,
+    tokens_total INTEGER DEFAULT 0,
+    errors_count INTEGER DEFAULT 0
+);
+```
+
+### Response Format Standardization
+
+All AI endpoints now return a consistent response format:
+
+**Success Response (Task Execution)**:
+```json
+{
+  "success": true,
+  "output": "AI generated response text",
+  "task_id": "task_20260120_123456_abc123",
+  "forensic_id": "TRUAI_20260120_123456_def456",
+  "model_used": "gpt-4",
+  "execution_id": "exec_1234567890_xyz789"
+}
+```
+
+**Success Response (Chat)**:
+```json
+{
+  "success": true,
+  "conversation_id": 123,
+  "reply": "AI chat response",
+  "model_used": "gpt-4",
+  "forensic_id": "TRUAI_20260120_123456_ghi789",
+  "message": {
+    "role": "assistant",
+    "content": "AI chat response",
+    "model": "gpt-4"
+  }
+}
+```
+
+**Error Response**:
+```json
+{
+  "success": false,
+  "error": "User-friendly error message",
+  "error_code": "AI_CONFIGURATION_ERROR",
+  "retry_after": 60
+}
+```
+
+### Authentication & CSRF Token Management
+
+#### Token Refresh Endpoint
+```
+GET /api/v1/auth/refresh-token
+```
+
+Response:
+```json
+{
+  "success": true,
+  "csrf_token": "new-token-value",
+  "username": "admin"
+}
+```
+
+#### Frontend Integration
+The frontend AI client automatically:
+1. Updates CSRF token before each request
+2. Refreshes token on 401 errors
+3. Retries failed requests after token refresh
+4. Shows user-friendly session expiration dialogs
+
+### Advanced Troubleshooting
+
+#### Common Issues
+
+**1. "AI service not configured" Error**
+- **Cause**: Missing or invalid API keys
+- **Solution**: 
+  1. Navigate to Settings → AI Providers
+  2. Enter valid API key for OpenAI or Anthropic
+  3. Test connection using "Test AI Connection" button
+
+**2. "Session expired" Errors**
+- **Cause**: CSRF token expired or session invalidated
+- **Solution**: The system will automatically refresh the token. If it persists, log out and log back in.
+
+**3. Rate Limit Errors**
+- **Cause**: Too many API requests in short period
+- **Solution**: Wait for the retry period (shown in error message) or upgrade API plan
+
+**4. Timeout Errors**
+- **Cause**: Large requests taking too long
+- **Solution**: 
+  - Break down large prompts into smaller chunks
+  - Increase timeout in settings (max 120 seconds)
+  - Use faster models (GPT-3.5 instead of GPT-4)
+
+**5. Database Lock Errors**
+- **Cause**: Concurrent database access
+- **Solution**: SQLite handles this automatically with retries. If persistent, check database file permissions.
+
+#### Debugging Tools
+
+**Check Migration Status**:
+```bash
+php -r "
+require_once 'backend/config.php';
+require_once 'backend/database.php';
+\$db = Database::getInstance();
+\$migrations = \$db->query('SELECT * FROM migrations');
+print_r(\$migrations);
+"
+```
+
+**View Recent AI Requests**:
+```bash
+php -r "
+require_once 'backend/config.php';
+require_once 'backend/database.php';
+\$db = Database::getInstance();
+\$requests = \$db->query('SELECT * FROM ai_requests ORDER BY created_at DESC LIMIT 10');
+print_r(\$requests);
+"
+```
+
+**Check Error Logs**:
+```bash
+php -r "
+require_once 'backend/config.php';
+require_once 'backend/database.php';
+\$db = Database::getInstance();
+\$errors = \$db->query('SELECT * FROM error_logs ORDER BY created_at DESC LIMIT 10');
+print_r(\$errors);
+"
+```
+
+**View API Metrics**:
+```bash
+php -r "
+require_once 'backend/config.php';
+require_once 'backend/database.php';
+\$db = Database::getInstance();
+\$metrics = \$db->query('SELECT * FROM api_metrics ORDER BY date DESC LIMIT 7');
+print_r(\$metrics);
+"
+```
+
+### Security Considerations
+
+1. **API Key Storage**: Keys stored encrypted in database
+2. **Sensitive Data**: Automatically sanitized in logs
+3. **CSRF Protection**: All API requests require valid CSRF token
+4. **Session Management**: Automatic session refresh and expiration handling
+5. **Error Messages**: No sensitive information exposed to users
+
+### Performance Optimization
+
+1. **Connection Pooling**: Single database instance per request
+2. **Indexed Queries**: All foreign keys and date fields indexed
+3. **Lazy Loading**: AI client initialized only when needed
+4. **Caching**: Conversation history limited to last 10 messages
+5. **Metrics Aggregation**: Daily rollup to reduce table size
+
+## Manual Testing Checklist
+
+After deployment, verify the following:
+
+- [ ] AI generation works with OpenAI
+- [ ] AI generation works with Anthropic (if configured)
+- [ ] Error handling shows user-friendly messages
+- [ ] CSRF token auto-refreshes on expiration
+- [ ] Session expiration handled gracefully
+- [ ] Rate limits trigger retry logic
+- [ ] Timeouts handled appropriately
+- [ ] Database logging working for all requests
+- [ ] Sensitive data sanitized in logs
+- [ ] API metrics tracked correctly
+- [ ] Forensic IDs included in responses
+- [ ] Frontend receives standardized response format
+
+## Automated Testing
+
+Run all tests:
+```bash
+cd TruAi
+./run-all-tests.sh
+```
+
+Test specific components:
+```bash
+# Test database migrations
+php /tmp/test_migrations.php
+
+# Test error handler
+php /tmp/test_error_handler.php
+
+# Test AI client (requires API keys)
+php tests/ai_client_test.php
+```
+

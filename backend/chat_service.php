@@ -144,6 +144,7 @@ class ChatService {
         // Call actual AI API
         require_once __DIR__ . '/ai_client.php';
         require_once __DIR__ . '/error_handler.php';
+        require_once __DIR__ . '/utils.php';
         
         // Get API keys from settings if available
         require_once __DIR__ . '/settings_service.php';
@@ -179,7 +180,7 @@ class ChatService {
         $startTime = microtime(true);
         $provider = strpos($model, 'claude') !== false ? 'anthropic' : 'openai';
         $taskId = 'chat_' . $conversationId . '_' . time();
-        $forensicId = 'TRUAI_' . date('Ymd_His') . '_' . substr(md5($taskId . microtime()), 0, 8);
+        $forensicId = TruAiUtils::generateForensicId('chat', $taskId);
         
         try {
             // Get conversation history for context

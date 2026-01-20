@@ -13,13 +13,13 @@ class ErrorHandler {
     
     // Sensitive patterns to redact from error messages
     private static $sensitivePatterns = [
-        '/sk-[a-zA-Z0-9]{32,}/',           // OpenAI API keys
-        '/sk-ant-[a-zA-Z0-9-]{32,}/',      // Anthropic API keys
-        '/api[_-]?key["\']?\s*[:=]\s*["\']?[a-zA-Z0-9-_]+/', // Generic API keys
-        '/password["\']?\s*[:=]\s*["\']?[^"\']+/',           // Passwords
-        '/token["\']?\s*[:=]\s*["\']?[a-zA-Z0-9-_\.]+/',     // Tokens
-        '/Bearer\s+[a-zA-Z0-9-_\.]+/',     // Bearer tokens
-        '/secret["\']?\s*[:=]\s*["\']?[^"\']+/',            // Secrets
+        '/sk-[a-zA-Z0-9]{32,}/',                    // OpenAI API keys
+        '/sk-ant-[a-zA-Z0-9-]{32,}/',               // Anthropic API keys
+        '/["\']\s*api[_-]?key["\']\s*[:=]\s*["\']\s*[a-zA-Z0-9-_]+/', // API keys in JSON/config
+        '/["\']\s*password["\']\s*[:=]\s*["\']\s*[^"\']+/',           // Passwords in JSON/config
+        '/["\']\s*token["\']\s*[:=]\s*["\']\s*[a-zA-Z0-9-_\.]+/',     // Tokens in JSON/config
+        '/Bearer\s+[a-zA-Z0-9-_\.]+/',              // Bearer tokens
+        '/["\']\s*secret["\']\s*[:=]\s*["\']\s*[^"\']+/',            // Secrets in JSON/config
     ];
     
     /**
@@ -33,8 +33,8 @@ class ErrorHandler {
             $message = preg_replace($pattern, '[REDACTED]', $message);
         }
         
-        // Remove full file paths
-        $message = preg_replace('/\/[\/\w\-\.]+\//', '[PATH]/', $message);
+        // Remove full file paths (Unix and Windows)
+        $message = preg_replace('#[/\\\\][\w\-\.\s/\\\\]+[/\\\\]#', '[PATH]/', $message);
         
         return $message;
     }

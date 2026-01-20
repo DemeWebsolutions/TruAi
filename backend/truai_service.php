@@ -23,6 +23,8 @@ class TruAiService {
      * Create a new task with personality governance
      */
     public function createTask($userId, $prompt, $context = null, $preferredTier = 'auto') {
+        require_once __DIR__ . '/utils.php';
+        
         if (empty($prompt)) {
             throw new Exception('Prompt is required');
         }
@@ -41,8 +43,8 @@ class TruAiService {
             ? $this->tierRouter->assign($riskLevel) 
             : $preferredTier;
 
-        // Generate task ID
-        $taskId = 'task_' . date('Ymd_His') . '_' . substr(md5(uniqid()), 0, 8);
+        // Generate task ID using utility function
+        $taskId = TruAiUtils::generateTaskId();
 
         // Store task with strategic context
         $this->db->execute(
@@ -149,6 +151,8 @@ class TruAiService {
      * Execute a task using AI
      */
     public function executeTask($taskId) {
+        require_once __DIR__ . '/utils.php';
+        
         $task = $this->getTask($taskId);
         
         if (!$task) {
@@ -159,16 +163,16 @@ class TruAiService {
             throw new Exception('Task cannot be executed in current state');
         }
 
-        // Generate execution ID and forensic ID
-        $execId = 'exec_' . time() . '_' . substr(md5(uniqid()), 0, 6);
-        $forensicId = 'TRUAI_' . date('Ymd_His') . '_' . substr(md5($taskId . microtime()), 0, 8);
+        // Generate IDs using utility functions
+        $execId = TruAiUtils::generateExecutionId();
+        $forensicId = TruAiUtils::generateForensicId('task', $taskId);
 
         // Simulate AI execution (placeholder for actual AI integration)
         $model = $this->getModelForTier($task['tier']);
         $output = $this->simulateAIExecution($task['prompt'], $model, $task['user_id'], $taskId);
 
         // Store execution
-        $artifactId = 'artifact_' . date('Ymd_His');
+        $artifactId = TruAiUtils::generateArtifactId();
         
         $this->db->execute(
             "INSERT INTO executions (id, task_id, model, output_artifact, status) 
