@@ -37,7 +37,10 @@ class TruAiAPI {
                 return false;
             }
         } catch (error) {
-            // Silent fail - return false to indicate failure
+            // Log error for debugging while avoiding sensitive data exposure
+            if (error && error.message) {
+                console.error('Failed to update CSRF token');
+            }
         }
         
         // Fallback to window config

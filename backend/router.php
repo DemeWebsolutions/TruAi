@@ -21,7 +21,7 @@ class Router {
                 'lifetime' => defined('SESSION_LIFETIME') ? SESSION_LIFETIME : 3600,
                 'path' => '/',
                 'domain' => '',
-                'secure' => (defined('APP_ENV') && APP_ENV === 'production'),
+                'secure' => (defined('APP_ENV') ? APP_ENV === 'production' : false),
                 'httponly' => true,
                 'samesite' => 'Lax'
             ]);
