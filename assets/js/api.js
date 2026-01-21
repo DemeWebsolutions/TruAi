@@ -33,12 +33,11 @@ class TruAiAPI {
                 }
             } else if (response.status === 401) {
                 // Session expired - redirect to login
-                console.warn('Session expired - redirecting to login');
                 window.location.href = '/TruAi/login-portal.html';
                 return false;
             }
         } catch (error) {
-            console.warn('Token refresh failed:', error.message);
+            // Silent fail - return false to indicate failure
         }
         
         // Fallback to window config
@@ -86,12 +85,10 @@ class TruAiAPI {
                     
                     if (!isAuthEndpoint) {
                         // Try to refresh session token
-                        console.log('Received 401 - attempting session recovery...');
                         const tokenRefreshed = await this.updateCsrfToken();
                         
                         if (!tokenRefreshed) {
                             // Session recovery failed - redirect to login
-                            console.warn('Session recovery failed - redirecting to login');
                             window.location.href = '/TruAi/login-portal.html';
                             return;
                         }
@@ -100,7 +97,6 @@ class TruAiAPI {
                         // For now, just fall through to the error
                     } else if (isAuthEndpoint && endpoint !== '/auth/refresh-token') {
                         // Authentication failed on auth endpoint - redirect to login
-                        console.warn('Authentication failed - redirecting to login');
                         // Clear any existing auth state
                         if (window.TRUAI_CONFIG) {
                             window.TRUAI_CONFIG.IS_AUTHENTICATED = false;

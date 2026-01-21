@@ -13,14 +13,18 @@ class Router {
     private $routes = [];
 
     public function __construct() {
-        // CRITICAL: Start session BEFORE creating Auth instance
+        // Session should already be started by config.php
+        // This is a safety fallback for direct instantiation
         if (session_status() === PHP_SESSION_NONE) {
-            // Configure session for environment-specific security
-            // For production, these should be overridden by config.php
-            $isProduction = (defined('APP_ENV') && APP_ENV === 'production');
-            ini_set('session.cookie_secure', $isProduction ? '1' : '0');
-            ini_set('session.cookie_httponly', '1'); // Prevent XSS
-            ini_set('session.cookie_samesite', 'Lax'); // CSRF protection
+            // Use session_set_cookie_params for consistency with config.php
+            session_set_cookie_params([
+                'lifetime' => defined('SESSION_LIFETIME') ? SESSION_LIFETIME : 3600,
+                'path' => '/',
+                'domain' => '',
+                'secure' => (defined('APP_ENV') && APP_ENV === 'production'),
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
             session_start();
         }
         

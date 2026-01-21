@@ -29,13 +29,15 @@ class AIClient {
         if ($openaiKey !== null) {
             $this->openaiKey = $openaiKey;
         } else {
-            $this->openaiKey = $this->getApiKeyFromSettings('openai') ?: (OPENAI_API_KEY ?: '');
+            $settingsKey = $this->getApiKeyFromSettings('openai');
+            $this->openaiKey = !empty($settingsKey) ? $settingsKey : (OPENAI_API_KEY ?: '');
         }
         
         if ($anthropicKey !== null) {
             $this->anthropicKey = $anthropicKey;
         } else {
-            $this->anthropicKey = $this->getApiKeyFromSettings('anthropic') ?: (ANTHROPIC_API_KEY ?: '');
+            $settingsKey = $this->getApiKeyFromSettings('anthropic');
+            $this->anthropicKey = !empty($settingsKey) ? $settingsKey : (ANTHROPIC_API_KEY ?: '');
         }
         
         $this->baseUrls = [
