@@ -98,8 +98,6 @@ class TruAiService {
             'assigned_tier' => $tier,
             'status' => 'CREATED'
         ];
-        // Auto-execute based on risk tier personality rules
-        return $this->applyPersonalityExecution($taskId, $riskLevel, $tier);
     }
 
     /**
