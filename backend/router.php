@@ -13,6 +13,15 @@ class Router {
     private $routes = [];
 
     public function __construct() {
+        // CRITICAL: Start session BEFORE creating Auth instance
+        if (session_status() === PHP_SESSION_NONE) {
+            // Configure session for localhost compatibility
+            ini_set('session.cookie_secure', '0'); // Allow HTTP for local dev
+            ini_set('session.cookie_httponly', '1'); // Prevent XSS
+            ini_set('session.cookie_samesite', 'Lax'); // CSRF protection
+            session_start();
+        }
+        
         $this->auth = new Auth();
         $this->registerRoutes();
     }
@@ -23,6 +32,7 @@ class Router {
         $this->routes['POST']['/api/v1/auth/login'] = [$this, 'handleLogin'];
         $this->routes['POST']['/api/v1/auth/logout'] = [$this, 'handleLogout'];
         $this->routes['GET']['/api/v1/auth/status'] = [$this, 'handleAuthStatus'];
+        $this->routes['GET']['/api/v1/auth/refresh-token'] = [$this, 'handleRefreshToken'];
 
         // Protected routes (require authentication)
         $this->routes['POST']['/api/v1/task/create'] = [$this, 'handleTaskCreate'];
@@ -101,6 +111,7 @@ class Router {
                 if ($route !== '/api/v1/auth/login' && 
                     $route !== '/api/v1/auth/status' &&
                     $route !== '/api/v1/auth/publickey' &&
+                    $route !== '/api/v1/auth/refresh-token' &&
                     $route !== '/api/v1/ai/test') {
                     // Settings endpoints require authentication (correct behavior)
                     if (!$this->auth->isAuthenticated()) {
@@ -179,10 +190,29 @@ class Router {
         if ($this->auth->isAuthenticated()) {
             echo json_encode([
                 'authenticated' => true,
-                'username' => $this->auth->getUsername()
+                'username' => $this->auth->getUsername(),
+                'csrf_token' => Auth::generateCsrfToken() // Include fresh token
             ]);
         } else {
             echo json_encode(['authenticated' => false]);
+        }
+    }
+
+    private function handleRefreshToken() {
+        if ($this->auth->isAuthenticated()) {
+            echo json_encode([
+                'success' => true,
+                'csrf_token' => Auth::generateCsrfToken(),
+                'authenticated' => true,
+                'username' => $this->auth->getUsername()
+            ]);
+        } else {
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'authenticated' => false,
+                'error' => 'Session expired. Please log in again.'
+            ]);
         }
     }
 

@@ -14,6 +14,42 @@ class TruAiAPI {
         this.csrfToken = window.TRUAI_CONFIG?.CSRF_TOKEN || '';
     }
 
+    async updateCsrfToken() {
+        try {
+            // Fetch fresh token from server
+            const response = await fetch(`${this.baseURL}/auth/refresh-token`, {
+                method: 'GET',
+                credentials: 'include' // Send session cookie
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.csrf_token) {
+                    this.csrfToken = data.csrf_token;
+                    if (window.TRUAI_CONFIG) {
+                        window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token;
+                    }
+                    console.log('✅ CSRF token refreshed from server');
+                    return true;
+                }
+            } else if (response.status === 401) {
+                // Session expired - redirect to login
+                console.warn('Session expired - redirecting to login');
+                window.location.href = '/TruAi/login-portal.html';
+                return false;
+            }
+        } catch (error) {
+            console.warn('Token refresh failed:', error.message);
+        }
+        
+        // Fallback to window config
+        if (window.TRUAI_CONFIG?.CSRF_TOKEN) {
+            this.csrfToken = window.TRUAI_CONFIG.CSRF_TOKEN;
+        }
+        
+        return !!this.csrfToken;
+    }
+
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
         const config = {
@@ -22,6 +58,7 @@ class TruAiAPI {
                 'Content-Type': 'application/json',
                 ...options.headers
             },
+            credentials: 'include', // CRITICAL: Send cookies with every request
             ...options
         };
 
@@ -43,14 +80,27 @@ class TruAiAPI {
             }
 
             if (!response.ok) {
-                // Handle 401 Unauthorized - only redirect to login for auth endpoints
-                // Other 401s (e.g., AI provider credential errors) should throw errors
+                // Handle 401 Unauthorized
                 if (response.status === 401) {
                     // Check if this is an authentication-related endpoint
                     const isAuthEndpoint = endpoint.startsWith('/auth/');
                     
-                    if (isAuthEndpoint) {
-                        // Authentication failed - redirect to login
+                    if (!isAuthEndpoint) {
+                        // Try to refresh session token
+                        console.log('Received 401 - attempting session recovery...');
+                        const tokenRefreshed = await this.updateCsrfToken();
+                        
+                        if (!tokenRefreshed) {
+                            // Session recovery failed - redirect to login
+                            console.warn('Session recovery failed - redirecting to login');
+                            window.location.href = '/TruAi/login-portal.html';
+                            return;
+                        }
+                        
+                        // If we're still here, the session is valid but may have had a CSRF issue
+                        // For now, just fall through to the error
+                    } else if (isAuthEndpoint && endpoint !== '/auth/refresh-token') {
+                        // Authentication failed on auth endpoint - redirect to login
                         console.warn('Authentication failed - redirecting to login');
                         // Clear any existing auth state
                         if (window.TRUAI_CONFIG) {
@@ -59,12 +109,12 @@ class TruAiAPI {
                         // Redirect to login portal
                         window.location.href = '/TruAi/login-portal.html';
                         return; // Don't throw error, redirect is happening
-                    } else {
-                        // Non-auth 401 (likely AI provider credential issue) - throw error
-                        const errorMsg = data.error || data.message || 'Unauthorized: Check your AI provider credentials in Settings';
-                        console.error(`API Error [${options.method || 'GET'} ${endpoint}]: 401 - ${errorMsg}`);
-                        throw new Error(errorMsg);
                     }
+                    
+                    // For all cases, still throw the error after recovery attempts
+                    const errorMsg = data.error || data.message || 'Unauthorized: Check your credentials';
+                    console.error(`API Error [${options.method || 'GET'} ${endpoint}]: 401 - ${errorMsg}`);
+                    throw new Error(errorMsg);
                 }
                 
                 // Safe error logging - do not log response data which may contain sensitive info

@@ -74,16 +74,18 @@ foreach ($directories as $dir) {
 date_default_timezone_set('UTC');
 
 // Session configuration
+// NOTE: Session will be started in router.php before Auth instantiation
+// This config ensures it's also started if accessed directly
 if (session_status() === PHP_SESSION_NONE) {
     session_name('TRUAI_SESSION');
     // Set cookie parameters before starting session
     session_set_cookie_params([
         'lifetime' => SESSION_LIFETIME,
-        'path' => '/',  // Available for entire domain
-        'domain' => '',  // Current domain (localhost)
-        'secure' => (APP_ENV === 'production'),  // Only HTTPS in production
-        'httponly' => true,  // Prevent JavaScript access
-        'samesite' => 'Lax'  // Allow cross-site requests from same site
+        'path' => '/',
+        'domain' => '',
+        'secure' => false,  // false on localhost for HTTP compatibility
+        'httponly' => true,
+        'samesite' => 'Lax'
     ]);
     session_start([
         'gc_maxlifetime' => SESSION_LIFETIME

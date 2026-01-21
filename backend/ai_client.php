@@ -24,9 +24,9 @@ class AIClient {
     const CONNECT_TIMEOUT = 10; // Connection timeout in seconds
 
     public function __construct($openaiKey = null, $anthropicKey = null, $timeout = 30) {
-        // Use provided keys, or fall back to environment variables, or settings
-        $this->openaiKey = $openaiKey ?? OPENAI_API_KEY ?? $this->getApiKeyFromSettings('openai');
-        $this->anthropicKey = $anthropicKey ?? ANTHROPIC_API_KEY ?? $this->getApiKeyFromSettings('anthropic');
+        // Precedence: Provided keys > User settings > Environment variables
+        $this->openaiKey = $openaiKey ?? $this->getApiKeyFromSettings('openai') ?: (OPENAI_API_KEY ?: '');
+        $this->anthropicKey = $anthropicKey ?? $this->getApiKeyFromSettings('anthropic') ?: (ANTHROPIC_API_KEY ?: '');
         $this->baseUrls = [
             'openai' => 'https://api.openai.com/v1',
             'anthropic' => 'https://api.anthropic.com/v1'

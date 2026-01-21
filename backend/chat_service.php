@@ -140,37 +140,40 @@ class ChatService {
         // Call actual AI API
         require_once __DIR__ . '/ai_client.php';
         
-        // Get API keys from settings if available
-        require_once __DIR__ . '/settings_service.php';
-        require_once __DIR__ . '/auth.php';
-        
-        $openaiKey = null;
-        $anthropicKey = null;
-        
-        try {
-            $auth = new Auth();
-            if ($auth->isAuthenticated()) {
-                $settingsService = new SettingsService();
-                $settings = $settingsService->getSettings($auth->getUserId());
-                
-                if (!empty($settings['ai']['openaiApiKey'])) {
-                    $openaiKey = $settings['ai']['openaiApiKey'];
-                }
-                if (!empty($settings['ai']['anthropicApiKey'])) {
-                    $anthropicKey = $settings['ai']['anthropicApiKey'];
-                }
-            }
-        } catch (Exception $e) {
-            error_log('Could not load API keys from settings: ' . $e->getMessage());
-        }
+        // Note: AIClient constructor now handles precedence:
+        // 1. Provided keys (passed here as null, so it will check settings)
+        // 2. User settings (loaded automatically by AIClient)
+        // 3. Environment variables (fallback)
         
         // Determine model if 'auto'
         if ($model === 'auto') {
-            // Default to OpenAI GPT-4 if available, otherwise Anthropic
-            $model = (!empty($openaiKey) || !empty(OPENAI_API_KEY)) ? 'gpt-4' : 'claude-3-sonnet';
+            // Try to load user settings to determine which model to use
+            require_once __DIR__ . '/settings_service.php';
+            require_once __DIR__ . '/auth.php';
+            
+            try {
+                $auth = new Auth();
+                if ($auth->isAuthenticated()) {
+                    $settingsService = new SettingsService();
+                    $settings = $settingsService->getSettings($auth->getUserId());
+                    
+                    // Prefer OpenAI if configured, otherwise Anthropic
+                    if (!empty($settings['ai']['openaiApiKey']) || !empty(OPENAI_API_KEY)) {
+                        $model = 'gpt-4';
+                    } else {
+                        $model = 'claude-3-sonnet';
+                    }
+                } else {
+                    // Not authenticated - use OpenAI if env var exists
+                    $model = !empty(OPENAI_API_KEY) ? 'gpt-4' : 'claude-3-sonnet';
+                }
+            } catch (Exception $e) {
+                error_log('Could not determine auto model: ' . $e->getMessage());
+                $model = 'gpt-4'; // Default fallback
+            }
         }
         
-        $aiClient = new AIClient($openaiKey, $anthropicKey);
+        $aiClient = new AIClient();
         
         try {
             // Get conversation history for context
