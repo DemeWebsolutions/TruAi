@@ -29,7 +29,6 @@ class TruAiAPI {
                     if (window.TRUAI_CONFIG) {
                         window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token;
                     }
-                    console.log('✅ CSRF token refreshed from server');
                     return true;
                 }
             } else if (response.status === 401) {

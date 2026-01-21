@@ -83,7 +83,7 @@ if (session_status() === PHP_SESSION_NONE) {
         'lifetime' => SESSION_LIFETIME,
         'path' => '/',
         'domain' => '',
-        'secure' => false,  // false on localhost for HTTP compatibility
+        'secure' => (APP_ENV === 'production'),  // HTTPS only in production
         'httponly' => true,
         'samesite' => 'Lax'
     ]);

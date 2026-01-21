@@ -25,8 +25,19 @@ class AIClient {
 
     public function __construct($openaiKey = null, $anthropicKey = null, $timeout = 30) {
         // Precedence: Provided keys > User settings > Environment variables
-        $this->openaiKey = $openaiKey ?? $this->getApiKeyFromSettings('openai') ?: (OPENAI_API_KEY ?: '');
-        $this->anthropicKey = $anthropicKey ?? $this->getApiKeyFromSettings('anthropic') ?: (ANTHROPIC_API_KEY ?: '');
+        // Only check settings if no key provided to avoid unnecessary DB queries
+        if ($openaiKey !== null) {
+            $this->openaiKey = $openaiKey;
+        } else {
+            $this->openaiKey = $this->getApiKeyFromSettings('openai') ?: (OPENAI_API_KEY ?: '');
+        }
+        
+        if ($anthropicKey !== null) {
+            $this->anthropicKey = $anthropicKey;
+        } else {
+            $this->anthropicKey = $this->getApiKeyFromSettings('anthropic') ?: (ANTHROPIC_API_KEY ?: '');
+        }
+        
         $this->baseUrls = [
             'openai' => 'https://api.openai.com/v1',
             'anthropic' => 'https://api.anthropic.com/v1'

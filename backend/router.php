@@ -15,8 +15,10 @@ class Router {
     public function __construct() {
         // CRITICAL: Start session BEFORE creating Auth instance
         if (session_status() === PHP_SESSION_NONE) {
-            // Configure session for localhost compatibility
-            ini_set('session.cookie_secure', '0'); // Allow HTTP for local dev
+            // Configure session for environment-specific security
+            // For production, these should be overridden by config.php
+            $isProduction = (defined('APP_ENV') && APP_ENV === 'production');
+            ini_set('session.cookie_secure', $isProduction ? '1' : '0');
             ini_set('session.cookie_httponly', '1'); // Prevent XSS
             ini_set('session.cookie_samesite', 'Lax'); // CSRF protection
             session_start();
