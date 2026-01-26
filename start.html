@@ -1,0 +1,498 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi Login Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('/Users/mydemellc./Desktop/TruAi/assets/images/Start-Background.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #0b0d11;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        .user-input {
+            position: absolute;
+            left: 50%;
+            top: 65.8%;
+            width: 13.8%;
+            min-width: 200px;
+            max-width: 300px;
+            height: 50px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 18px;
+            padding: 0 20px;
+            outline: none;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            text-align: center;
+            line-height: 50px;
+            vertical-align: middle;
+        }
+
+        .user-input:focus {
+            background: none;
+        }
+
+        .user-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+        }
+
+        .password-input {
+            position: absolute;
+            left: 50%;
+            top: 79.2%;
+            width: 13.8%;
+            min-width: 200px;
+            max-width: 300px;
+            height: 50px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 18px;
+            padding: 0 20px;
+            outline: none;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            text-align: center;
+            line-height: 50px;
+            vertical-align: middle;
+        }
+
+        .password-input:focus {
+            background: none;
+        }
+
+        .password-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+        }
+
+        /* Error and Loading Messages */
+        .error-message {
+            position: absolute;
+            left: 50%;
+            top: 85%;
+            transform: translateX(-50%);
+            color: #f44336;
+            font-size: 14px;
+            text-align: center;
+            padding: 12px 24px;
+            background-color: rgba(244, 67, 54, 0.15);
+            border-radius: 8px;
+            border: 1px solid rgba(244, 67, 54, 0.4);
+            display: none;
+            max-width: 400px;
+            width: auto;
+            z-index: 1000;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .loading {
+            position: absolute;
+            left: 50%;
+            top: 85%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            text-align: center;
+            padding: 12px 24px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        /* Hidden submit button for form submission */
+        .submit-button {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Responsive adjustments */
+        /* Mobile (portrait) */
+        @media (max-width: 480px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 85%;
+                min-width: 180px;
+                max-width: none;
+                font-size: 16px;
+                padding: 0 15px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 58%;
+            }
+            
+            .password-input {
+                top: 68%;
+            }
+
+            .error-message,
+            .loading {
+                top: 75%;
+                width: 90%;
+                font-size: 12px;
+            }
+        }
+
+        /* Mobile (landscape) and small tablets */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 70%;
+                min-width: 200px;
+                max-width: 400px;
+                font-size: 17px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 60%;
+            }
+            
+            .password-input {
+                top: 70%;
+            }
+
+            .error-message,
+            .loading {
+                top: 78%;
+            }
+        }
+
+        /* Tablets */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 25%;
+                min-width: 220px;
+                max-width: 350px;
+                font-size: 17px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 63%;
+            }
+            
+            .password-input {
+                top: 75%;
+            }
+
+            .error-message,
+            .loading {
+                top: 82%;
+            }
+        }
+
+        /* Laptops and small desktops */
+        @media (min-width: 1025px) and (max-width: 1440px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 18%;
+                min-width: 240px;
+                max-width: 320px;
+                font-size: 18px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 64.5%;
+            }
+            
+            .password-input {
+                top: 77%;
+            }
+
+            .error-message,
+            .loading {
+                top: 83%;
+            }
+        }
+
+        /* Large desktops */
+        @media (min-width: 1441px) and (max-width: 1919px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 15%;
+                min-width: 250px;
+                max-width: 300px;
+                font-size: 18px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 65.2%;
+            }
+            
+            .password-input {
+                top: 78.5%;
+            }
+
+            .error-message,
+            .loading {
+                top: 84%;
+            }
+        }
+
+        /* Extra large desktops (1920px+) */
+        @media (min-width: 1920px) {
+            .user-input {
+                left: 50%;
+                width: 264.7px;
+                top: 700.177px;
+                transform: translateX(-50%);
+            }
+
+            .password-input {
+                left: 50%;
+                width: 264.7px;
+                top: 854.484px;
+                transform: translateX(-50%);
+            }
+
+            .error-message,
+            .loading {
+                top: 920px;
+            }
+        }
+
+        /* SVG Project Option Styles */
+        .project-option {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .project-option path,
+        .project-option rect,
+        .project-option circle,
+        .project-option polygon {
+            stroke: #ffffff;
+            stroke-opacity: 0.27;
+            fill: none;
+            transition: all 0.3s ease;
+        }
+
+        .project-option:hover path,
+        .project-option:hover rect,
+        .project-option:hover circle,
+        .project-option:hover polygon {
+            stroke: #ffffff;
+            stroke-opacity: 1;
+        }
+
+        .project-option.selected path,
+        .project-option.selected rect,
+        .project-option.selected circle,
+        .project-option.selected polygon {
+            stroke: #008ED6;
+            stroke-opacity: 1;
+        }
+    </style>
+</head>
+    <body>
+        <div class="container">
+            <div class="svg-wrapper">
+                <object data="/Users/mydemellc./Desktop/TruAi/assets/images/Start.svg" type="image/svg+xml" width="100%" height="100%">
+                    <embed src="/Users/mydemellc./Desktop/TruAi/assets/images/Start.svg" type="image/svg+xml" width="100%" height="100%">
+                </object>
+            </div>
+        </div>
+        <script>
+            // Wait for SVG to load
+            window.addEventListener('DOMContentLoaded', function() {
+                const svgObject = document.querySelector('object[data*="Start.svg"]');
+                const svgEmbed = document.querySelector('embed[src*="Start.svg"]');
+                
+                function initSVGInteractions() {
+                    let svgDoc;
+                    
+                    // Get SVG document from object or embed
+                    if (svgObject && svgObject.contentDocument) {
+                        svgDoc = svgObject.contentDocument;
+                    } else if (svgEmbed && svgEmbed.getSVGDocument) {
+                        svgDoc = svgEmbed.getSVGDocument();
+                    }
+                    
+                    if (!svgDoc) {
+                        // Retry after a short delay if SVG hasn't loaded yet
+                        setTimeout(initSVGInteractions, 100);
+                        return;
+                    }
+                    
+                    // Find all <g> elements with clip-path attributes (for the three project options)
+                    // The user mentioned clip-path="url(#8bf4504433)" as an example
+                    // We'll find all groups with clip-path that contain stroke elements
+                    const allGroups = svgDoc.querySelectorAll('g[clip-path]');
+                    const projectOptions = [];
+                    
+                    allGroups.forEach(g => {
+                        const clipPath = g.getAttribute('clip-path');
+                        if (clipPath && clipPath.includes('url(#')) {
+                            // Check if this group has stroke elements (outlines)
+                            const strokeElements = g.querySelectorAll('path[stroke], rect[stroke], circle[stroke], polygon[stroke], path[fill="none"], rect[fill="none"], path, rect, circle, polygon');
+                            // Look for elements that form outlines/borders
+                            let hasOutline = false;
+                            strokeElements.forEach(el => {
+                                const stroke = el.getAttribute('stroke');
+                                const fill = el.getAttribute('fill');
+                                // If has stroke or fill is none, it's likely an outline
+                                if (stroke || fill === 'none' || !fill) {
+                                    hasOutline = true;
+                                }
+                            });
+                            if (hasOutline && projectOptions.length < 3) {
+                                projectOptions.push(g);
+                            }
+                        }
+                    });
+                    
+                    // Apply default styles and add event listeners
+                    projectOptions.forEach((option, index) => {
+                        // Add class for styling
+                        option.classList.add('project-option');
+                        option.setAttribute('data-option-index', index);
+                        
+                        // Set default opacity for stroke elements (0.27 opacity #ffffff)
+                        const strokeElements = option.querySelectorAll('path, rect, circle, polygon, line, polyline');
+                        strokeElements.forEach(el => {
+                            // Only modify elements that have stroke or should have stroke
+                            const hasStroke = el.getAttribute('stroke') !== null;
+                            const fill = el.getAttribute('fill');
+                            
+                            // If element has stroke or fill is none (outline), set default style
+                            if (hasStroke || fill === 'none' || !fill) {
+                                el.setAttribute('stroke', '#ffffff');
+                                el.setAttribute('stroke-opacity', '0.27');
+                            }
+                        });
+                        
+                        // Add hover event (100% opacity #ffffff)
+                        option.addEventListener('mouseenter', function() {
+                            if (!this.classList.contains('selected')) {
+                                const strokeEls = this.querySelectorAll('path, rect, circle, polygon, line, polyline');
+                                strokeEls.forEach(el => {
+                                    const stroke = el.getAttribute('stroke');
+                                    if (stroke === '#ffffff' || stroke === null) {
+                                        el.setAttribute('stroke', '#ffffff');
+                                        el.setAttribute('stroke-opacity', '1');
+                                    }
+                                });
+                            }
+                        });
+                        
+                        // Add mouse leave event (back to 0.27 opacity)
+                        option.addEventListener('mouseleave', function() {
+                            if (!this.classList.contains('selected')) {
+                                const strokeEls = this.querySelectorAll('path, rect, circle, polygon, line, polyline');
+                                strokeEls.forEach(el => {
+                                    const stroke = el.getAttribute('stroke');
+                                    if (stroke === '#ffffff' || stroke === null) {
+                                        el.setAttribute('stroke', '#ffffff');
+                                        el.setAttribute('stroke-opacity', '0.27');
+                                    }
+                                });
+                            }
+                        });
+                        
+                        // Add click event (set to #008ED6)
+                        option.addEventListener('click', function() {
+                            // Remove selected class from all options
+                            projectOptions.forEach(opt => {
+                                opt.classList.remove('selected');
+                                const strokeEls = opt.querySelectorAll('path, rect, circle, polygon, line, polyline');
+                                strokeEls.forEach(el => {
+                                    el.setAttribute('stroke', '#ffffff');
+                                    el.setAttribute('stroke-opacity', '0.27');
+                                });
+                            });
+                            
+                            // Add selected class to clicked option
+                            this.classList.add('selected');
+                            const strokeEls = this.querySelectorAll('path, rect, circle, polygon, line, polyline');
+                            strokeEls.forEach(el => {
+                                const stroke = el.getAttribute('stroke');
+                                if (stroke === '#ffffff' || stroke === null) {
+                                    el.setAttribute('stroke', '#008ED6');
+                                    el.setAttribute('stroke-opacity', '1');
+                                }
+                            });
+                            
+                            // Handle navigation based on selection
+                            const optionIndex = this.getAttribute('data-option-index');
+                            handleOptionSelection(optionIndex);
+                        });
+                    });
+                }
+                
+                function handleOptionSelection(index) {
+                    // Handle navigation based on selected option
+                    // Option 0: View Previous Project
+                    // Option 1: Start New Project
+                    // Option 2: Review Completed Projects
+                    console.log('Selected option:', index);
+                    
+                    // Add your navigation logic here
+                    // For example:
+                    // if (index === 0) {
+                    //     window.location.href = '/TruAi/view-previous.html';
+                    // } else if (index === 1) {
+                    //     window.location.href = '/TruAi/start-new.html';
+                    // } else if (index === 2) {
+                    //     window.location.href = '/TruAi/review-completed.html';
+                    // }
+                }
+                
+                // Initialize when object loads
+                if (svgObject) {
+                    svgObject.addEventListener('load', initSVGInteractions);
+                }
+                
+                // Also try immediately in case SVG is already loaded
+                initSVGInteractions();
+            });
+        </script>
+
+
+    </body></html>
