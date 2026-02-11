@@ -128,6 +128,25 @@ class Database {
             UNIQUE(user_id, category, key)
         );
 
+        CREATE TABLE IF NOT EXISTS itc_systems (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            system_id TEXT UNIQUE NOT NULL,
+            public_key TEXT NOT NULL,
+            trust_status TEXT DEFAULT 'active' CHECK(trust_status IN ('active', 'revoked')),
+            revoked_at DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS itc_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT UNIQUE NOT NULL,
+            system_id TEXT NOT NULL,
+            expires_at DATETIME NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (system_id) REFERENCES itc_systems(system_id)
+        );
+
         CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id);
         CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
         CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(user_id);
@@ -135,6 +154,9 @@ class Database {
         CREATE INDEX IF NOT EXISTS idx_artifacts_task ON artifacts(task_id);
         CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
         CREATE INDEX IF NOT EXISTS idx_settings_user ON settings(user_id);
+        CREATE INDEX IF NOT EXISTS idx_itc_systems_id ON itc_systems(system_id);
+        CREATE INDEX IF NOT EXISTS idx_itc_sessions_id ON itc_sessions(session_id);
+        CREATE INDEX IF NOT EXISTS idx_itc_sessions_expires ON itc_sessions(expires_at);
         ";
 
         $this->connection->exec($schema);
@@ -147,8 +169,13 @@ class Database {
         $result = $stmt->fetch();
         
         if ($result['count'] == 0) {
-            // Create default admin user
-            $defaultPassword = password_hash('admin123', PASSWORD_DEFAULT);
+            // Secure default: use env or generate crypto-random password
+            $initialPassword = getenv('TRUAI_INITIAL_PASSWORD');
+            if ($initialPassword === false || $initialPassword === '') {
+                $initialPassword = bin2hex(random_bytes(12)); // 24 alphanumeric chars
+            }
+            
+            $defaultPassword = password_hash($initialPassword, PASSWORD_DEFAULT);
             $apiKey = bin2hex(random_bytes(32));
             
             $stmt = $this->connection->prepare(
@@ -156,13 +183,31 @@ class Database {
                  VALUES (:username, :password, :role, :api_key)"
             );
             $stmt->execute([
-                ':username' => 'admin',
+                ':username' => 'Deme',
                 ':password' => $defaultPassword,
                 ':role' => 'SUPER_ADMIN',
                 ':api_key' => $apiKey
             ]);
             
-            error_log('Default admin user created. Username: admin, Password: admin123');
+            $this->writeInitialCredentials('Deme', $initialPassword);
+            error_log('Default user created. Username: Deme. One-time credentials written to database/.initial_credentials — change password on first login.');
+        }
+    }
+
+    /**
+     * Write one-time initial credentials to secure file (ROMA-aligned).
+     * Caller must change password on first login.
+     */
+    private function writeInitialCredentials($username, $password) {
+        $file = DATABASE_PATH . '/.initial_credentials';
+        $content = json_encode([
+            'username' => $username,
+            'password' => $password,
+            'created' => date('c'),
+            'warning' => 'ONE-TIME USE. Change password immediately. Delete this file after first login.'
+        ], JSON_PRETTY_PRINT);
+        if (file_put_contents($file, $content) !== false) {
+            @chmod($file, 0600);
         }
     }
 

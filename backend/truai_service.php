@@ -10,6 +10,7 @@
 
 class TruAiService {
     private $db;
+    private $currentTaskId = null; // For learning service integration
     private $riskEngine;
     private $tierRouter;
 
@@ -68,9 +69,13 @@ class TruAiService {
             'inferred_dependencies' => $inferredDependencies
         ]);
 
-        // Auto-execute low-risk and medium-risk tasks immediately
-        $autoExecute = ($riskLevel === RISK_LOW || $riskLevel === RISK_MEDIUM);
-        
+        // Auto-execute low/medium risk only when user setting allows
+        require_once __DIR__ . '/settings_service.php';
+        $settingsService = new SettingsService();
+        $settings = $settingsService->getSettings($userId);
+        $autoExecuteEnabled = isset($settings['truai']['autoExecute']) ? (bool) $settings['truai']['autoExecute'] : true;
+        $autoExecute = $autoExecuteEnabled && ($riskLevel === RISK_LOW || $riskLevel === RISK_MEDIUM);
+
         if ($autoExecute) {
             try {
                 // Execute immediately
@@ -144,6 +149,40 @@ class TruAiService {
     }
 
     /**
+     * List recent tasks for the current user (for Operations panel / status created view)
+     */
+    public function listTasks($userId, $limit = 20, $statuses = null) {
+        $sql = "SELECT id, prompt, risk_level, tier, status, created_at FROM tasks WHERE user_id = :user_id";
+        $params = [':user_id' => $userId];
+        if ($statuses !== null && is_array($statuses) && !empty($statuses)) {
+            $placeholders = implode(',', array_map(function ($i) { return ':s' . $i; }, array_keys($statuses)));
+            $sql .= " AND status IN ($placeholders)";
+            foreach ($statuses as $i => $s) {
+                $params[':s' . $i] = $s;
+            }
+        }
+        $sql .= " ORDER BY created_at DESC LIMIT " . (int) $limit;
+        return $this->db->query($sql, $params);
+    }
+
+    /**
+     * Get recent EXECUTED tasks with output snippets for retention (prior-context injection)
+     */
+    private function getRecentTasksWithOutput($userId, $excludeTaskId, $limit = 6) {
+        $rows = $this->db->query(
+            "SELECT t.id, t.prompt,
+             (SELECT a.content FROM executions e
+              JOIN artifacts a ON a.id = e.output_artifact
+              WHERE e.task_id = t.id ORDER BY e.created_at DESC LIMIT 1) AS output
+             FROM tasks t
+             WHERE t.user_id = :user_id AND t.id != :exclude AND t.status = 'EXECUTED'
+             ORDER BY t.created_at DESC LIMIT " . (int) $limit,
+            [':user_id' => $userId, ':exclude' => $excludeTaskId]
+        );
+        return $rows ?: [];
+    }
+
+    /**
      * Execute a task using AI
      */
     public function executeTask($taskId) {
@@ -157,12 +196,54 @@ class TruAiService {
             throw new Exception('Task cannot be executed in current state');
         }
 
+        // Store current task ID for learning service
+        $this->currentTaskId = $taskId;
+
         // Generate execution ID
         $execId = 'exec_' . time() . '_' . substr(md5(uniqid()), 0, 6);
 
+        // Build prompt with context_files if present (Cursor parity)
+        $prompt = $task['prompt'];
+        if (!empty($task['context'])) {
+            $ctx = is_string($task['context']) ? json_decode($task['context'], true) : $task['context'];
+            if (!empty($ctx['context_files']) && is_array($ctx['context_files'])) {
+                $budget = 4000;
+                $parts = ["Context (AI sees):"];
+                $used = 0;
+                foreach ($ctx['context_files'] as $f) {
+                    $path = $f['path'] ?? '';
+                    $content = isset($f['content']) ? substr((string)$f['content'], 0, $budget - $used - 200) : '';
+                    if ($used + strlen($content) + strlen($path) + 50 > $budget) break;
+                    $parts[] = "--- {$path} ---";
+                    $parts[] = $content;
+                    $used += strlen($content) + strlen($path) + 50;
+                }
+                $parts[] = "--- End context ---\n\n" . $prompt;
+                $prompt = implode("\n", $parts);
+            }
+        }
+        // Retention: inject recent prior tasks (prompt + output) so AI can reference "previous command", "like before", etc.
+        $priorContext = $this->getRecentTasksWithOutput($task['user_id'], $taskId, 6);
+        if (!empty($priorContext)) {
+            $priorBudget = 2500;
+            $priorParts = ["Recent prior interactions (use when user says \"like before\", \"same as last time\", \"previous command\", etc.):"];
+            $priorUsed = 0;
+            foreach ($priorContext as $prior) {
+                $pSnip = substr($prior['prompt'], 0, 180);
+                if (strlen($prior['prompt']) > 180) $pSnip .= '…';
+                $oSnip = isset($prior['output']) ? substr((string)$prior['output'], 0, 350) : '(no output)';
+                if (isset($prior['output']) && strlen($prior['output']) > 350) $oSnip .= '…';
+                $block = "[User] " . $pSnip . "\n[Assistant] " . $oSnip . "\n";
+                if ($priorUsed + strlen($block) > $priorBudget) break;
+                $priorParts[] = $block;
+                $priorUsed += strlen($block);
+            }
+            $priorParts[] = "--- End prior interactions ---\n\nCurrent request:";
+            $prompt = implode("\n", $priorParts) . "\n\n" . $prompt;
+        }
         // Simulate AI execution (placeholder for actual AI integration)
         $model = $this->getModelForTier($task['tier']);
-        $output = $this->simulateAIExecution($task['prompt'], $model);
+        $output = $this->simulateAIExecution($prompt, $model);
 
         // Store execution
         $artifactId = 'artifact_' . date('Ymd_His');
@@ -251,42 +332,62 @@ class TruAiService {
     }
 
     private function simulateAIExecution($prompt, $model) {
-        // Call actual AI API with proper exception handling
+        // Call actual AI API
         require_once __DIR__ . '/ai_client.php';
-        require_once __DIR__ . '/ai_exceptions.php';
-        $aiClient = new AIClient();
+        require_once __DIR__ . '/settings_service.php';
+        
+        // Get API keys from settings for the current user
+        $openaiKey = null;
+        $anthropicKey = null;
+        
+        try {
+            require_once __DIR__ . '/auth.php';
+            $auth = new Auth();
+            if ($auth->isAuthenticated()) {
+                $settingsService = new SettingsService();
+                $settings = $settingsService->getSettings($auth->getUserId());
+                $openaiKey = $settings['ai']['openaiApiKey'] ?? '';
+                $anthropicKey = $settings['ai']['anthropicApiKey'] ?? '';
+                
+                // Log for debugging
+                error_log('API Keys loaded from settings - OpenAI: ' . (!empty($openaiKey) ? 'present (' . strlen($openaiKey) . ' chars)' : 'missing') . 
+                         ', Anthropic: ' . (!empty($anthropicKey) ? 'present (' . strlen($anthropicKey) . ' chars)' : 'missing'));
+            } else {
+                error_log('User not authenticated - cannot load API keys from settings');
+            }
+        } catch (Exception $e) {
+            error_log('Could not load API keys from settings: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+        }
+        
+        // Create AI client with keys from settings (only if non-empty)
+        $aiClient = new AIClient(
+            (!empty($openaiKey) && $openaiKey !== '') ? $openaiKey : null,
+            (!empty($anthropicKey) && $anthropicKey !== '') ? $anthropicKey : null
+        );
+        
+        // If OpenAI key is TruAi (sk-svcacct-*) and base is still api.openai.com, use Claude to avoid 401
+        $envOpenai = defined('OPENAI_API_KEY') ? OPENAI_API_KEY : '';
+        $envBase = defined('OPENAI_API_BASE') ? OPENAI_API_BASE : 'https://api.openai.com/v1';
+        $hasAnthropic = !empty($anthropicKey) || (defined('ANTHROPIC_API_KEY') && !empty(ANTHROPIC_API_KEY));
+        if ((strpos($openaiKey, 'sk-svcacct-') === 0 || strpos($envOpenai, 'sk-svcacct-') === 0) && strpos($envBase, 'api.openai.com') !== false && $hasAnthropic) {
+            $model = 'claude-3-sonnet';
+        }
+        
+        // Log if keys are still missing
+        if (empty($openaiKey) && empty($anthropicKey)) {
+            error_log('WARNING: No API keys available - neither OpenAI nor Anthropic keys found in settings');
+        }
         
         try {
             $response = $aiClient->generateCode($prompt, $model);
             return $response;
-        } catch (AIConfigurationException $e) {
-            error_log('AI Configuration Error: ' . $e->getMessage());
-            throw new Exception('AI service not configured. Please check API keys in Settings.');
-        } catch (AIRateLimitException $e) {
-            error_log('AI Rate Limit: ' . $e->getMessage());
-            $retryAfter = $e->getRetryAfter();
-            $message = 'AI service rate limit exceeded. Please try again';
-            if ($retryAfter) {
-                $message .= " in {$retryAfter} seconds";
-            } else {
-                $message .= ' later';
-            }
-            throw new Exception($message . '.');
-        } catch (AITimeoutException $e) {
-            error_log('AI Timeout: ' . $e->getMessage());
-            throw new Exception('AI service request timed out. Please try again.');
-        } catch (AITransientException $e) {
-            error_log('AI Transient Error: ' . $e->getMessage());
-            throw new Exception('AI service temporarily unavailable. Please try again.');
-        } catch (AIResponseException $e) {
-            error_log('AI Response Error: ' . $e->getMessage());
-            throw new Exception('AI service returned invalid response. Please try again or contact support.');
-        } catch (AIException $e) {
-            error_log('AI Error: ' . $e->getMessage());
-            throw new Exception('AI service error: ' . $e->getMessage());
         } catch (Exception $e) {
-            error_log('Unexpected error in AI execution: ' . $e->getMessage());
-            throw new Exception('Unexpected error occurred. Please try again or contact support.');
+            error_log('AI execution failed: ' . $e->getMessage());
+            // Fallback to simulated response if API fails
+            return "// AI execution failed. Please check API configuration.\n" .
+                   "// Error: " . $e->getMessage() . "\n" .
+                   "// Prompt: " . substr($prompt, 0, 50) . "...\n";
         }
     }
 
