@@ -3,7 +3,7 @@
 .env.local
 
 # Database files (keep structure, exclude data)
-database/truai.db
+# database/truai.db
 
 # Logs
 logs/

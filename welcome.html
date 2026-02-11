@@ -12,253 +12,47 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-            background-color: #06090f;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .welcome-container {
-            width: 100%;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background-image: url('/TruAi/assets/images/Welcome.gif');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #0b0d11;
             position: relative;
-        }
-
-        .welcome-svg {
-            width: 100%;
-            height: 100%;
-            max-width: 1920px;
-            max-height: 1080px;
-            object-fit: contain;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            opacity: 0.9;
-        }
-
-        .welcome-content {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-        }
-
-        .welcome-text {
-            color: white;
-            font-size: 48px;
-            font-weight: 300;
-            letter-spacing: 0.05em;
-            margin-bottom: 16px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            animation: fadeInUp 1s ease-out;
-        }
-
-        .username-text {
-            color: #0E94E8;
-            font-size: 36px;
-            font-weight: 400;
-            letter-spacing: 0.08em;
-            margin-bottom: 24px;
-            text-shadow: 0 2px 10px rgba(14, 148, 232, 0.3);
-            animation: fadeInUp 1.2s ease-out;
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
-
-        .username-text.fade-out {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-
-        .success-text {
-            color: #0E94E8;
-            font-size: 36px;
-            font-weight: 400;
-            letter-spacing: 0.08em;
-            margin-bottom: 24px;
-            text-shadow: 0 2px 10px rgba(14, 148, 232, 0.3);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
-
-        .success-text.fade-in {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .redirect-message.show {
-            display: block;
-        }
-
-        .welcome-subtitle {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 18px;
-            font-weight: 300;
-            letter-spacing: 0.05em;
-            margin-bottom: 40px;
-            animation: fadeInUp 1.4s ease-out;
-        }
-
-        .continue-button {
-            padding: 16px 48px;
-            background-color: transparent;
-            border: 1.5px solid #0E94E8;
-            border-radius: 10px;
-            color: #0E94E8;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
-            letter-spacing: 0.05em;
-            animation: fadeInUp 1.6s ease-out;
-        }
-
-        .continue-button:hover {
-            background-color: rgba(14, 148, 232, 0.1);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(14, 148, 232, 0.3);
-        }
-
-        .redirect-message {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 12px;
-            margin-top: 24px;
-            animation: fadeInUp 1.8s ease-out;
-        }
-
-        .redirect-countdown {
-            color: #0E94E8;
-            font-weight: 600;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .welcome-text {
-                font-size: 32px;
-            }
-
-            .username-text {
-                font-size: 24px;
-            }
-
-            .welcome-subtitle {
-                font-size: 14px;
-            }
+            overflow: auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
         }
     </style>
 </head>
 <body>
-    <div class="welcome-container">
-        <img 
-            src="/TruAi/assets/images/Welcome-user.svg" 
-            alt="Welcome Background" 
-            class="welcome-svg"
-            onerror="this.style.display='none';"
-        />
-
-        <div class="welcome-content">
-            <h1 class="welcome-text">Welcome</h1>
-            <h2 class="username-text" id="usernameDisplay">Mr. Demetrius</h2>
-            <h2 class="success-text" id="successDisplay">Success</h2>
-            <p class="welcome-subtitle">Accessing TruAi Platform</p>
-
-            <a href="#" class="continue-button" id="continueButton">Continue</a>
-
-            <p class="redirect-message">
-                Redirecting in <span class="redirect-countdown" id="countdown">3</span> seconds...
-            </p>
-        </div>
-    </div>
-
     <script>
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const username = urlParams.get('username') || 'Demetrius';
-        const redirectUrl = urlParams.get('redirect') || '/TruAi/';
+        const username = urlParams.get('username') || 'Deme';
+        // Flow: welcome.html (welcome.gif) -> start.html (selection) -> http://localhost:8080/TruAi/
+        const nextPage = urlParams.get('next') || '/TruAi/start.html';
 
-        // Use username as-is without assumptions about title/gender
-        const displayName = username;
+        // Wait for GIF to play, then redirect to start.html
+        const welcomeDuration = 25000; // 25 seconds - adjust based on your GIF length
+        let redirectTimer;
 
-        // Update username display
-        const usernameDisplay = document.getElementById('usernameDisplay');
-        const successDisplay = document.getElementById('successDisplay');
-        usernameDisplay.textContent = displayName;
+        redirectTimer = setTimeout(() => {
+            window.location.href = nextPage;
+        }, welcomeDuration);
 
-        // Animation sequence: Name disappears, then transitions to "Success"
-        setTimeout(() => {
-            // Fade out the username
-            usernameDisplay.classList.add('fade-out');
-            
-            // After fade out completes, fade in "Success"
-            setTimeout(() => {
-                usernameDisplay.style.display = 'none';
-                successDisplay.classList.add('fade-in');
-            }, 800); // Match transition duration
-        }, 2000); // Show name for 2 seconds before transition
-
-        // Countdown timer (starts after transition)
-        let countdown = 3;
-        const countdownElement = document.getElementById('countdown');
-        const continueButton = document.getElementById('continueButton');
-
-        // Timer variable for clearing
-        let timer = null;
-
-        // Start countdown after transition completes (2s + 0.8s fade out + 0.8s fade in = ~3.6s)
-        setTimeout(() => {
-            // Show countdown message
-            document.querySelector('.redirect-message').classList.add('show');
-            
-            timer = setInterval(() => {
-                countdown--;
-                countdownElement.textContent = countdown;
-                
-                if (countdown <= 0) {
-                    clearInterval(timer);
-                    window.location.href = redirectUrl;
-                }
-            }, 1000);
-        }, 3600);
-
-        // Manual redirect button
-        continueButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (timer) clearInterval(timer);
-            window.location.href = redirectUrl;
+        // If user clicks anywhere, redirect to start.html immediately
+        document.addEventListener('click', () => {
+            clearTimeout(redirectTimer);
+            window.location.href = nextPage;
         });
 
-        // Also redirect on any keypress or click
+        // Also redirect on any keypress
         document.addEventListener('keydown', () => {
-            if (timer) clearInterval(timer);
-            window.location.href = redirectUrl;
+            clearTimeout(redirectTimer);
+            window.location.href = nextPage;
         });
     </script>
 </body>

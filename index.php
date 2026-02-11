@@ -73,7 +73,7 @@ if (!$auth->isAuthenticated() && $page !== 'login') {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 0;
+            padding: 10px 0 0 0;
             margin: 0;
         }
 
@@ -81,7 +81,7 @@ if (!$auth->isAuthenticated() && $page !== 'login') {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px 20px 20px;
+            padding: 10px 20px 20px;
         }
 
         .logo-container {
@@ -110,14 +110,44 @@ if (!$auth->isAuthenticated() && $page !== 'login') {
             padding: 20px 40px;
             overflow-y: auto;
             min-height: 300px;
+            /* Disappearing scroll: default nearly invisible */
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: transparent transparent;
+        }
+
+        /* Disappearing scroll for WebKit browsers */
+        .ai-response-area::-webkit-scrollbar {
+            width: 8px;
+            background: transparent;
+        }
+
+        .ai-response-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .ai-response-area::-webkit-scrollbar-thumb {
+            background-color: transparent;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        /* Show scroll thumb only on hover or while scrolling */
+        .ai-response-area.scrolling::-webkit-scrollbar-thumb,
+        .ai-response-area:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .ai-response-area.scrolling {
+            scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
         }
 
         .ai-response-content {
             max-width: 1400px;
             margin: 0 auto;
-            color: #e8e9eb;
+            color: rgba(231, 232, 235, 0.72);
             font-size: 14px;
             line-height: 1.6;
+            text-align: center;
         }
 
         .ai-response-content.empty {

@@ -12,271 +12,39 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-            background-color: #34383C;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-
-        .access-card {
-            position: relative;
-            width: 400px;
-            max-width: 100%;
-            border: 1.5px solid #f44336;
-            border-radius: 20px;
-            padding: 40px 48px;
-            background-color: #3F4449;
-            text-align: center;
-            animation: shake 0.5s ease-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-            20%, 40%, 60%, 80% { transform: translateX(10px); }
-        }
-
-        .error-icon {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .error-circle {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(244, 67, 54, 0.3) 0%, rgba(244, 67, 54, 0.1) 100%);
-            border: 3px solid #f44336;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .x-mark {
-            width: 50px;
-            height: 50px;
-            position: relative;
-        }
-
-        .x-mark::before {
-            content: '✗';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 50px;
-            color: #f44336;
-            font-weight: bold;
-        }
-
-        .title {
-            color: #f44336;
-            font-size: 32px;
-            font-weight: 300;
-            letter-spacing: 0.05em;
-            margin-bottom: 12px;
-        }
-
-        .message {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 16px;
-            font-weight: 300;
-            margin-bottom: 8px;
-        }
-
-        .submessage {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
-            font-weight: 300;
-            margin-bottom: 32px;
-        }
-
-        .divider-line {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            margin-bottom: 24px;
-        }
-
-        .divider-dot {
-            width: 4px;
-            height: 4px;
-            background-color: rgba(244, 67, 54, 0.4);
-            border-radius: 50%;
-        }
-
-        .divider-bar {
-            width: 80px;
-            height: 1px;
-            background-color: rgba(244, 67, 54, 0.4);
-        }
-
-        .error-details {
-            background-color: rgba(244, 67, 54, 0.1);
-            border: 1px solid rgba(244, 67, 54, 0.3);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 24px;
-            text-align: left;
-        }
-
-        .error-details-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 11px;
-            letter-spacing: 0.1em;
-            margin-bottom: 8px;
-        }
-
-        .error-details-list {
-            list-style: none;
+            margin: 0;
             padding: 0;
-        }
-
-        .error-details-list li {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 12px;
-            margin-bottom: 4px;
-            padding-left: 16px;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('/TruAi/access-denied.gif');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #0b0d11;
             position: relative;
-        }
-
-        .error-details-list li::before {
-            content: '•';
-            position: absolute;
-            left: 0;
-            color: #f44336;
-        }
-
-        .redirect-message {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 12px;
-            margin-bottom: 16px;
-        }
-
-        .redirect-countdown {
-            color: #f44336;
-            font-weight: 600;
-        }
-
-        .retry-button {
-            padding: 12px 32px;
-            background-color: transparent;
-            border: 1.5px solid #f44336;
-            border-radius: 10px;
-            color: #f44336;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
-            margin-right: 12px;
-        }
-
-        .retry-button:hover {
-            background-color: rgba(244, 67, 54, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .back-button {
-            padding: 12px 32px;
-            background-color: transparent;
-            border: 1.5px solid #6B7280;
-            border-radius: 10px;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
-        }
-
-        .back-button:hover {
-            background-color: rgba(107, 114, 128, 0.1);
-            border-color: #8B92A0;
-            color: white;
+            overflow: auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
         }
     </style>
 </head>
 <body>
-    <div class="access-card">
-        <div class="error-icon">
-            <div class="error-circle">
-                <div class="x-mark"></div>
-            </div>
-        </div>
-
-        <h1 class="title">ACCESS DENIED</h1>
-        <p class="message">Authentication Failed</p>
-        <p class="submessage">Invalid credentials or unauthorized access</p>
-
-        <div class="divider-line">
-            <div class="divider-dot"></div>
-            <div class="divider-bar"></div>
-            <div class="divider-dot"></div>
-        </div>
-
-        <div class="error-details">
-            <div class="error-details-label">POSSIBLE REASONS:</div>
-            <ul class="error-details-list">
-                <li id="errorReason">Invalid username or password</li>
-                <li>Account may be locked or suspended</li>
-                <li>Session expired or invalid</li>
-                <li>Unauthorized access attempt</li>
-            </ul>
-        </div>
-
-        <p class="redirect-message">
-            Returning to login in <span class="redirect-countdown" id="countdown">5</span> seconds...
-        </p>
-
-        <div style="display: flex; gap: 12px; justify-content: center;">
-            <a href="/TruAi/login-portal.html" class="retry-button" id="retryButton">Try Again</a>
-            <a href="/TruAi/gateway" class="back-button">Back to Gateway</a>
-        </div>
-    </div>
-
     <script>
-        // Get error message from URL parameter
+        // Get error message from URL parameter if available
         const urlParams = new URLSearchParams(window.location.search);
-        const errorMessage = urlParams.get('error') || urlParams.get('message');
-        
-        if (errorMessage) {
-            document.getElementById('errorReason').textContent = errorMessage;
-        }
+        const error = urlParams.get('error') || 'Access denied';
 
-        // Countdown timer
-        let countdown = 5;
-        const countdownElement = document.getElementById('countdown');
-        const retryButton = document.getElementById('retryButton');
+        // Countdown timer - redirect back to login
+        let countdown = 3;
 
         const timer = setInterval(() => {
             countdown--;
-            countdownElement.textContent = countdown;
             
             if (countdown <= 0) {
                 clearInterval(timer);
+                // Redirect back to login page
                 window.location.href = '/TruAi/login-portal.html';
             }
         }, 1000);
-
-        // Manual redirect button
-        retryButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            clearInterval(timer);
-            window.location.href = '/TruAi/login-portal.html';
-        });
     </script>
 </body>
 </html>

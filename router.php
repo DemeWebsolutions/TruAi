@@ -58,6 +58,15 @@ if (strpos($requestUri, '/welcome') !== false || strpos($requestUri, '/welcome.h
     }
 }
 
+// Check if this is a start page request (after welcome.html, before /TruAi/ dashboard)
+if (strpos($requestUri, '/start') !== false || strpos($requestUri, '/start.html') !== false) {
+    if (file_exists(__DIR__ . '/start.html')) {
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile(__DIR__ . '/start.html');
+        return true;
+    }
+}
+
 // Check if this is a loading page request
 if (strpos($requestUri, '/loading') !== false || strpos($requestUri, '/loading.html') !== false) {
     if (file_exists(__DIR__ . '/loading.html')) {
@@ -90,6 +99,28 @@ if (strpos($requestUri, '/login-portal') !== false || strpos($requestUri, '/logi
     }
 }
 
+// Serve Gemini.ai portal at /TruAi/gemini or /TruAi/gemini.html
+if (preg_match('#^/TruAi/gemini(\.html)?/?$#', $requestUri) || preg_match('#^/gemini(\.html)?/?$#', $requestUri)) {
+    $geminiPath = __DIR__ . '/dev/gemini-portal.html';
+    if (file_exists($geminiPath)) {
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile($geminiPath);
+        return true;
+    }
+}
+
+// Redirect Phantom.ai to external portal (http://127.0.0.1:8787/Phantom.ai.portal.html)
+if (preg_match('#^/TruAi/phantom(\.html)?/?$#', $requestUri) || preg_match('#^/phantom(\.html)?/?$#', $requestUri)) {
+    header('Location: http://127.0.0.1:8787/Phantom.ai.portal.html', true, 302);
+    return true;
+}
+
+// Redirect /monitor and /TruAi/monitor to main TruAi dashboard
+if (preg_match('#^/(TruAi/)?monitor/?$#', $requestUri)) {
+    header('Location: /TruAi', true, 302);
+    return true;
+}
+
 // Check if this is a gateway request
 if (strpos($requestUri, '/gateway') !== false || strpos($requestUri, '/gateway.php') !== false || strpos($requestUri, '/gateway.html') !== false) {
     // Serve gateway page
@@ -117,6 +148,16 @@ if (strpos($requestUri, '/api/') !== false) {
     $router = new Router();
     $router->dispatch();
     return true;
+}
+
+// Serve TruAi Prototype as live dashboard at /TruAi/ or /TruAi
+if (preg_match('#^/TruAi/?$#', $requestUri)) {
+    $prototypePath = __DIR__ . '/TruAi Prototype.html';
+    if (file_exists($prototypePath)) {
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile($prototypePath);
+        return true;
+    }
 }
 
 // All other requests go to index.php for frontend
