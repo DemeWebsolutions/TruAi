@@ -437,15 +437,26 @@
                     throw new Error(result.message || 'Login failed');
                 }
             } catch (error) {
+                // Re-enable inputs after error
+                usernameInput.disabled = false;
+                passwordInput.disabled = false;
+                this.classList.remove('submitting');
+                
                 // Distinguish between authentication errors and connection issues
                 const errorMsg = error.message || 'Login failed. Please check your credentials.';
                 
+                // Check if this is a network/connection error (using error type for robustness)
+                const isConnectionError = error instanceof TypeError || 
+                                         error.name === 'NetworkError' || 
+                                         errorMsg.includes('Failed to fetch') ||
+                                         errorMsg.includes('network') ||
+                                         errorMsg.includes('NetworkError');
+                
                 // For connection errors, show error in place rather than redirecting
-                if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch')) {
-                    loginButton.disabled = false;
-                    loginButton.textContent = 'Login';
-                    loadingMessage.textContent = '❌ Connection error. Please try again.';
-                    loadingMessage.style.color = '#ff4444';
+                if (isConnectionError) {
+                    loadingMessage.classList.remove('show');
+                    errorMessage.textContent = '❌ Connection error. Please check your network and try again.';
+                    errorMessage.classList.add('show');
                 } else {
                     // For authentication failures, redirect to access-denied page
                     window.location.href = `/TruAi/access-denied.html?error=${encodeURIComponent(errorMsg)}`;
