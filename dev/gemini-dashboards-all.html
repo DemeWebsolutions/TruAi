@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini.ai — Dashboard Examples</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #1a1a1a;
+      color: #B3B3B3;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tabs button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: 1px solid #4A4A4A;
+      background: rgba(42, 42, 42, 0.9);
+      color: #A0A0A0;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tabs button:hover {
+      border-color: #00A3FF;
+      color: #FFFFFF;
+      background: rgba(0, 163, 255, 0.15);
+    }
+    .tabs button.active {
+      background: #00A3FF;
+      border-color: #00A3FF;
+      color: #FFFFFF;
+    }
+
+    .dashboard-panel { display: none; }
+    .dashboard-panel.active { display: block; }
+
+    /* ========== LOGO-STYLE DASHBOARD ========== */
+    .dash-logo {
+      background: #292929;
+      min-height: calc(100vh - 80px);
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .dash-logo .container {
+      max-width: 900px;
+      width: 100%;
+      background: rgba(42, 42, 42, 0.95);
+      border-radius: 12px;
+      border: 1px solid #4A4A4A;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .dash-logo .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #4A4A4A;
+    }
+    .dash-logo .brand img { width: 44px; height: 44px; object-fit: contain; }
+    .dash-logo .brand h1 { font-size: 22px; color: #A0A0A0; font-weight: 600; }
+    .dash-logo .nav { display: flex; gap: 8px; margin-bottom: 20px; }
+    .dash-logo .nav a {
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid #4A4A4A;
+      color: #A0A0A0;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .dash-logo .nav a:hover { border-color: #00A3FF; color: #00A3FF; }
+    .dash-logo .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 800px) { .dash-logo .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .dash-logo .grid { grid-template-columns: 1fr; } }
+    .dash-logo .stat-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid #4A4A4A;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .dash-logo .stat-card .label { font-size: 11px; color: #696969; text-transform: uppercase; margin-bottom: 4px; }
+    .dash-logo .stat-card .value { font-size: 1.5rem; font-weight: 700; color: #FFFFFF; }
+    .dash-logo .stat-card .value.alert { color: #f87171; }
+    .dash-logo .section { margin-bottom: 20px; }
+    .dash-logo .section h2 { font-size: 16px; color: #A0A0A0; margin-bottom: 12px; }
+    .dash-logo .section p { font-size: 13px; color: #696969; margin-bottom: 12px; }
+    .dash-logo .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .dash-logo .btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #00A3FF;
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .dash-logo .btn:hover { background: #0088DD; }
+    .dash-logo .btn-outline { background: transparent; border: 1px solid #4A4A4A; color: #A0A0A0; }
+    .dash-logo .btn-outline:hover { border-color: #00A3FF; color: #00A3FF; }
+    .dash-logo ul { list-style: none; }
+    .dash-logo ul li {
+      padding: 10px 0;
+      border-bottom: 1px solid #333;
+      font-size: 13px;
+      color: #A0A0A0;
+    }
+    .dash-logo .footer { margin-top: 20px; font-size: 11px; color: #696969; }
+    .dash-logo .footer a { color: #00A3FF; text-decoration: none; }
+
+    /* ========== TRUAI-STYLE DASHBOARD ========== */
+    .dash-truai {
+      background: #292929;
+      min-height: calc(100vh - 80px);
+      padding: 24px;
+    }
+    .dash-truai .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 320px);
+      gap: 24px;
+    }
+    @media (max-width: 900px) { .dash-truai .shell { grid-template-columns: 1fr; } }
+    .dash-truai .panel {
+      background: rgba(42, 42, 42, 0.95);
+      border-radius: 12px;
+      border: 1px solid #4A4A4A;
+      padding: 24px 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .dash-truai .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .dash-truai .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #A0A0A0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dash-truai .title-pill {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #00A3FF;
+      color: #FFFFFF;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .dash-truai .status-pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(0, 163, 255, 0.2);
+      color: #00A3FF;
+      border: 1px solid rgba(0, 163, 255, 0.5);
+    }
+    .dash-truai .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .dash-truai .brand img { width: 40px; height: 40px; object-fit: contain; }
+    .dash-truai .brand h1 { font-size: 18px; color: #A0A0A0; }
+    .dash-truai .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    @media (max-width: 600px) { .dash-truai .grid { grid-template-columns: repeat(2, 1fr); } }
+    .dash-truai .stat-card {
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid #4A4A4A;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .dash-truai .stat-card .label { font-size: 11px; color: #696969; text-transform: uppercase; margin-bottom: 4px; }
+    .dash-truai .stat-card .value { font-size: 1.35rem; font-weight: 700; color: #FFFFFF; }
+    .dash-truai .stat-card .value.alert { color: #f87171; }
+    .dash-truai .side-item {
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid #4A4A4A;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #A0A0A0;
+    }
+    .dash-truai .side-item span:last-child { color: #00A3FF; font-size: 11px; }
+    .dash-truai .side-title { font-size: 12px; color: #696969; text-transform: uppercase; margin-bottom: 10px; }
+    .dash-truai .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dash-truai .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      background: #00A3FF;
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .dash-truai .btn:hover { background: #0088DD; }
+    .dash-truai .btn-outline { background: transparent; border: 1px solid #4A4A4A; color: #A0A0A0; }
+    .dash-truai ul { list-style: none; }
+    .dash-truai ul li { padding: 8px 0; border-bottom: 1px solid #333; font-size: 12px; color: #A0A0A0; }
+    .dash-truai .footer { margin-top: 16px; font-size: 11px; color: #696969; }
+    .dash-truai .footer a { color: #00A3FF; text-decoration: none; }
+
+    /* ========== ROMA-STYLE DASHBOARD ========== */
+    .dash-roma {
+      background: #292929;
+      min-height: calc(100vh - 80px);
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .dash-roma .frame {
+      width: 100%;
+      max-width: 720px;
+      background: rgba(42, 42, 42, 0.95);
+      border-radius: 12px;
+      border: 1px solid #4A4A4A;
+      padding: 20px 22px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .dash-roma .monitor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .dash-roma .monitor-title { font-size: 14px; font-weight: 500; color: #A0A0A0; }
+    .dash-roma .monitor-pill {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(0, 163, 255, 0.2);
+      color: #00A3FF;
+      border: 1px solid rgba(0, 163, 255, 0.5);
+    }
+    .dash-roma .status-bar {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+    .dash-roma .status-cell { display: flex; flex-direction: column; gap: 2px; }
+    .dash-roma .status-cell .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #696969; }
+    .dash-roma .status-cell .value { font-size: 13px; font-weight: 500; }
+    .dash-roma .value-ok { color: #00A3FF; }
+    .dash-roma .value-warn { color: #fbbf24; }
+    .dash-roma .value-bad { color: #f87171; }
+    .dash-roma .divider { width: 1px; height: 26px; background: #4A4A4A; }
+    .dash-roma .panel-label { font-size: 11px; color: #696969; text-transform: uppercase; margin-bottom: 10px; }
+    .dash-roma .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .dash-roma .brand img { width: 36px; height: 36px; object-fit: contain; }
+    .dash-roma .brand h1 { font-size: 16px; color: #A0A0A0; }
+    .dash-roma .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+    @media (max-width: 600px) { .dash-roma .grid { grid-template-columns: repeat(2, 1fr); } }
+    .dash-roma .stat-card {
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid #4A4A4A;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .dash-roma .stat-card .label { font-size: 10px; color: #696969; text-transform: uppercase; margin-bottom: 2px; }
+    .dash-roma .stat-card .value { font-size: 1.2rem; font-weight: 600; color: #FFFFFF; }
+    .dash-roma .stat-card .value.alert { color: #f87171; }
+    .dash-roma .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dash-roma .btn {
+      font-size: 12px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid #4A4A4A;
+      background: rgba(0, 0, 0, 0.3);
+      color: #A0A0A0;
+      cursor: pointer;
+    }
+    .dash-roma .btn-primary { background: #00A3FF; border-color: #00A3FF; color: #FFFFFF; }
+    .dash-roma .btn:hover { border-color: #696969; color: #FFFFFF; }
+    .dash-roma .btn-primary:hover { background: #0088DD; border-color: #0088DD; }
+    .dash-roma ul { list-style: none; }
+    .dash-roma ul li { padding: 6px 0; border-bottom: 1px solid #333; font-size: 12px; color: #A0A0A0; }
+    .dash-roma .foot { margin-top: 12px; font-size: 11px; color: #696969; text-align: right; }
+    .dash-roma .foot a { color: #00A3FF; text-decoration: none; }
+
+    /* ========== GLASS-STYLE DASHBOARD (gemini-login-dashboard-with-logo) ========== */
+    .dash-glass-wrap {
+      --blue:#1ea7ff;
+      --glass-bg:rgba(15,17,20,0.6);
+      --glass-border:rgba(255,255,255,0.12);
+      --shadow:0 10px 25px rgba(0,0,0,0.35);
+      background: radial-gradient(1200px 600px at 50% 100%, rgba(0,0,0,0.55), rgba(0,0,0,0.85)), #1a1a1a;
+      min-height: calc(100vh - 80px);
+      padding: 2rem;
+      position: relative;
+    }
+    .dash-glass-wrap .overlay {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(700px 350px at 50% 0%, rgba(30,167,255,0.08), transparent),
+        radial-gradient(1000px 500px at 10% 80%, rgba(255,255,255,0.05), transparent);
+      mix-blend-mode: screen;
+    }
+    .dash-glass {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.25rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 1rem;
+      backdrop-filter: saturate(125%) blur(10px);
+      -webkit-backdrop-filter: saturate(125%) blur(10px);
+      box-shadow: var(--shadow);
+      position: relative;
+      z-index: 1;
+    }
+    .dash-glass .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .dash-glass .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .dash-glass .brand img { width: 40px; height: 40px; object-fit: contain; }
+    .dash-glass .brand h1 { font-size: 1.35rem; margin: 0; color: #fff; }
+    .dash-glass .nav a {
+      padding: 0.6rem 0.8rem;
+      border-radius: 0.6rem;
+      border: 1px solid transparent;
+      color: #1ea7ff;
+      text-decoration: none;
+    }
+    .dash-glass .nav a:hover {
+      border-color: var(--blue);
+      background: linear-gradient(180deg, rgba(30,167,255,0.18), rgba(30,167,255,0.06));
+    }
+    .dash-glass .grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(12, 1fr);
+    }
+    .dash-glass .card-sm {
+      grid-column: span 3;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.8rem;
+      padding: 1rem;
+    }
+    .dash-glass .card-lg {
+      grid-column: span 12;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.8rem;
+      padding: 1rem;
+    }
+    @media (max-width: 900px) { .dash-glass .card-sm { grid-column: span 6; } }
+    @media (max-width: 600px) { .dash-glass .card-sm { grid-column: span 12; } }
+    .dash-glass .stat { font-size: 0.9rem; color: rgba(255,255,255,0.85); }
+    .dash-glass .value { font-size: 1.6rem; font-weight: 700; color: #fff; }
+    .dash-glass .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .dash-glass button, .dash-glass .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.1rem;
+      border-radius: 0.6rem;
+      border: 1px solid #1ea7ff;
+      background: linear-gradient(180deg, rgba(30,167,255,0.25), rgba(30,167,255,0.15));
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .dash-glass button:hover, .dash-glass .btn:hover {
+      background: linear-gradient(180deg, rgba(30,167,255,0.35), rgba(30,167,255,0.22));
+    }
+    .dash-glass .btn-outline {
+      background: transparent;
+      border-color: #fff;
+      color: #fff;
+    }
+    .dash-glass .muted { color: rgba(255,255,255,0.75); }
+    .dash-glass .footer {
+      margin-top: 1rem;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .dash-glass .footer .dw {
+      color: #1ea7ff;
+      font-weight: 700;
+      border-bottom: 1px solid #1ea7ff;
+    }
+    .dash-glass .footer a { color: #1ea7ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <button class="active" data-dash="logo">Logo-style Dashboard</button>
+    <button data-dash="truai">TruAi-style Dashboard</button>
+    <button data-dash="roma">ROMA-style Dashboard</button>
+    <button data-dash="glass">Glass-style Dashboard</button>
+  </div>
+
+  <!-- Logo-style Dashboard -->
+  <div id="dash-logo" class="dashboard-panel active">
+    <div class="dash-logo">
+      <div class="container">
+        <div class="brand">
+          <img src="../assets/Gemini.ai_Logo-e2c5fbfe-a528-4613-8631-3d094ab89f8e.png" alt="Gemini.ai">
+          <h1>Gemini.ai Dashboard</h1>
+        </div>
+        <nav class="nav">
+          <a href="#">Overview</a>
+          <a href="#">Provisioning</a>
+          <a href="#">Diagnostics</a>
+          <a href="#">Security</a>
+          <a href="#">Sign out</a>
+        </nav>
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label">Provisioned Nodes</div>
+            <div class="value">42</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Active Alerts</div>
+            <div class="value alert">3</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Avg CPU Load</div>
+            <div class="value">27%</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Uptime</div>
+            <div class="value">99.98%</div>
+          </div>
+        </div>
+        <div class="section">
+          <h2>Automation &amp; Actions</h2>
+          <p>Run common tasks with one click.</p>
+          <div class="actions">
+            <button class="btn">Run Diagnostics</button>
+            <button class="btn">Apply Security Hardening</button>
+            <button class="btn">Scale Cluster</button>
+            <button class="btn btn-outline">View Logs</button>
+          </div>
+        </div>
+        <div class="section">
+          <h2>Recent Activity</h2>
+          <ul>
+            <li>Auto-remediation applied to node gmn-07</li>
+            <li>Failover tested successfully for region eu-west</li>
+            <li>Package updates completed on 12 hosts</li>
+          </ul>
+        </div>
+        <div class="footer">
+          <a href="https://demewebsolutions.com" target="_blank">DEMEWEBSOLUTIONS.COM</a> • WEB SOLUTIONS MADE SIMPLE
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TruAi-style Dashboard -->
+  <div id="dash-truai" class="dashboard-panel">
+    <div class="dash-truai">
+      <div class="shell">
+        <div class="panel">
+          <header class="panel-header">
+            <div class="title">
+              <div class="title-pill">G</div>
+              <span>Gemini.ai • Dashboard</span>
+            </div>
+            <span class="status-pill">ROMA • Internal Only</span>
+          </header>
+          <div class="brand">
+            <img src="../assets/Gemini.ai_Logo-e2c5fbfe-a528-4613-8631-3d094ab89f8e.png" alt="Gemini.ai">
+            <h1>AI-assisted server management</h1>
+          </div>
+          <div class="grid">
+            <div class="stat-card">
+              <div class="label">Provisioned Nodes</div>
+              <div class="value">42</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Active Alerts</div>
+              <div class="value alert">3</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Avg CPU Load</div>
+              <div class="value">27%</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Uptime</div>
+              <div class="value">99.98%</div>
+            </div>
+          </div>
+          <div class="section">
+            <h2>Automation &amp; Actions</h2>
+            <div class="actions">
+              <button class="btn">Run Diagnostics</button>
+              <button class="btn">Apply Security Hardening</button>
+              <button class="btn btn-outline">View Logs</button>
+            </div>
+          </div>
+          <div class="section">
+            <h2>Recent Activity</h2>
+            <ul>
+              <li>Auto-remediation applied to node gmn-07</li>
+              <li>Failover tested successfully for region eu-west</li>
+              <li>Package updates completed on 12 hosts</li>
+            </ul>
+          </div>
+        </div>
+        <aside class="panel">
+          <div class="side-title">Runtime status</div>
+          <div class="side-item"><span>Portal</span><span>http://154.53.54.169:5000</span></div>
+          <div class="side-item"><span>gemini-portal.service</span><span>active</span></div>
+          <div class="side-item"><span>ROMA</span><span>internal-only</span></div>
+          <div class="side-item"><span>Provisioned Nodes</span><span>42</span></div>
+          <div class="side-item"><span>Active Alerts</span><span>3</span></div>
+          <div class="footer" style="margin-top:12px">
+            <a href="https://demewebsolutions.com" target="_blank">DEMEWEBSOLUTIONS.COM</a> • WEB SOLUTIONS MADE SIMPLE
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROMA-style Dashboard -->
+  <div id="dash-roma" class="dashboard-panel">
+    <div class="dash-roma">
+      <div class="frame">
+        <div class="brand">
+          <img src="../assets/Gemini.ai_Logo-e2c5fbfe-a528-4613-8631-3d094ab89f8e.png" alt="Gemini.ai">
+          <h1>Gemini.ai Dashboard</h1>
+        </div>
+        <header class="monitor-header">
+          <div class="monitor-title">Portal • Monitor View</div>
+          <div class="monitor-pill">Monitor • Port 5000</div>
+        </header>
+        <div class="status-bar">
+          <div class="status-cell">
+            <span class="label">ROMA</span>
+            <span class="value value-ok">Verified</span>
+          </div>
+          <div class="divider"></div>
+          <div class="status-cell">
+            <span class="label">Portal</span>
+            <span class="value value-ok">Online</span>
+          </div>
+          <div class="divider"></div>
+          <div class="status-cell">
+            <span class="label">Alerts</span>
+            <span class="value value-bad">3</span>
+          </div>
+          <div class="divider"></div>
+          <div class="status-cell">
+            <span class="label">Target</span>
+            <span class="value">154.53.54.169:5000</span>
+          </div>
+        </div>
+        <div class="panel-label">Metrics</div>
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label">Nodes</div>
+            <div class="value">42</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Alerts</div>
+            <div class="value alert">3</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">CPU</div>
+            <div class="value">27%</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Uptime</div>
+            <div class="value">99.98%</div>
+          </div>
+        </div>
+        <div class="panel-label">Actions</div>
+        <div class="actions">
+          <button class="btn btn-primary">Run Diagnostics</button>
+          <button class="btn">Apply Hardening</button>
+          <button class="btn">View Logs</button>
+        </div>
+        <div class="panel-label" style="margin-top:14px">Recent Activity</div>
+        <ul>
+          <li>Auto-remediation applied to node gmn-07</li>
+          <li>Failover tested successfully for region eu-west</li>
+          <li>Package updates completed on 12 hosts</li>
+        </ul>
+        <div class="foot">
+          <a href="https://demewebsolutions.com" target="_blank">DEMEWEBSOLUTIONS.COM</a> • WEB SOLUTIONS MADE SIMPLE
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Glass-style Dashboard (gemini-login-dashboard-with-logo) -->
+  <div id="dash-glass" class="dashboard-panel">
+    <div class="dash-glass-wrap">
+      <div class="overlay" aria-hidden="true"></div>
+      <div class="dash-glass">
+        <div class="topbar">
+          <div class="brand">
+            <img src="../assets/Gemini.ai_Logo-e2c5fbfe-a528-4613-8631-3d094ab89f8e.png" alt="Gemini.ai">
+            <h1>Gemini.ai Dashboard</h1>
+          </div>
+          <nav class="nav" aria-label="Primary">
+            <a href="#">Overview</a>
+            <a href="#">Provisioning</a>
+            <a href="#">Diagnostics</a>
+            <a href="#">Security</a>
+            <a href="#">Sign out</a>
+          </nav>
+        </div>
+        <div class="grid">
+          <div class="card-sm">
+            <div class="stat">Provisioned Nodes</div>
+            <div class="value">42</div>
+          </div>
+          <div class="card-sm">
+            <div class="stat">Active Alerts</div>
+            <div class="value" style="color:#ff6b6b">3</div>
+          </div>
+          <div class="card-sm">
+            <div class="stat">Avg CPU Load</div>
+            <div class="value">27%</div>
+          </div>
+          <div class="card-sm">
+            <div class="stat">Uptime</div>
+            <div class="value">99.98%</div>
+          </div>
+          <div class="card-lg">
+            <h2 style="margin-top:0">Automation &amp; Actions</h2>
+            <p class="muted">Run common tasks with one click. Links and buttons use the Gemini blue/white scheme.</p>
+            <div class="actions">
+              <button>Run Diagnostics</button>
+              <button>Apply Security Hardening</button>
+              <button>Scale Cluster</button>
+              <button class="btn btn-outline">View Logs</button>
+              <a class="btn" href="#">Open Task Scheduler</a>
+            </div>
+          </div>
+          <div class="card-lg">
+            <h2 style="margin-top:0">Recent Activity</h2>
+            <ul>
+              <li>Auto-remediation applied to node gmn-07</li>
+              <li>Failover tested successfully for region eu-west</li>
+              <li>Package updates completed on 12 hosts</li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer">
+          <span class="dw">DW</span>
+          <span>Web Solutions — <a href="https://demewebsolutions.com" target="_blank" rel="noopener">Made Simple</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('dash-' + btn.dataset.dash).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -36,7 +36,11 @@ class SettingsService {
             'confirmSync' => true
         ],
         'terminal' => [
-            'shell' => 'zsh'
+            'shell' => 'zsh',
+            'password' => 'update'
+        ],
+        'truai' => [
+            'autoExecute' => true  // when true, low/medium risk tasks run immediately; when false, all tasks require approval
         ]
     ];
 

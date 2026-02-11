@@ -75,14 +75,6 @@ class EncryptionService {
             $sessionKey = $this->getSessionKey($sessionId);
             
             if (!$sessionKey) {
-                // Fallback: try to decode as base64
-                $decoded = base64_decode($encryptedData);
-                if ($decoded) {
-                    $payload = json_decode($decoded, true);
-                    if ($payload && isset($payload['username']) && isset($payload['password_hash'])) {
-                        return $payload;
-                    }
-                }
                 throw new Exception('Invalid session key');
             }
             
@@ -99,8 +91,7 @@ class EncryptionService {
             );
             
             if ($decrypted === false) {
-                // Fallback decryption
-                $decrypted = $this->fallbackDecrypt($encryptedData);
+                throw new Exception('Decryption failed');
             }
             
             $payload = json_decode($decrypted, true);
@@ -126,14 +117,19 @@ class EncryptionService {
     }
 
     /**
-     * Fallback decryption for compatibility
+     * Store session key from RSA-encrypted payload (client sends session key encrypted with server public key)
      */
-    private function fallbackDecrypt($data) {
-        $decoded = base64_decode($data);
-        if ($decoded) {
-            return $decoded;
+    public function storeSessionKeyFromRSA($encryptedSessionKeyB64, $sessionId) {
+        $encrypted = base64_decode($encryptedSessionKeyB64);
+        if ($encrypted === false) {
+            throw new Exception('Invalid encrypted session key');
         }
-        return $data;
+        $decrypted = '';
+        if (!openssl_private_decrypt($encrypted, $decrypted, $this->privateKey, OPENSSL_PKCS1_OAEP_PADDING)) {
+            throw new Exception('RSA decryption failed');
+        }
+        $sessionKey = bin2hex($decrypted);
+        $this->storeSessionKey($sessionId, $sessionKey);
     }
 
     /**

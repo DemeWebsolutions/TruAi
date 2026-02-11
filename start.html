@@ -14,7 +14,7 @@
             padding: 0;
             width: 100vw;
             height: 100vh;
-            background-image: url('/Users/mydemellc./Desktop/TruAi/assets/images/Start-Background.jpg');
+            background-image: url('TruAi-Start-Background.jpg');
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
@@ -25,6 +25,11 @@
             align-items: center;
             overflow: auto;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            transition: background-image 1s ease-in-out;
+        }
+
+        body.background-changed {
+            background-image: url('Project.gif');
         }
 
         .user-input {
@@ -298,201 +303,179 @@
             }
         }
 
-        /* SVG Project Option Styles */
+        /* Project Option Images - Exact positioning from example SVG */
         .project-option {
+            position: absolute;
             cursor: pointer;
             transition: all 0.3s ease;
+            z-index: 10;
+            pointer-events: auto;
+            border: 2px solid rgba(255, 255, 255, 0.27);
+            background: transparent;
+            text-decoration: none;
+            display: block;
         }
 
-        .project-option path,
-        .project-option rect,
-        .project-option circle,
-        .project-option polygon {
-            stroke: #ffffff;
-            stroke-opacity: 0.27;
-            fill: none;
-            transition: all 0.3s ease;
+        .project-option:hover {
+            border-color: rgba(255, 255, 255, 1);
         }
 
-        .project-option:hover path,
-        .project-option:hover rect,
-        .project-option:hover circle,
-        .project-option:hover polygon {
-            stroke: #ffffff;
-            stroke-opacity: 1;
+        .project-option.selected {
+            border-color: #008ED6;
         }
 
-        .project-option.selected path,
-        .project-option.selected rect,
-        .project-option.selected circle,
-        .project-option.selected polygon {
-            stroke: #008ED6;
-            stroke-opacity: 1;
+        .project-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Exact positions from example SVG (1920x1080 viewport) */
+        /* Option 1: View Previous Project - x=197, y=322, width=434, height=434 */
+        .project-option.option-1 {
+            left: 10.26%;
+            top: 29.81%;
+            width: 22.6%;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.27);
+        }
+
+        /* Option 2: Start New Project - x=744, y=322, width=434, height=434 */
+        .project-option.option-2 {
+            left: 38.75%;
+            top: 29.81%;
+            width: 22.6%;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.27);
+        }
+
+        /* Option 3: Review Completed Projects - x=1289, y=322, width=436, height=434 */
+        .project-option.option-3 {
+            left: 67.14%;
+            top: 29.81%;
+            width: 22.71%;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.27);
+        }
+
+        /* For 1920px+ screens, use exact pixel values */
+        @media (min-width: 1920px) {
+            .project-option.option-1 {
+                left: 197px;
+                top: 322px;
+                width: 434px;
+                height: 434px;
+            }
+
+            .project-option.option-2 {
+                left: 744px;
+                top: 322px;
+                width: 434px;
+                height: 434px;
+            }
+
+            .project-option.option-3 {
+                left: 1289px;
+                top: 322px;
+                width: 436px;
+                height: 434px;
+            }
         }
     </style>
 </head>
     <body>
-        <div class="container">
-            <div class="svg-wrapper">
-                <object data="/Users/mydemellc./Desktop/TruAi/assets/images/Start.svg" type="image/svg+xml" width="100%" height="100%">
-                    <embed src="/Users/mydemellc./Desktop/TruAi/assets/images/Start.svg" type="image/svg+xml" width="100%" height="100%">
-                </object>
-            </div>
-        </div>
+        <!-- Project Option Images -->
+        <a href="#view-previous" class="project-option option-1" id="option-view-previous" aria-label="View Previous Project" style="border: 2px solid rgba(255, 255, 255, 0.27);">
+            <img src="assets/images/view-previous-project.png" alt="View Previous Project">
+        </a>
+        <a href="#start-new" class="project-option option-2" id="option-start-new" aria-label="Start New Project" style="">
+            <img src="assets/images/start-new-project.png" alt="Start New Project">
+        </a>
+        <a href="#review-completed" class="project-option option-3" id="option-review-completed" aria-label="Review Completed Projects" style="">
+            <img src="assets/images/review-completed-projects.png" alt="Review Completed Projects">
+        </a>
+
         <script>
-            // Wait for SVG to load
+            // Make the three project option images act as (#) hyperlinks
+            // Default outline: 0.27 opacity #ffffff
+            // Hover: 100% opacity #ffffff
+            // Click/selection (complete): #008ED6
+
             window.addEventListener('DOMContentLoaded', function() {
-                const svgObject = document.querySelector('object[data*="Start.svg"]');
-                const svgEmbed = document.querySelector('embed[src*="Start.svg"]');
-                
-                function initSVGInteractions() {
-                    let svgDoc;
+                const linkTargets = ['#view-previous', '#start-new', '#review-completed'];
+                const linkLabels  = ['View Previous Project', 'Start New Project', 'Review Completed Projects'];
+                const optionSections = document.querySelectorAll('.project-option');
+
+                // Initialize each section
+                optionSections.forEach((section, index) => {
+                    console.log(`Initializing section ${index}: ${linkLabels[index]}`);
                     
-                    // Get SVG document from object or embed
-                    if (svgObject && svgObject.contentDocument) {
-                        svgDoc = svgObject.contentDocument;
-                    } else if (svgEmbed && svgEmbed.getSVGDocument) {
-                        svgDoc = svgEmbed.getSVGDocument();
-                    }
-                    
-                    if (!svgDoc) {
-                        // Retry after a short delay if SVG hasn't loaded yet
-                        setTimeout(initSVGInteractions, 100);
-                        return;
-                    }
-                    
-                    // Find all <g> elements with clip-path attributes (for the three project options)
-                    // The user mentioned clip-path="url(#8bf4504433)" as an example
-                    // We'll find all groups with clip-path that contain stroke elements
-                    const allGroups = svgDoc.querySelectorAll('g[clip-path]');
-                    const projectOptions = [];
-                    
-                    allGroups.forEach(g => {
-                        const clipPath = g.getAttribute('clip-path');
-                        if (clipPath && clipPath.includes('url(#')) {
-                            // Check if this group has stroke elements (outlines)
-                            const strokeElements = g.querySelectorAll('path[stroke], rect[stroke], circle[stroke], polygon[stroke], path[fill="none"], rect[fill="none"], path, rect, circle, polygon');
-                            // Look for elements that form outlines/borders
-                            let hasOutline = false;
-                            strokeElements.forEach(el => {
-                                const stroke = el.getAttribute('stroke');
-                                const fill = el.getAttribute('fill');
-                                // If has stroke or fill is none, it's likely an outline
-                                if (stroke || fill === 'none' || !fill) {
-                                    hasOutline = true;
-                                }
-                            });
-                            if (hasOutline && projectOptions.length < 3) {
-                                projectOptions.push(g);
-                            }
+                    // Set default border style (0.27 opacity #ffffff)
+                    section.style.border = '2px solid rgba(255, 255, 255, 0.27)';
+
+                    // Hover: set opacity to 1 on outline
+                    section.addEventListener('mouseenter', function(e) {
+                        console.log(`Hover ENTER: ${linkLabels[index]}`);
+                        if (!this.classList.contains('selected')) {
+                            this.style.border = '2px solid rgba(255, 255, 255, 1)';
                         }
                     });
-                    
-                    // Apply default styles and add event listeners
-                    projectOptions.forEach((option, index) => {
-                        // Add class for styling
-                        option.classList.add('project-option');
-                        option.setAttribute('data-option-index', index);
-                        
-                        // Set default opacity for stroke elements (0.27 opacity #ffffff)
-                        const strokeElements = option.querySelectorAll('path, rect, circle, polygon, line, polyline');
-                        strokeElements.forEach(el => {
-                            // Only modify elements that have stroke or should have stroke
-                            const hasStroke = el.getAttribute('stroke') !== null;
-                            const fill = el.getAttribute('fill');
-                            
-                            // If element has stroke or fill is none (outline), set default style
-                            if (hasStroke || fill === 'none' || !fill) {
-                                el.setAttribute('stroke', '#ffffff');
-                                el.setAttribute('stroke-opacity', '0.27');
-                            }
-                        });
-                        
-                        // Add hover event (100% opacity #ffffff)
-                        option.addEventListener('mouseenter', function() {
-                            if (!this.classList.contains('selected')) {
-                                const strokeEls = this.querySelectorAll('path, rect, circle, polygon, line, polyline');
-                                strokeEls.forEach(el => {
-                                    const stroke = el.getAttribute('stroke');
-                                    if (stroke === '#ffffff' || stroke === null) {
-                                        el.setAttribute('stroke', '#ffffff');
-                                        el.setAttribute('stroke-opacity', '1');
-                                    }
-                                });
-                            }
-                        });
-                        
-                        // Add mouse leave event (back to 0.27 opacity)
-                        option.addEventListener('mouseleave', function() {
-                            if (!this.classList.contains('selected')) {
-                                const strokeEls = this.querySelectorAll('path, rect, circle, polygon, line, polyline');
-                                strokeEls.forEach(el => {
-                                    const stroke = el.getAttribute('stroke');
-                                    if (stroke === '#ffffff' || stroke === null) {
-                                        el.setAttribute('stroke', '#ffffff');
-                                        el.setAttribute('stroke-opacity', '0.27');
-                                    }
-                                });
-                            }
-                        });
-                        
-                        // Add click event (set to #008ED6)
-                        option.addEventListener('click', function() {
-                            // Remove selected class from all options
-                            projectOptions.forEach(opt => {
-                                opt.classList.remove('selected');
-                                const strokeEls = opt.querySelectorAll('path, rect, circle, polygon, line, polyline');
-                                strokeEls.forEach(el => {
-                                    el.setAttribute('stroke', '#ffffff');
-                                    el.setAttribute('stroke-opacity', '0.27');
-                                });
-                            });
-                            
-                            // Add selected class to clicked option
-                            this.classList.add('selected');
-                            const strokeEls = this.querySelectorAll('path, rect, circle, polygon, line, polyline');
-                            strokeEls.forEach(el => {
-                                const stroke = el.getAttribute('stroke');
-                                if (stroke === '#ffffff' || stroke === null) {
-                                    el.setAttribute('stroke', '#008ED6');
-                                    el.setAttribute('stroke-opacity', '1');
-                                }
-                            });
-                            
-                            // Handle navigation based on selection
-                            const optionIndex = this.getAttribute('data-option-index');
-                            handleOptionSelection(optionIndex);
-                        });
+
+                    // Mouse leave: revert to 0.27
+                    section.addEventListener('mouseleave', function(e) {
+                        console.log(`Hover LEAVE: ${linkLabels[index]}`);
+                        if (!this.classList.contains('selected')) {
+                            this.style.border = '2px solid rgba(255, 255, 255, 0.27)';
+                        }
                     });
-                }
-                
-                function handleOptionSelection(index) {
-                    // Handle navigation based on selected option
-                    // Option 0: View Previous Project
-                    // Option 1: Start New Project
-                    // Option 2: Review Completed Projects
-                    console.log('Selected option:', index);
-                    
-                    // Add your navigation logic here
-                    // For example:
-                    // if (index === 0) {
-                    //     window.location.href = '/TruAi/view-previous.html';
-                    // } else if (index === 1) {
-                    //     window.location.href = '/TruAi/start-new.html';
-                    // } else if (index === 2) {
-                    //     window.location.href = '/TruAi/review-completed.html';
-                    // }
-                }
-                
-                // Initialize when object loads
-                if (svgObject) {
-                    svgObject.addEventListener('load', initSVGInteractions);
-                }
-                
-                // Also try immediately in case SVG is already loaded
-                initSVGInteractions();
+
+                    // Click: mark selection (#008ED6) and update hash
+                    section.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log(`Click/Select: ${linkLabels[index]} - Setting color to #008ED6`);
+                        
+                        // Clear selection from all options
+                        optionSections.forEach(opt => {
+                            opt.classList.remove('selected');
+                            opt.style.border = '2px solid rgba(255, 255, 255, 0.27)';
+                        });
+
+                        // Select current option
+                        this.classList.add('selected');
+                        this.style.border = '2px solid #008ED6';
+
+                        // Act as a (#) hyperlink in the main document
+                        const targetHash = linkTargets[index] || '#';
+                        try {
+                            window.location.hash = targetHash;
+                            console.log(`Hash updated to: ${targetHash}`);
+                        } catch (_) {
+                            // Fallback: do nothing if setting hash fails
+                        }
+
+                        // Change background to Project.gif
+                        document.body.classList.add('background-changed');
+                        console.log('Background changed to Project.gif');
+
+                        // After 10 seconds, navigate to http://localhost:8080/TruAi/
+                        setTimeout(function() {
+                            console.log('Navigating to http://localhost:8080/TruAi/');
+                            window.location.href = 'http://localhost:8080/TruAi/';
+                        }, 10000); // 10 seconds
+                    });
+
+                    // Keyboard accessibility: Enter/Space
+                    section.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.click();
+                        }
+                    });
+                });
+
+                console.log(`Initialized ${optionSections.length} project option sections`);
             });
         </script>
-
-
-    </body></html>
+    
+</body></html>

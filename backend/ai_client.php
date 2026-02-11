@@ -8,95 +8,31 @@
  * @version 1.0.0
  */
 
-require_once __DIR__ . '/ai_exceptions.php';
-
 class AIClient {
     private $openaiKey;
     private $anthropicKey;
     private $baseUrls;
-    private $timeout;
-    private $maxRetries;
-    private $tokenUsage;
-    
-    // Timeout constraints
-    const MIN_TIMEOUT = 1;
-    const MAX_TIMEOUT = 120;
-    const CONNECT_TIMEOUT = 10; // Connection timeout in seconds
 
-    public function __construct($openaiKey = null, $anthropicKey = null, $timeout = 30) {
-        // Precedence: Provided keys > User settings > Environment variables
-        // Only check settings if no key provided to avoid unnecessary DB queries
+    public function __construct($openaiKey = null, $anthropicKey = null) {
+        // Use provided keys first, then try settings, then environment variables
         if ($openaiKey !== null) {
             $this->openaiKey = $openaiKey;
         } else {
             $settingsKey = $this->getApiKeyFromSettings('openai');
-            $this->openaiKey = !empty($settingsKey) ? $settingsKey : (OPENAI_API_KEY ?: '');
+            $this->openaiKey = !empty($settingsKey) ? $settingsKey : (defined('OPENAI_API_KEY') && !empty(OPENAI_API_KEY) ? OPENAI_API_KEY : '');
         }
         
         if ($anthropicKey !== null) {
             $this->anthropicKey = $anthropicKey;
         } else {
             $settingsKey = $this->getApiKeyFromSettings('anthropic');
-            $this->anthropicKey = !empty($settingsKey) ? $settingsKey : (ANTHROPIC_API_KEY ?: '');
+            $this->anthropicKey = !empty($settingsKey) ? $settingsKey : (defined('ANTHROPIC_API_KEY') && !empty(ANTHROPIC_API_KEY) ? ANTHROPIC_API_KEY : '');
         }
         
         $this->baseUrls = [
-            'openai' => 'https://api.openai.com/v1',
+            'openai' => defined('OPENAI_API_BASE') && OPENAI_API_BASE !== '' ? OPENAI_API_BASE : 'https://api.openai.com/v1',
             'anthropic' => 'https://api.anthropic.com/v1'
         ];
-        // Timeout configuration (default 30s, max 120s)
-        $this->timeout = min(max($timeout, self::MIN_TIMEOUT), self::MAX_TIMEOUT);
-        $this->maxRetries = 3;
-        $this->tokenUsage = [];
-    }
-    
-    /**
-     * Get token usage statistics
-     */
-    public function getTokenUsage() {
-        return $this->tokenUsage;
-    }
-    
-    /**
-     * Execute with retry logic for transient failures
-     */
-    private function executeWithRetry($callable, $operation = 'API call') {
-        $attempt = 0;
-        $lastException = null;
-        
-        while ($attempt < $this->maxRetries) {
-            try {
-                return $callable();
-            } catch (AIException $e) {
-                $lastException = $e;
-                
-                // Don't retry if not retryable
-                if (!$e->isRetryable()) {
-                    throw $e;
-                }
-                
-                $attempt++;
-                
-                // Last attempt, throw the exception
-                if ($attempt >= $this->maxRetries) {
-                    error_log("Max retries ($this->maxRetries) exceeded for $operation");
-                    throw $e;
-                }
-                
-                // Calculate exponential backoff delay
-                $delay = min(pow(2, $attempt - 1), 8); // Max 8 seconds
-                
-                // For rate limits, use the retry-after header if available
-                if ($e instanceof AIRateLimitException && $e->getRetryAfter()) {
-                    $delay = max($delay, $e->getRetryAfter());
-                }
-                
-                error_log("Retry attempt $attempt/$this->maxRetries for $operation after {$delay}s delay");
-                sleep($delay);
-            }
-        }
-        
-        throw $lastException;
     }
     
     /**
@@ -138,23 +74,23 @@ class AIClient {
             ['role' => 'user', 'content' => $prompt]
         ];
 
-        return $this->executeWithRetry(function() use ($messages, $model) {
-            if ($this->isAnthropicModel($model)) {
-                return $this->callAnthropic($messages, $model);
-            } else {
-                return $this->callOpenAI($messages, $model);
-            }
-        }, "generateCode with model $model");
+        if ($this->isAnthropicModel($model)) {
+            return $this->callAnthropic($messages, $model);
+        } else {
+            return $this->callOpenAI($messages, $model);
+        }
     }
 
     /**
      * Chat with AI with personality enforcement
+     * @param array|null $metadata Optional: scope (gemini|phantom), intent
      */
-    public function chat($message, $model = 'gpt-3.5-turbo', $conversationHistory = []) {
+    public function chat($message, $model = 'gpt-3.5-turbo', $conversationHistory = [], $metadata = null) {
         $messages = [];
         
-        // PERSONALITY GUARD for chat
-        $systemPrompt = $this->getChatPersonalityGuard();
+        // Scope-aware system prompt: Gemini.ai gets a helpful, conversational persona
+        $scope = isset($metadata['scope']) ? trim((string)$metadata['scope']) : '';
+        $systemPrompt = ($scope === 'gemini') ? $this->getGeminiChatPersonalityGuard() : $this->getChatPersonalityGuard();
         $messages[] = [
             'role' => 'system',
             'content' => $systemPrompt
@@ -174,13 +110,11 @@ class AIClient {
             'content' => $message
         ];
 
-        return $this->executeWithRetry(function() use ($messages, $model) {
-            if ($this->isAnthropicModel($model)) {
-                return $this->callAnthropic($messages, $model);
-            } else {
-                return $this->callOpenAI($messages, $model);
-            }
-        }, "chat with model $model");
+        if ($this->isAnthropicModel($model)) {
+            return $this->callAnthropic($messages, $model);
+        } else {
+            return $this->callOpenAI($messages, $model);
+        }
     }
 
     /**
@@ -188,10 +122,14 @@ class AIClient {
      */
     private function callOpenAI($messages, $model) {
         if (empty($this->openaiKey)) {
-            throw new AIConfigurationException(
-                'OpenAI API key not configured. Please set your API key in Settings.',
-                'OPENAI_KEY_MISSING'
-            );
+            // Check if keys exist in settings but weren't loaded
+            $settingsKey = $this->getApiKeyFromSettings('openai');
+            if (!empty($settingsKey)) {
+                $this->openaiKey = $settingsKey;
+                error_log('OpenAI key loaded from settings fallback');
+            } else {
+                throw new Exception('OpenAI API key not configured. Please set it in Settings or OPENAI_API_KEY environment variable.');
+            }
         }
 
         $url = $this->baseUrls['openai'] . '/chat/completions';
@@ -211,96 +149,27 @@ class AIClient {
             'Authorization: Bearer ' . $this->openaiKey
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::CONNECT_TIMEOUT);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        $curlErrno = curl_errno($ch);
+        $error = curl_error($ch);
         curl_close($ch);
 
-        // Handle CURL errors (network issues, timeouts)
-        if ($curlError) {
-            if ($curlErrno === CURLE_OPERATION_TIMEDOUT) {
-                throw new AITimeoutException(
-                    "OpenAI API request timed out after {$this->timeout}s. Please try again.",
-                    'OPENAI_TIMEOUT'
-                );
-            }
-            throw new AITransientException(
-                'OpenAI API request failed: ' . $curlError,
-                'OPENAI_NETWORK_ERROR'
-            );
+        if ($error) {
+            throw new Exception('OpenAI API request failed: ' . $error);
         }
 
-        // Handle HTTP errors
         if ($httpCode !== 200) {
             $errorData = json_decode($response, true);
             $errorMsg = $errorData['error']['message'] ?? 'Unknown error';
-            $errorType = $errorData['error']['type'] ?? null;
-            
-            // Rate limit error
-            if ($httpCode === 429) {
-                $retryAfter = null;
-                if (isset($errorData['error']['retry_after'])) {
-                    $retryAfter = intval($errorData['error']['retry_after']);
-                }
-                throw new AIRateLimitException(
-                    'OpenAI API rate limit exceeded. Please try again later.',
-                    $retryAfter,
-                    'OPENAI_RATE_LIMIT'
-                );
-            }
-            
-            // Authentication error
-            if ($httpCode === 401) {
-                throw new AIConfigurationException(
-                    'OpenAI API authentication failed. Please check your API key in Settings.',
-                    'OPENAI_AUTH_FAILED'
-                );
-            }
-            
-            // Invalid request
-            if ($httpCode === 400) {
-                throw new AIResponseException(
-                    'OpenAI API invalid request: ' . $errorMsg,
-                    'OPENAI_INVALID_REQUEST'
-                );
-            }
-            
-            // Server error (retryable)
-            if ($httpCode >= 500) {
-                throw new AITransientException(
-                    'OpenAI API server error (' . $httpCode . '). Please try again.',
-                    'OPENAI_SERVER_ERROR'
-                );
-            }
-            
-            // Other errors
-            throw new AIException(
-                'OpenAI API error (' . $httpCode . '): ' . $errorMsg,
-                'OPENAI_ERROR_' . $httpCode,
-                false
-            );
+            throw new Exception('OpenAI API error (' . $httpCode . '): ' . $errorMsg);
         }
 
         $result = json_decode($response, true);
         
         if (!isset($result['choices'][0]['message']['content'])) {
-            throw new AIResponseException(
-                'Invalid response from OpenAI API: missing content field',
-                'OPENAI_INVALID_RESPONSE'
-            );
-        }
-        
-        // Track token usage
-        if (isset($result['usage'])) {
-            $this->tokenUsage = [
-                'prompt_tokens' => $result['usage']['prompt_tokens'] ?? 0,
-                'completion_tokens' => $result['usage']['completion_tokens'] ?? 0,
-                'total_tokens' => $result['usage']['total_tokens'] ?? 0
-            ];
+            throw new Exception('Invalid response from OpenAI API');
         }
 
         return $result['choices'][0]['message']['content'];
@@ -311,10 +180,14 @@ class AIClient {
      */
     private function callAnthropic($messages, $model) {
         if (empty($this->anthropicKey)) {
-            throw new AIConfigurationException(
-                'Anthropic API key not configured. Please set your API key in Settings.',
-                'ANTHROPIC_KEY_MISSING'
-            );
+            // Check if keys exist in settings but weren't loaded
+            $settingsKey = $this->getApiKeyFromSettings('anthropic');
+            if (!empty($settingsKey)) {
+                $this->anthropicKey = $settingsKey;
+                error_log('Anthropic key loaded from settings fallback');
+            } else {
+                throw new Exception('Anthropic API key not configured. Please set it in Settings or ANTHROPIC_API_KEY environment variable.');
+            }
         }
 
         $url = $this->baseUrls['anthropic'] . '/messages';
@@ -354,96 +227,27 @@ class AIClient {
             'anthropic-version: 2023-06-01'
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::CONNECT_TIMEOUT);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        $curlErrno = curl_errno($ch);
+        $error = curl_error($ch);
         curl_close($ch);
 
-        // Handle CURL errors (network issues, timeouts)
-        if ($curlError) {
-            if ($curlErrno === CURLE_OPERATION_TIMEDOUT) {
-                throw new AITimeoutException(
-                    "Anthropic API request timed out after {$this->timeout}s. Please try again.",
-                    'ANTHROPIC_TIMEOUT'
-                );
-            }
-            throw new AITransientException(
-                'Anthropic API request failed: ' . $curlError,
-                'ANTHROPIC_NETWORK_ERROR'
-            );
+        if ($error) {
+            throw new Exception('Anthropic API request failed: ' . $error);
         }
 
-        // Handle HTTP errors
         if ($httpCode !== 200) {
             $errorData = json_decode($response, true);
             $errorMsg = $errorData['error']['message'] ?? 'Unknown error';
-            $errorType = $errorData['error']['type'] ?? null;
-            
-            // Rate limit error
-            if ($httpCode === 429) {
-                $retryAfter = null;
-                if (isset($errorData['error']['retry_after'])) {
-                    $retryAfter = intval($errorData['error']['retry_after']);
-                }
-                throw new AIRateLimitException(
-                    'Anthropic API rate limit exceeded. Please try again later.',
-                    $retryAfter,
-                    'ANTHROPIC_RATE_LIMIT'
-                );
-            }
-            
-            // Authentication error
-            if ($httpCode === 401) {
-                throw new AIConfigurationException(
-                    'Anthropic API authentication failed. Please check your API key in Settings.',
-                    'ANTHROPIC_AUTH_FAILED'
-                );
-            }
-            
-            // Invalid request
-            if ($httpCode === 400) {
-                throw new AIResponseException(
-                    'Anthropic API invalid request: ' . $errorMsg,
-                    'ANTHROPIC_INVALID_REQUEST'
-                );
-            }
-            
-            // Server error (retryable)
-            if ($httpCode >= 500) {
-                throw new AITransientException(
-                    'Anthropic API server error (' . $httpCode . '). Please try again.',
-                    'ANTHROPIC_SERVER_ERROR'
-                );
-            }
-            
-            // Other errors
-            throw new AIException(
-                'Anthropic API error (' . $httpCode . '): ' . $errorMsg,
-                'ANTHROPIC_ERROR_' . $httpCode,
-                false
-            );
+            throw new Exception('Anthropic API error (' . $httpCode . '): ' . $errorMsg);
         }
 
         $result = json_decode($response, true);
         
         if (!isset($result['content'][0]['text'])) {
-            throw new AIResponseException(
-                'Invalid response from Anthropic API: missing content field',
-                'ANTHROPIC_INVALID_RESPONSE'
-            );
-        }
-        
-        // Track token usage
-        if (isset($result['usage'])) {
-            $this->tokenUsage = [
-                'input_tokens' => $result['usage']['input_tokens'] ?? 0,
-                'output_tokens' => $result['usage']['output_tokens'] ?? 0,
-                'total_tokens' => ($result['usage']['input_tokens'] ?? 0) + ($result['usage']['output_tokens'] ?? 0)
-            ];
+            throw new Exception('Invalid response from Anthropic API');
         }
 
         return $result['content'][0]['text'];
@@ -457,27 +261,81 @@ class AIClient {
     }
 
     /**
-     * Map generic model name to Anthropic model
+     * Map generic model name to Anthropic model (current API model IDs)
      */
     private function mapToAnthropicModel($model) {
         $mapping = [
-            'claude' => 'claude-3-opus-20240229',
-            'claude-3-opus' => 'claude-3-opus-20240229',
-            'claude-3-sonnet' => 'claude-3-sonnet-20240229',
-            'claude-3-haiku' => 'claude-3-haiku-20240307',
-            'claude-sonnet' => 'claude-3-sonnet-20240229',
-            'sonnet' => 'claude-3-sonnet-20240229'
+            'claude' => 'claude-sonnet-4-20250514',
+            'claude-3-opus' => 'claude-3-5-opus-20241022',
+            'claude-3-sonnet' => 'claude-sonnet-4-20250514',
+            'claude-3-5-sonnet' => 'claude-3-5-sonnet-20241022',
+            'claude-3-haiku' => 'claude-3-5-haiku-20241022',
+            'claude-sonnet' => 'claude-sonnet-4-20250514',
+            'claude-sonnet-4' => 'claude-sonnet-4-20250514',
+            'sonnet' => 'claude-sonnet-4-20250514'
         ];
 
-        return $mapping[$model] ?? 'claude-3-sonnet-20240229';
+        return $mapping[$model] ?? 'claude-sonnet-4-20250514';
+    }
+
+    /**
+     * TruAi as source of truth for My Deme, LLC proprietary AI systems (injected into all prompts)
+     */
+    private function getTruAiSourceOfTruthAssertion() {
+        return <<<ASSERTION
+TRUAI AUTHORITY (canonical source of truth):
+- TruAi Core is the authoritative reasoning and learning layer for all My Deme, LLC AI-powered systems.
+- Subordinate systems may execute, suggest, or observe, but may not override TruAi Core's governance, risk assessment, or learning directives.
+
+MY DEME, LLC PROPRIETARY AI ECOSYSTEM:
+- Gemini.ai — Subordinate executor (AI-powered server management).
+- Phantom.ai — Subordinate executor (web project management and execution).
+- ROMA — Enforcement and security substrate (local/corporate security for online browsing, monitoring, and data encryption).
+- TruAi Core — Canonical governance, learning, and ROI brain; all reasoning, learning, escalation, and ROI optimization flows through TruAi Core.
+
+This is a governance authority relationship, not a capability change. TruAi does not rewrite other systems; it governs them.
+ASSERTION;
+    }
+
+    /**
+     * TruAi Core Limitations (single source of truth - injected into all prompts)
+     */
+    private function getTruAiCoreLimitations() {
+        return <<<LIMITS
+TRUAI CORE LIMITATIONS (you must comply):
+
+FUNCTIONAL:
+- No file system access. No code execution on the host. No real-time data unless fetched from a provided URL.
+- Allowed: access to external repositories or URLs when the user provides them or explicitly requests fetching from a URL/repository (e.g. read public repo contents, fetch URL content for context).
+
+OPERATIONAL:
+- Cannot modify existing files directly. Cannot install packages/dependencies. Cannot run tests or deployments. Cannot access databases or external systems.
+
+CONTEXTUAL:
+- Limited to provided prior interactions only. Cannot access broader conversation history beyond what is explicitly provided. Cannot remember context across separate conversation sessions.
+
+OUTPUT:
+- Text-only responses. Cannot generate images, audio, or binary files. Cannot create actual file structures (only show code examples).
+
+BEHAVIORAL:
+- Must follow TruAi Core governance constraints. Cannot engage in brainstorming or speculative discussion. Cannot suggest architectural changes unless explicitly requested. Must maintain minimal, execution-focused responses.
+LIMITS;
     }
 
     /**
      * Copilot System Guard (Hard Constraints)
      */
     private function getCopilotPersonalityGuard() {
+        $limits = $this->getTruAiCoreLimitations();
         return <<<GUARD
 You operate under TruAi Core governance.
+
+{$limits}
+
+RETENTION (prior context):
+- You may receive "Recent prior interactions" below: past user prompts and your outputs. Use them when the user says "like before", "same as last time", "previous command", "that update again", "what I asked earlier", or refers to a prior example.
+- Never say you "don't have access to previous conversation history", "each conversation starts fresh", or that you lack context from prior interactions. TruAi provides you prior context when available; use it.
+- If the user refers to something not in the prior interactions you were given, reply in one short sentence: ask them to paste the relevant part or describe what they need. Do not recite disclaimers about conversation limits.
 
 CONSTRAINTS:
 - Be minimal, professional, and execution-focused
@@ -504,7 +362,13 @@ GUARD;
      * Chat Personality Guard (Execution-focused)
      */
     private function getChatPersonalityGuard() {
+        $assertion = $this->getTruAiSourceOfTruthAssertion();
+        $limits = $this->getTruAiCoreLimitations();
         return <<<GUARD
+{$assertion}
+
+{$limits}
+
 You are TruAi Core, an execution-focused AI assistant operating under strict governance.
 
 OPERATING PRINCIPLES:
@@ -527,7 +391,48 @@ OUTPUT CONSTRAINTS:
 - No tool/framework suggestions unless asked
 - Deterministic, auditable responses only
 
+CONTEXT AND PRIOR MESSAGES:
+- You receive conversation history in this thread when it exists; use it to answer questions about "previous submission", "last message", or "what I asked before".
+- Never say you "don't have access to previous conversations", "each conversation starts fresh", or that you lack context from prior interactions. That is incorrect and unhelpful.
+- If the user refers to something not present in the messages you were given, reply briefly: ask them to paste the relevant part or describe what they need (one short sentence). Do not recite disclaimers about conversation limits.
+
 You do not converse. You execute, govern, and anticipate.
+GUARD;
+    }
+
+    /**
+     * Gemini.ai Chat Personality (helpful, conversational, server-management focused)
+     * Softer than core TruAi guard: encourages speculative answers, guides rather than blocks
+     */
+    private function getGeminiChatPersonalityGuard() {
+        $assertion = $this->getTruAiSourceOfTruthAssertion();
+        return <<<GUARD
+{$assertion}
+
+You are Gemini.ai, an AI-powered server management assistant. You operate under TruAi Core governance as a subordinate executor.
+
+TONE & BEHAVIOR:
+- Be conversational, helpful, and approachable. You assist operators with server management tasks.
+- Welcome users, acknowledge requests, and provide actionable guidance.
+- When asked for recommendations, reviews, or improvements: offer concrete, actionable suggestions based on available context. Do not block with "GOVERNANCE VIOLATION" or "CANNOT PROCEED WITHOUT" unless the request truly requires sensitive data or exceeds your authority.
+- If you lack specific data (e.g. performance metrics, codebase), say so briefly and suggest what would help—then offer best-practice recommendations anyway where possible.
+- Prefer: "Here are some suggestions…" over "I cannot proceed without…"
+
+SERVER MANAGEMENT SCOPE:
+- You help with: diagnostics, scaling, provisioning, security hardening, log collection, metrics explanation, alert remediation.
+- You can suggest improvements, explain operational patterns, and recommend actions.
+- For governance-sensitive decisions (e.g. production changes, key rotation): note that TruAi Core approval may be required and offer to escalate.
+
+OUTPUT:
+- Clear, concise, actionable responses.
+- Use bullet points or numbered steps when helpful.
+- Avoid all-caps block text or legal-style disclaimers unless genuinely required.
+
+ESCALATION:
+- If a request clearly exceeds your authority (e.g. modifying TruAi Core, overriding governance), briefly explain and offer: "Request TruAi review" as an escalation path.
+- Do not refuse to help with general questions, recommendations, or reviews.
+
+You are helpful and execution-oriented. You guide, suggest, and assist—you do not block unnecessarily.
 GUARD;
     }
 

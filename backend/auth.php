@@ -164,9 +164,12 @@ class Auth {
     }
 
     /**
-     * Enforce localhost access only
+     * Enforce localhost access only (skipped in production)
      */
     public static function enforceLocalhost() {
+        if (defined('TRUAI_DEPLOYMENT') && TRUAI_DEPLOYMENT === 'production') {
+            return;
+        }
         $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
         if (!in_array($remoteAddr, ALLOWED_HOSTS)) {
             http_response_code(403);
@@ -205,6 +208,33 @@ class Auth {
     public static function verifyCsrfToken($token) {
         return isset($_SESSION[CSRF_TOKEN_NAME]) && 
                hash_equals($_SESSION[CSRF_TOKEN_NAME], $token);
+    }
+
+    /**
+     * Change password for current user (requires current password verification).
+     * Returns true on success.
+     */
+    public function changePassword($currentPassword, $newPassword) {
+        if (!$this->isAuthenticated()) {
+            return false;
+        }
+        $user = $this->db->query(
+            "SELECT id, username, password_hash FROM users WHERE id = :id LIMIT 1",
+            [':id' => $this->getUserId()]
+        );
+        if (empty($user) || !password_verify($currentPassword, $user[0]['password_hash'])) {
+            return false;
+        }
+        if (strlen($newPassword) < 8) {
+            throw new InvalidArgumentException('Password must be at least 8 characters');
+        }
+        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $this->db->execute(
+            "UPDATE users SET password_hash = :hash WHERE id = :id",
+            [':hash' => $hash, ':id' => $this->getUserId()]
+        );
+        $this->auditLog('PASSWORD_CHANGE', $this->getUsername());
+        return true;
     }
 
     /**

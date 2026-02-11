@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phantom.ai — Login &amp; Dashboard</title>
+  <script>
+    window.TRUAI_CONFIG = {
+      API_BASE: (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi'),
+      CSRF_TOKEN: '',
+      IS_AUTHENTICATED: false,
+      USERNAME: ''
+    };
+  </script>
+  <script src="/TruAi/assets/js/api.js"></script>
+  <style>
+    /* ========== LOGIN ========== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: #B3B3B3;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    #login-view {
+      background: #292929;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-container {
+      background: rgba(42, 42, 42, 0.95);
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 420px;
+      width: 100%;
+      border: 1px solid #4A4A4A;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo img {
+      max-width: 300px;
+      height: auto;
+    }
+
+    .logo h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #A0A0A0;
+      letter-spacing: 0.02em;
+    }
+
+    .logo p {
+      color: #696969;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .legal-notice {
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 2px solid #00A3FF;
+      border-right: 2px solid #00A3FF;
+      padding: 12px 14px;
+      margin-bottom: 22px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #A0A0A0;
+    }
+
+    .legal-notice strong { color: #FFFFFF; }
+
+    .form-group { margin-bottom: 18px; }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #A0A0A0;
+      font-size: 13px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 11px 12px;
+      background: #1A1A1A;
+      border: 1px solid #4A4A4A;
+      border-radius: 8px;
+      color: #FFFFFF;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #00A3FF;
+      box-shadow: 0 0 0 1px rgba(0, 163, 255, 0.4);
+    }
+
+    .form-group input::placeholder {
+      color: #696969;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      font-size: 12px;
+      color: #696969;
+    }
+
+    .footer-row a {
+      color: #00A3FF;
+      text-decoration: none;
+    }
+
+    .footer-row a:hover { color: #FFFFFF; text-decoration: underline; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px 0;
+      border-radius: 8px;
+      border: none;
+      background: #00A3FF;
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-primary:hover {
+      background: #0088DD;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .copyright {
+      margin-top: 20px;
+      font-size: 11px;
+      color: #696969;
+      text-align: center;
+    }
+
+    .copyright a {
+      color: #00A3FF;
+      text-decoration: none;
+    }
+
+    .copyright a:hover { color: #FFFFFF; }
+
+    .roma-indicator {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.05em;
+      z-index: 100;
+    }
+    .roma-indicator.confirmed { color: rgba(255,255,255,0.75); }
+
+    /* Disclaimer view */
+    #disclaimer-view {
+      background: #292929;
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #e5e7eb;
+    }
+
+    .disclaimer-card {
+      max-width: 640px;
+      width: 100%;
+      background: rgba(15, 17, 20, 0.96);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      padding: 28px 28px 22px;
+    }
+
+    .disclaimer-card h2 {
+      margin: 0 0 12px 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #fbbf24;
+    }
+
+    .disclaimer-card p {
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 6px 0;
+      color: #d1d5db;
+    }
+
+    .disclaimer-card p strong {
+      color: #f9fafb;
+    }
+
+    .disclaimer-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .disclaimer-actions button {
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+
+    .disclaimer-actions .btn-secondary {
+      background: #4b5563;
+      color: #e5e7eb;
+    }
+
+    .disclaimer-actions .btn-secondary:hover {
+      background: #374151;
+    }
+
+    .disclaimer-actions .btn-primary-continue {
+      background: #00A3FF;
+      color: #ffffff;
+    }
+
+    .disclaimer-actions .btn-primary-continue:hover {
+      background: #0088DD;
+    }
+
+    /* Dashboard */
+    #dashboard-view {
+      display: none;
+      min-height: 100vh;
+      color: #ffffff;
+      background:
+        radial-gradient(1200px 600px at 50% 100%, rgba(0,0,0,0.55), rgba(0,0,0,0.85)),
+        #1a1a1a;
+    }
+
+    #dashboard-view.active {
+      display: block;
+    }
+
+    :root {
+      --blue: #1ea7ff;
+      --white: #ffffff;
+      --glass-bg: rgba(15,17,20,0.6);
+      --glass-border: rgba(255,255,255,0.12);
+      --shadow: 0 10px 25px rgba(0,0,0,0.35);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(700px 350px at 50% 0%, rgba(30,167,255,0.08), transparent),
+        radial-gradient(1000px 500px at 10% 80%, rgba(255,255,255,0.05), transparent);
+      mix-blend-mode: screen;
+    }
+
+    #dashboard-view a { color: var(--blue); text-decoration: none; }
+    #dashboard-view a:hover { text-decoration: underline; }
+
+    #dashboard-view button, #dashboard-view .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--blue);
+      background: linear-gradient(180deg, rgba(30,167,255,0.25), rgba(30,167,255,0.15));
+      color: var(--white);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    #dashboard-view button:hover, #dashboard-view .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(30,167,255,0.3);
+      background: linear-gradient(180deg, rgba(30,167,255,0.35), rgba(30,167,255,0.22));
+    }
+
+    #dashboard-view .btn-outline {
+      background: transparent;
+      border-color: var(--white);
+      color: var(--white);
+    }
+
+    .center {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      backdrop-filter: saturate(125%) blur(10px);
+      -webkit-backdrop-filter: saturate(125%) blur(10px);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand .logo-img {
+      height: 80px;
+      object-fit: contain;
+      padding-right: 5px;
+      padding-left: 5px;
+      width: 90px;
+    }
+
+    .brand .logo-text {
+      font-size: 28px;
+      font-weight: 600;
+      color: #A0A0A0;
+      letter-spacing: 0.02em;
+    }
+
+    .brand h1 { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: 0.02em; color: #A0A0A0; }
+
+    .muted { color: #696969; font-size: 12px; }
+
+    .nav a {
+      padding: 11px 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 13px;
+    }
+
+    .nav a:hover {
+      border-color: var(--blue);
+      background: linear-gradient(180deg, rgba(30,167,255,0.18), rgba(30,167,255,0.06));
+    }
+    .nav-tab.active {
+      border-color: var(--blue);
+      background: linear-gradient(180deg, rgba(30,167,255,0.18), rgba(30,167,255,0.06));
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .chat-history { max-height: 320px; overflow-y: auto; margin-bottom: 12px; }
+    .chat-msg { margin-bottom: 10px; font-size: 13px; line-height: 1.5; }
+    .chat-msg.user { text-align: right; }
+    .chat-msg.user span { display: inline-block; background: rgba(30,167,255,0.2); border-radius: 12px; padding: 8px 12px; }
+    .chat-msg.ai span { display: inline-block; background: rgba(255,255,255,0.06); border-radius: 12px; padding: 8px 12px; border: 1px solid var(--glass-border); }
+    .chat-input-row { display: flex; gap: 8px; margin-top: 8px; }
+    .chat-input-row textarea { flex: 1; min-height: 44px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.06); color: #fff; font-size: 13px; resize: none; }
+    .chat-input-row button { padding: 10px 18px; border-radius: 8px; border: 1px solid var(--blue); background: linear-gradient(180deg, rgba(30,167,255,0.3), rgba(30,167,255,0.15)); color: #fff; font-weight: 600; cursor: pointer; }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(12, 1fr);
+    }
+
+    .card-sm {
+      grid-column: span 3;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .card-lg {
+      grid-column: span 12;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 22px;
+    }
+
+    .stat { font-size: 13px; font-weight: 600; color: #A0A0A0; margin-bottom: 6px; }
+
+    .value { font-size: 24px; font-weight: 600; color: var(--white); }
+
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .footer {
+      margin-top: 20px;
+      color: #696969;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .footer .dw {
+      color: var(--blue);
+      font-weight: 700;
+      border-bottom: 1px solid var(--blue);
+    }
+
+    @media (max-width: 900px) {
+      .card-sm { grid-column: span 6; }
+    }
+
+    @media (max-width: 600px) {
+      .card-sm { grid-column: span 12; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="login-view">
+    <div class="login-container">
+      <div class="logo">
+        <h1>Phantom.ai</h1>
+        <p>Web Project Management &amp; Execution Portal</p>
+      </div>
+
+      <div class="legal-notice">
+        <strong>PROPRIETARY SYSTEM</strong><br>
+        © 2013 – <script>document.write(new Date().getFullYear())</script> My Deme, LLC. All Rights Reserved.<br>
+        Unauthorized access or use is strictly prohibited and may result in civil and criminal penalties.
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Portal Username</label>
+          <input id="username" name="username" type="text" placeholder="Username" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Portal Password</label>
+          <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+        </div>
+
+        <div class="footer-row">
+          <span>My Deme, LLC • Florida, USA</span>
+          <a href="#" onclick="alert('Password recovery would be implemented here.');return false;">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">Sign in</button>
+      </form>
+
+      <div class="copyright">
+        <a href="/TruAi">Return to TruAi</a>
+        <span style="margin:0 8px">|</span>
+        <a href="https://demewebsolutions.com" target="_blank">DEMEWEBSOLUTIONS.COM</a> • WEB SOLUTIONS MADE SIMPLE
+      </div>
+    </div>
+    <div id="romaLogin" class="roma-indicator">Roma • Checking…</div>
+  </div>
+
+  <div id="disclaimer-view">
+    <div class="disclaimer-card" role="dialog" aria-labelledby="disclaimer-title" aria-modal="true">
+      <h2 id="disclaimer-title">⚠️ Proprietary System Notice</h2>
+      <p><strong>© 2013 – 2026 My Deme, LLC. All Rights Reserved.</strong></p>
+      <p>
+        This Phantom.ai system, including all software, data, configurations, and operational workflows,
+        is the exclusive property of My Deme, LLC. Access is permitted only for authorized personnel
+        acting within the scope of their duties.
+      </p>
+      <p>
+        By selecting <strong>"I Understand and Accept"</strong>, you acknowledge that this system is
+        protected under <strong>Florida State Law</strong> and <strong>United States Federal Law</strong>,
+        and that <strong>unauthorized access, use, or disclosure is strictly prohibited</strong> and may
+        result in civil and criminal penalties.
+      </p>
+      <p>
+        All access attempts may be monitored and logged for security and compliance purposes.
+      </p>
+      <div class="disclaimer-actions">
+        <a href="/TruAi" class="btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;padding:10px 16px;">Return to TruAi</a>
+        <button type="button" id="disclaimerCancel" class="btn-secondary">Cancel / Return to Login</button>
+        <button type="button" id="disclaimerAccept" class="btn-primary-continue">I Understand and Accept</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard-view">
+    <div class="overlay" aria-hidden="true"></div>
+    <div class="center" style="padding-top: 3rem">
+      <div class="shell">
+        <div class="topbar">
+          <div class="brand">
+            <span class="logo-text">Phantom.ai</span>
+            <h1 style="margin:0">Dashboard</h1>
+          </div>
+          <nav class="nav" aria-label="Primary">
+            <a href="#" data-tab="overview" class="nav-tab active">Overview</a>
+            <a href="#" data-tab="provisioning" class="nav-tab">Provisioning</a>
+            <a href="#" data-tab="diagnostics" class="nav-tab">Diagnostics</a>
+            <a href="#" data-tab="security" class="nav-tab">Security</a>
+            <a href="#" data-tab="chat" class="nav-tab">AI Chat</a>
+            <a href="/TruAi" class="nav-tab">Return to TruAi</a>
+            <a href="#" id="signOut">Sign out</a>
+          </nav>
+        </div>
+
+        <div id="tab-overview" class="tab-panel active">
+          <div class="grid">
+            <div class="card-sm">
+              <div class="stat">Active Projects</div>
+              <div class="value">18</div>
+            </div>
+            <div class="card-sm">
+              <div class="stat">Pending Tasks</div>
+              <div class="value" style="color:#ff6b6b">5</div>
+            </div>
+            <div class="card-sm">
+              <div class="stat">Deployments Today</div>
+              <div class="value">12</div>
+            </div>
+            <div class="card-sm">
+              <div class="stat">Success Rate</div>
+              <div class="value">99.2%</div>
+            </div>
+            <div class="card-lg">
+              <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Automation &amp; Actions</h2>
+              <p class="muted" style="margin-bottom:18px">Run common project management and execution tasks.</p>
+              <div class="actions">
+                <button class="action-btn" data-action="Deploy Project">Deploy Project</button>
+                <button class="action-btn" data-action="Run Build">Run Build</button>
+                <button class="action-btn" data-action="Execute Task">Execute Task</button>
+                <button class="btn btn-outline">View Logs</button>
+                <a class="btn" href="/TruAi">Open TruAi</a>
+              </div>
+            </div>
+            <div class="card-lg">
+              <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Recent Activity</h2>
+              <ul style="margin:0; padding:0; list-style:none">
+                <li style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.1); font-size:13px; color:#A0A0A0">Project web-app-v2 deployed successfully</li>
+                <li style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.1); font-size:13px; color:#A0A0A0">Build pipeline completed for api-service</li>
+                <li style="padding:10px 0; font-size:13px; color:#A0A0A0">Task sync completed with TruAi Core</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div id="tab-provisioning" class="tab-panel">
+          <div class="card-lg">
+            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Provisioning</h2>
+            <p class="muted" style="margin-bottom:18px">Provision projects, run builds, and manage deployments.</p>
+            <div class="actions">
+              <button class="action-btn" data-action="Provision Project">Provision Project</button>
+              <button class="action-btn" data-action="Deploy Project">Deploy Project</button>
+            </div>
+          </div>
+        </div>
+        <div id="tab-diagnostics" class="tab-panel">
+          <div class="card-lg">
+            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Diagnostics</h2>
+            <p class="muted" style="margin-bottom:18px">Run health checks, collect logs, and troubleshoot issues.</p>
+            <div class="actions">
+              <button class="action-btn" data-action="Run Diagnostics">Run Full Diagnostics</button>
+              <button class="action-btn" data-action="Collect Logs">Collect Logs</button>
+            </div>
+          </div>
+        </div>
+        <div id="tab-security" class="tab-panel">
+          <div class="card-lg">
+            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Security Center</h2>
+            <p class="muted" style="margin-bottom:18px">Access policies, roles, and audit controls. Protected under Florida State Law and United States Federal Law.</p>
+            <div class="actions">
+              <button class="action-btn" data-action="Apply Security Hardening">Apply Security Hardening</button>
+              <button class="action-btn" data-action="Rotate Keys">Rotate API Keys</button>
+            </div>
+          </div>
+        </div>
+        <div id="tab-chat" class="tab-panel">
+          <div class="card-lg">
+            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">AI Chat</h2>
+            <p class="muted" style="margin-bottom:12px">Ask Phantom.ai to run tasks, deploy projects, or manage workflows. Powered by TruAi Core.</p>
+            <div class="chat-history" id="chatHistory">
+              <div class="chat-msg ai"><span>Hello. How can Phantom.ai assist you today?</span></div>
+            </div>
+            <div class="chat-input-row">
+              <textarea id="chatInput" placeholder="Ask Phantom.ai to deploy a project, run a build, or manage a task…" rows="2"></textarea>
+              <button type="button" id="chatSend">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <span>© 2025 - 2026 My Deme, LLC. All Rights Reserved. | Phantom.ai</span>
+          <span>| Protected under Florida State Law and United States Federal Law</span>
+          <span>| PROPRIETARY AND CONFIDENTIAL</span>
+        </div>
+        <div id="romaDashboard" class="roma-indicator" style="position:relative;bottom:auto;left:auto;transform:none;margin-top:12px">Roma • Checking…</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const loginView = document.getElementById('login-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const disclaimerView = document.getElementById('disclaimer-view');
+    const disclaimerAccept = document.getElementById('disclaimerAccept');
+    const disclaimerCancel = document.getElementById('disclaimerCancel');
+    const signOut = document.getElementById('signOut');
+    const api = typeof TruAiAPI !== 'undefined' ? new TruAiAPI() : null;
+
+    function getApiBase() {
+      return (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi');
+    }
+
+    function updateRoma(el, data) {
+      if (!el) return;
+      if (data && data.roma && data.portal_protected && data.monitor === 'active') {
+        el.textContent = 'Roma \u2022 Portal protected \u2022 Monitor active';
+        el.classList.add('confirmed');
+      } else if (data && data.trust_state === 'BLOCKED') {
+        el.textContent = 'Roma \u2022 Blocked (suspicion threshold)';
+        el.classList.remove('confirmed');
+      } else if (data && (data.trust_state === 'UNVERIFIED' || data.reason)) {
+        el.textContent = 'Roma \u2022 Unverified (' + (data.reason || 'security check failed') + ')';
+        el.classList.remove('confirmed');
+      } else {
+        el.textContent = 'Roma \u2022 Portal protected';
+        el.classList.add('confirmed');
+      }
+    }
+
+    function fetchRoma() {
+      fetch(getApiBase() + '/security/roma', { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => {
+          updateRoma(document.getElementById('romaLogin'), data);
+          updateRoma(document.getElementById('romaDashboard'), data);
+        })
+        .catch(() => {
+          var el = document.getElementById('romaLogin');
+          if (el) el.textContent = 'Roma \u2022 Unreachable (start TruAi server)';
+          el = document.getElementById('romaDashboard');
+          if (el) el.textContent = 'Roma \u2022 Unreachable';
+        });
+    }
+
+    function reportOutcome(action, outcome) {
+      if (!api || !window.TRUAI_CONFIG || !window.TRUAI_CONFIG.IS_AUTHENTICATED) return;
+      const taskId = 'phantom-' + Date.now();
+      api.reportSubordinateOutcome({
+        system: 'phantom',
+        task_id: taskId,
+        outcome: outcome,
+        user_action: 'accepted',
+        latency_ms: 150,
+        target: action
+      }).catch(() => {});
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      fetchRoma();
+      fetch(getApiBase() + '/auth/status', { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.authenticated) {
+            if (window.TRUAI_CONFIG) {
+              window.TRUAI_CONFIG.IS_AUTHENTICATED = true;
+              window.TRUAI_CONFIG.USERNAME = data.username || '';
+              window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token || '';
+            }
+            loginView.style.display = 'none';
+            disclaimerView.style.display = 'flex';
+          }
+        })
+        .catch(() => {});
+    });
+
+    loginForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      if (!u || !p) return;
+      const base = getApiBase();
+      fetch(base + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username: u, password: p })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            if (window.TRUAI_CONFIG) {
+              window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token || '';
+              window.TRUAI_CONFIG.IS_AUTHENTICATED = true;
+              window.TRUAI_CONFIG.USERNAME = data.username || u;
+            }
+            loginView.style.display = 'none';
+            disclaimerView.style.display = 'flex';
+          } else {
+            alert(data.error || 'Login failed');
+          }
+        })
+        .catch(err => {
+          alert('Login failed: ' + (err.message || 'Network error'));
+        });
+    });
+
+    disclaimerAccept.addEventListener('click', function () {
+      disclaimerView.style.display = 'none';
+      dashboardView.style.display = 'block';
+      dashboardView.classList.add('active');
+      fetchRoma();
+    });
+
+    disclaimerCancel.addEventListener('click', function () {
+      disclaimerView.style.display = 'none';
+      loginView.style.display = 'flex';
+    });
+
+    signOut.addEventListener('click', function (e) {
+      e.preventDefault();
+      fetch(getApiBase() + '/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+      if (window.TRUAI_CONFIG) window.TRUAI_CONFIG.IS_AUTHENTICATED = false;
+      dashboardView.style.display = 'none';
+      dashboardView.classList.remove('active');
+      loginView.style.display = 'flex';
+    });
+
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', function (e) {
+        if (this.id === 'signOut') return;
+        e.preventDefault();
+        const t = this.dataset.tab;
+        document.querySelectorAll('.nav-tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+        this.classList.add('active');
+        var panel = document.getElementById('tab-' + t);
+        if (panel) panel.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const action = this.dataset.action || this.textContent;
+        reportOutcome(action, 'success');
+        alert('[Demo] ' + action + ' would execute. Outcome reported to TruAi Core.');
+      });
+    });
+
+    const chatInput = document.getElementById('chatInput');
+    const chatSend = document.getElementById('chatSend');
+    const chatHistory = document.getElementById('chatHistory');
+    if (chatSend && chatInput) {
+      chatSend.addEventListener('click', sendChat);
+      chatInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+      });
+    }
+    function sendChat() {
+      const text = (chatInput && chatInput.value.trim()) || '';
+      if (!text) return;
+      var div = document.createElement('div');
+      div.className = 'chat-msg user';
+      div.innerHTML = '<span>' + text.replace(/</g, '&lt;') + '</span>';
+      chatHistory.appendChild(div);
+      chatInput.value = '';
+      if (api && window.TRUAI_CONFIG && window.TRUAI_CONFIG.IS_AUTHENTICATED) {
+        api.sendMessage(text, null, 'auto', { scope: 'phantom', intent: 'project_management' })
+          .then(res => {
+            var reply = (res && res.message && res.message.content) ? res.message.content : (res && res.reply) ? res.reply : '[Demo] Phantom.ai would respond here.';
+            var d = document.createElement('div');
+            d.className = 'chat-msg ai';
+            d.innerHTML = '<span>' + String(reply).replace(/</g, '&lt;') + '</span>';
+            chatHistory.appendChild(d);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+          })
+          .catch(() => {
+            var d = document.createElement('div');
+            d.className = 'chat-msg ai';
+            d.innerHTML = '<span>[Demo] Response would appear here. Ensure TruAi server is running for live AI.</span>';
+            chatHistory.appendChild(d);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+          });
+      } else {
+        var d = document.createElement('div');
+        d.className = 'chat-msg ai';
+        d.innerHTML = '<span>[Demo] AI Chat powered by TruAi Core. Sign in via TruAi for live responses.</span>';
+        chatHistory.appendChild(d);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+    }
+  </script>
+</body>
+</html>

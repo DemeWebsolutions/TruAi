@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gemini.ai — Login &amp; Dashboard</title>
+  <style>
+    :root{
+      --blue:#1ea7ff;
+      --white:#ffffff;
+      --ink:#0b0d10;
+      --glass-bg:rgba(15,17,20,0.6);
+      --glass-border:rgba(255,255,255,0.12);
+      --shadow:0 10px 25px rgba(0,0,0,0.35);
+    }
+
+    html,body{
+      height:100%;
+      color:var(--white);
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% 100%, rgba(0,0,0,0.55), rgba(0,0,0,0.85)),
+        #1a1a1a;
+      margin:0;
+    }
+    .overlay{
+      position:fixed; inset:0; pointer-events:none;
+      background:
+        radial-gradient(700px 350px at 50% 0%, rgba(30,167,255,0.08), transparent),
+        radial-gradient(1000px 500px at 10% 80%, rgba(255,255,255,0.05), transparent);
+      mix-blend-mode:screen;
+    }
+    a{ color:var(--blue); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+    button, .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      padding:12px 18px; border-radius:8px; border:1px solid var(--blue);
+      background:linear-gradient(180deg, rgba(30,167,255,0.25), rgba(30,167,255,0.15));
+      color:var(--white); font-size:14px; font-weight:600; cursor:pointer; box-shadow:var(--shadow);
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    button:hover, .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 30px rgba(30,167,255,0.3);
+      background:linear-gradient(180deg, rgba(30,167,255,0.35), rgba(30,167,255,0.22));
+    }
+    .btn-outline{
+      background:transparent; border-color:var(--white); color:var(--white);
+    }
+
+    .center{
+      min-height:100%;
+      display:grid; place-items:center;
+      padding:24px;
+    }
+    .card{
+      width:min(100%, 420px);
+      background:var(--glass-bg);
+      border:1px solid var(--glass-border);
+      border-radius:12px; box-shadow:var(--shadow);
+      backdrop-filter:saturate(125%) blur(10px);
+      -webkit-backdrop-filter:saturate(125%) blur(10px);
+      padding:40px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px; margin-bottom:24px;
+    }
+    .brand .logo-img{
+      width:48px; height:48px; object-fit:contain;
+    }
+    .brand h1{
+      font-size:24px; font-weight:600; margin:0; letter-spacing:.02em;
+    }
+    .muted{ color:#696969; font-size:12px; }
+
+    .field{ display:flex; flex-direction:column; gap:6px; margin:18px 0; }
+    .field label{ font-size:13px; font-weight:600; color:#A0A0A0; }
+    .field input{
+      padding:11px 12px; border-radius:8px; border:1px solid var(--glass-border);
+      background:rgba(255,255,255,0.06); color:var(--white); font-size:14px;
+      outline:none; transition:border-color .12s ease, box-shadow .12s ease;
+    }
+    .field input::placeholder{ color:rgba(255,255,255,0.55); }
+    .field input:focus{
+      border-color:var(--blue); box-shadow:0 0 0 3px rgba(30,167,255,0.25);
+    }
+    .form-actions{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px;
+    }
+
+    .app{ display:none; }
+    .shell{
+      max-width:1200px; margin:0 auto; padding:40px;
+      background:var(--glass-bg);
+      border:1px solid var(--glass-border);
+      border-radius:12px; backdrop-filter:saturate(125%) blur(10px);
+      -webkit-backdrop-filter:saturate(125%) blur(10px);
+      box-shadow:var(--shadow);
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:24px;
+    }
+    .topbar .brand .logo-img{ width:40px; height:40px; }
+    .topbar .brand h1{ font-size:24px; font-weight:600; }
+    .nav a{
+      padding:11px 14px; border-radius:8px; border:1px solid transparent; font-size:13px;
+    }
+    .nav a:hover{
+      border-color:var(--blue);
+      background:linear-gradient(180deg, rgba(30,167,255,0.18), rgba(30,167,255,0.06));
+    }
+
+    .grid{
+      display:grid; gap:18px;
+      grid-template-columns:repeat(12, 1fr);
+    }
+    .card-sm{
+      grid-column:span 3;
+      background:rgba(255,255,255,0.06);
+      border:1px solid var(--glass-border);
+      border-radius:8px; padding:18px;
+    }
+    .card-lg{
+      grid-column:span 12;
+      background:rgba(255,255,255,0.06);
+      border:1px solid var(--glass-border);
+      border-radius:8px; padding:22px;
+    }
+    .stat{
+      font-size:13px; font-weight:600; color:#A0A0A0; margin-bottom:6px;
+    }
+    .value{
+      font-size:24px; font-weight:600; color:var(--white);
+    }
+    .actions{ display:flex; gap:12px; flex-wrap:wrap; }
+
+    .footer{
+      margin-top:20px; color:#696969; font-size:11px;
+      display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    }
+    .footer .dw{
+      color:var(--blue); font-weight:700; border-bottom:1px solid var(--blue);
+    }
+
+    @media (max-width:900px){
+      .card-sm{ grid-column:span 6; }
+    }
+    @media (max-width:600px){
+      .card-sm{ grid-column:span 12; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{ transition:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <!-- Login -->
+  <main class="center" id="login">
+    <section class="card" aria-label="Login">
+      <div class="brand">
+        <img class="logo-img" src="../assets/Gemini.ai_Logo-e2c5fbfe-a528-4613-8631-3d094ab89f8e.png" alt="Gemini.ai">
+        <div>
+          <h1>Gemini.ai</h1>
+          <div class="muted">AI-assisted server management</div>
+        </div>
+      </div>
+
+      <form onsubmit="return false">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="admin@example.com" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+
+        <div class="form-actions">
+          <button id="signInBtn" type="button" aria-label="Sign in">
+            Sign in
+          </button>
+          <div class="muted">
+            <a href="#">Forgot password?</a>
+          </div>
+        </div>
+      </form>
+
+      <div class="footer" style="margin-top:1.25rem">
+        <span class="dw">DW</span>
+        <span>Web Solutions — <a href="https://demewebsolutions.com" target="_blank" rel="noopener">Made Simple</a></span>
+      </div>
+    </section>
+  </main>
+
+  <!-- Dashboard -->
+  <div class="app" id="app" style="display:none;">
+    <div class="center" style="padding-top:3rem">
+      <div class="shell">
+        <div class="topbar">
+          <div class="brand">
+            <img class="logo-img" src="../assets/Gemini.ai_Logo-e2c5fbfe-a528-4613-8631-3d094ab89f8e.png" alt="Gemini.ai">
+            <h1 style="margin:0">Gemini.ai Dashboard</h1>
+          </div>
+          <nav class="nav" aria-label="Primary">
+            <a href="#">Overview</a>
+            <a href="#">Provisioning</a>
+            <a href="#">Diagnostics</a>
+            <a href="#">Security</a>
+            <a href="#" id="signOut">Sign out</a>
+          </nav>
+        </div>
+
+        <div class="grid">
+          <div class="card-sm">
+            <div class="stat">Provisioned Nodes</div>
+            <div class="value">42</div>
+          </div>
+          <div class="card-sm">
+            <div class="stat">Active Alerts</div>
+            <div class="value" style="color:#ff6b6b">3</div>
+          </div>
+          <div class="card-sm">
+            <div class="stat">Avg CPU Load</div>
+            <div class="value">27%</div>
+          </div>
+          <div class="card-sm">
+            <div class="stat">Uptime</div>
+            <div class="value">99.98%</div>
+          </div>
+
+          <div class="card-lg">
+            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Automation &amp; Actions</h2>
+            <p class="muted" style="margin-bottom:18px">Run common tasks with one click. Links and buttons use the Gemini blue/white scheme.</p>
+            <div class="actions">
+              <button>Run Diagnostics</button>
+              <button>Apply Security Hardening</button>
+              <button>Scale Cluster</button>
+              <button class="btn btn-outline">View Logs</button>
+              <a class="btn" href="#">Open Task Scheduler</a>
+            </div>
+          </div>
+
+          <div class="card-lg">
+            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Recent Activity</h2>
+            <ul style="margin:0; padding:0; list-style:none">
+              <li style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.1); font-size:13px; color:#A0A0A0">Auto-remediation applied to node gmn-07</li>
+              <li style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.1); font-size:13px; color:#A0A0A0">Failover tested successfully for region eu-west</li>
+              <li style="padding:10px 0; font-size:13px; color:#A0A0A0">Package updates completed on 12 hosts</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer">
+          <span class="dw">DW</span>
+          <span>Web Solutions — <a href="https://demewebsolutions.com" target="_blank" rel="noopener">Made Simple</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const signInBtn = document.getElementById('signInBtn');
+    const login = document.getElementById('login');
+    const app = document.getElementById('app');
+    const signOut = document.getElementById('signOut');
+
+    signInBtn.addEventListener('click', () => {
+      login.style.display = 'none';
+      app.style.display = 'block';
+    });
+
+    signOut.addEventListener('click', (e) => {
+      e.preventDefault();
+      app.style.display = 'none';
+      login.style.display = 'grid';
+    });
+  </script>
+
+</body>
+</html>

@@ -18,8 +18,9 @@ class ChatService {
 
     /**
      * Send a message and get AI response
+     * @param array|null $metadata Optional: intent, scope, forensic_id, file_path, context_files (array of {path, content})
      */
-    public function sendMessage($userId, $conversationId, $message, $model = 'auto') {
+    public function sendMessage($userId, $conversationId, $message, $model = 'auto', $metadata = null) {
         if (empty($message)) {
             throw new Exception('Message is required');
         }
@@ -35,9 +36,21 @@ class ChatService {
         // Save user message
         $this->saveMessage($conversationId, 'user', $message);
 
+        // Build context from metadata (hard token budget ~4k chars for context)
+        $contextFiles = isset($metadata['context_files']) && is_array($metadata['context_files']) ? $metadata['context_files'] : [];
+        $effectiveMessage = $this->buildMessageWithContext($message, $contextFiles);
+
         // Get AI response
-        $aiResponse = $this->getAIResponse($message, $model);
+        $aiResponse = $this->getAIResponse($effectiveMessage, $model, $metadata);
         $this->saveMessage($conversationId, 'assistant', $aiResponse, $model);
+
+        // Audit inline_rewrite
+        if ($metadata && isset($metadata['intent']) && $metadata['intent'] === 'inline_rewrite') {
+            $this->auditLog($userId, 'INLINE_REWRITE', $metadata['forensic_id'] ?? 'unknown', [
+                'file_path' => $metadata['file_path'] ?? null,
+                'selection_length' => $metadata['selection_length'] ?? 0
+            ]);
+        }
 
         // Update conversation timestamp
         $this->db->execute(
@@ -92,17 +105,52 @@ class ChatService {
     }
 
     /**
-     * Delete a conversation
+     * Update a message (editable chat - Cursor parity)
      */
-    public function deleteConversation($conversationId) {
+    public function updateMessage($messageId, $conversationId, $userId, $content) {
+        $conv = $this->db->query(
+            "SELECT id FROM conversations WHERE id = :id AND user_id = :user_id LIMIT 1",
+            [':id' => $conversationId, ':user_id' => $userId]
+        );
+        if (empty($conv)) {
+            throw new Exception('Conversation not found');
+        }
+        $this->db->execute(
+            "UPDATE messages SET content = :content WHERE id = :id AND conversation_id = :conv_id",
+            [':content' => $content, ':id' => $messageId, ':conv_id' => $conversationId]
+        );
+        return true;
+    }
+
+    /**
+     * Update conversation title (editable, reviewable - Cursor parity)
+     */
+    public function updateConversationTitle($conversationId, $userId, $title) {
+        $conv = $this->db->query(
+            "SELECT id FROM conversations WHERE id = :id AND user_id = :user_id LIMIT 1",
+            [':id' => $conversationId, ':user_id' => $userId]
+        );
+        if (empty($conv)) {
+            throw new Exception('Conversation not found');
+        }
+        $this->db->execute(
+            "UPDATE conversations SET title = :title, updated_at = CURRENT_TIMESTAMP WHERE id = :id",
+            [':title' => $title, ':id' => $conversationId]
+        );
+        return true;
+    }
+
+    /**
+     * Delete a conversation (only if owned by user)
+     */
+    public function deleteConversation($conversationId, $userId) {
         $this->db->execute(
             "DELETE FROM messages WHERE conversation_id = :id",
             [':id' => $conversationId]
         );
-        
         $this->db->execute(
-            "DELETE FROM conversations WHERE id = :id",
-            [':id' => $conversationId]
+            "DELETE FROM conversations WHERE id = :id AND user_id = :user_id",
+            [':id' => $conversationId, ':user_id' => $userId]
         );
     }
 
@@ -136,7 +184,45 @@ class ChatService {
         return $title;
     }
 
-    private function getAIResponse($message, $model) {
+    /**
+     * Build user message with context files (deterministic order, hard budget)
+     */
+    private function buildMessageWithContext($message, $contextFiles) {
+        $CONTEXT_BUDGET = 4000; // chars
+        if (empty($contextFiles)) {
+            return $message;
+        }
+        $parts = ["Context (AI sees):"];
+        $used = 0;
+        foreach ($contextFiles as $ctx) {
+            $path = $ctx['path'] ?? '';
+            $content = isset($ctx['content']) ? substr((string)$ctx['content'], 0, $CONTEXT_BUDGET - $used - 200) : '';
+            if ($used + strlen($content) + strlen($path) + 50 > $CONTEXT_BUDGET) {
+                break;
+            }
+            $parts[] = "--- {$path} ---";
+            $parts[] = $content;
+            $used += strlen($content) + strlen($path) + 50;
+        }
+        $parts[] = "--- End context ---";
+        $parts[] = "";
+        $parts[] = $message;
+        return implode("\n", $parts);
+    }
+
+    private function auditLog($userId, $event, $actor, $details = null) {
+        $this->db->execute(
+            "INSERT INTO audit_logs (user_id, event, actor, details) VALUES (:user_id, :event, :actor, :details)",
+            [
+                ':user_id' => $userId,
+                ':event' => $event,
+                ':actor' => $actor,
+                ':details' => $details ? json_encode($details) : null
+            ]
+        );
+    }
+
+    private function getAIResponse($message, $model, $metadata = null) {
         // Call actual AI API
         require_once __DIR__ . '/ai_client.php';
         
@@ -153,23 +239,25 @@ class ChatService {
             
             try {
                 $auth = new Auth();
+                $openaiKey = defined('OPENAI_API_KEY') ? OPENAI_API_KEY : '';
+                $isTruAiKey = (strpos($openaiKey, 'sk-svcacct-') === 0);
                 if ($auth->isAuthenticated()) {
                     $settingsService = new SettingsService();
                     $settings = $settingsService->getSettings($auth->getUserId());
-                    
-                    // Prefer OpenAI if configured, otherwise Anthropic
-                    if (!empty($settings['ai']['openaiApiKey']) || !empty(OPENAI_API_KEY)) {
+                    $settingsOpenai = $settings['ai']['openaiApiKey'] ?? '';
+                    $isTruAiKey = $isTruAiKey || (strpos($settingsOpenai, 'sk-svcacct-') === 0);
+                    $hasRealOpenAi = (!empty($settingsOpenai) || !empty($openaiKey)) && !$isTruAiKey;
+                    if ($hasRealOpenAi) {
                         $model = 'gpt-4';
                     } else {
                         $model = 'claude-3-sonnet';
                     }
                 } else {
-                    // Not authenticated - use OpenAI if env var exists
-                    $model = !empty(OPENAI_API_KEY) ? 'gpt-4' : 'claude-3-sonnet';
+                    $model = (!empty($openaiKey) && !$isTruAiKey) ? 'gpt-4' : 'claude-3-sonnet';
                 }
             } catch (Exception $e) {
                 error_log('Could not determine auto model: ' . $e->getMessage());
-                $model = 'gpt-4'; // Default fallback
+                $model = 'claude-3-sonnet'; // Prefer Claude as fallback (key often valid)
             }
         }
         
@@ -189,7 +277,7 @@ class ChatService {
                 $conversationHistory = array_reverse($history);
             }
             
-            $response = $aiClient->chat($message, $model, $conversationHistory);
+            $response = $aiClient->chat($message, $model, $conversationHistory, $metadata);
             return $response;
         } catch (Exception $e) {
             error_log('AI chat failed: ' . $e->getMessage());
