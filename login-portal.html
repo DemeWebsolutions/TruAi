@@ -179,7 +179,8 @@
         }
 
         .input-field::placeholder {
-            color: transparent;
+            color: #6B7280;
+            opacity: 0.7;
         }
 
         .input-label {
@@ -425,20 +426,30 @@
                         window.TRUAI_CONFIG.USERNAME = result.username;
                     }
                     
-                    // Show success and redirect
+                    // Show success and redirect to access-granted page
                     loadingMessage.textContent = '✅ Login successful! Redirecting...';
                     
-                    // Redirect to dashboard
+                    // Redirect to access-granted page as part of the authentication flow
                     setTimeout(() => {
-                        window.location.href = '/TruAi/';
+                        window.location.href = `/TruAi/access-granted.html?username=${encodeURIComponent(result.username)}`;
                     }, 500);
                 } else {
                     throw new Error(result.message || 'Login failed');
                 }
             } catch (error) {
-                // Redirect to Access Denied page with error message
-                const errorMsg = encodeURIComponent(error.message || 'Login failed. Please check your credentials.');
-                window.location.href = `/TruAi/access-denied.html?error=${errorMsg}`;
+                // Distinguish between authentication errors and connection issues
+                const errorMsg = error.message || 'Login failed. Please check your credentials.';
+                
+                // For connection errors, show error in place rather than redirecting
+                if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch')) {
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Login';
+                    loadingMessage.textContent = '❌ Connection error. Please try again.';
+                    loadingMessage.style.color = '#ff4444';
+                } else {
+                    // For authentication failures, redirect to access-denied page
+                    window.location.href = `/TruAi/access-denied.html?error=${encodeURIComponent(errorMsg)}`;
+                }
             }
         });
 

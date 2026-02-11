@@ -204,11 +204,8 @@
         const username = urlParams.get('username') || 'Demetrius';
         const redirectUrl = urlParams.get('redirect') || '/TruAi/';
 
-        // Format username with "Mr." prefix
-        let displayName = username;
-        if (!username.toLowerCase().startsWith('mr.')) {
-            displayName = `Mr. ${username}`;
-        }
+        // Use username as-is without assumptions about title/gender
+        const displayName = username;
 
         // Update username display
         const usernameDisplay = document.getElementById('usernameDisplay');
