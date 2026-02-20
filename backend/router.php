@@ -89,6 +89,17 @@ class Router {
         $this->routes['GET']['/api/v1/gemini/stats'] = [$this, 'handleGeminiStats'];
         $this->routes['GET']['/api/v1/gemini/insights'] = [$this, 'handleGeminiInsights'];
         $this->routes['POST']['/api/v1/gemini/chat/feedback'] = [$this, 'handleGeminiChatFeedback'];
+        $this->routes['POST']['/api/v1/gemini/automation'] = [$this, 'handleGeminiAutomation'];
+
+        // UBSAS: biometric authentication endpoints
+        $this->routes['GET']['/api/v1/auth/methods'] = [$this, 'handleAuthMethods'];
+        $this->routes['POST']['/api/v1/auth/biometric'] = [$this, 'handleBiometricAuth'];
+        $this->routes['POST']['/api/v1/auth/autofill'] = [$this, 'handleAutoFillAuth'];
+        $this->routes['POST']['/api/v1/auth/masterkey'] = [$this, 'handleMasterKeyAuth'];
+
+        // LSRP: secure recovery endpoints
+        $this->routes['POST']['/api/v1/recovery/initiate'] = [$this, 'handleLSRPRecovery'];
+        $this->routes['POST']['/api/v1/recovery/masterkey/generate'] = [$this, 'handleGenerateMasterKey'];
     }
 
     public function dispatch() {
@@ -102,7 +113,7 @@ class Router {
         if (CORS_ENABLED) {
             // Get request origin
             $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
-            $allowedOrigins = ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8765', 'http://127.0.0.1:8765', 'http://localhost:8787', 'http://127.0.0.1:8787', 'http://localhost:5000', 'http://127.0.0.1:5000', 'http://154.53.54.169:5000', 'http://localhost', 'http://127.0.0.1'];
+            $allowedOrigins = ['http://localhost:8001', 'http://127.0.0.1:8001', 'http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8765', 'http://127.0.0.1:8765', 'http://localhost:8787', 'http://127.0.0.1:8787', 'http://localhost:5000', 'http://127.0.0.1:5000', 'http://154.53.54.169:5000', 'http://localhost', 'http://127.0.0.1'];
             
             // Allow credentials only from allowed origins
             if (in_array($requestOrigin, $allowedOrigins)) {
@@ -137,6 +148,11 @@ class Router {
                 if ($route !== '/api/v1/auth/login' && 
                     $route !== '/api/v1/auth/status' &&
                     $route !== '/api/v1/auth/publickey' &&
+                    $route !== '/api/v1/auth/methods' &&
+                    $route !== '/api/v1/auth/biometric' &&
+                    $route !== '/api/v1/auth/autofill' &&
+                    $route !== '/api/v1/auth/masterkey' &&
+                    $route !== '/api/v1/recovery/initiate' &&
                     $route !== '/api/v1/security/roma' &&
                     $route !== '/api/v1/health' &&
                     $route !== '/api/v1/monitor/probe' &&
@@ -1371,5 +1387,154 @@ class Router {
         }
         $suggestions = $service->getAdaptationSuggestions($prompt);
         echo json_encode(['success' => true, 'suggestions' => $suggestions]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Gemini Automation
+    // -------------------------------------------------------------------------
+
+    private function handleGeminiAutomation() {
+        $data   = json_decode(file_get_contents('php://input'), true);
+        $action = trim($data['action'] ?? '');
+
+        if (empty($action)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'action is required']);
+            return;
+        }
+
+        require_once __DIR__ . '/gemini_service.php';
+        $result = GeminiService::executeAutomation($this->auth->getUserId(), $action);
+
+        if (!$result['success']) {
+            http_response_code(400);
+        }
+        echo json_encode($result);
+    }
+
+    // -------------------------------------------------------------------------
+    // UBSAS: Biometric authentication handlers
+    // -------------------------------------------------------------------------
+
+    /**
+     * GET /api/v1/auth/methods — return available auth tiers for this host.
+     */
+    private function handleAuthMethods() {
+        require_once __DIR__ . '/ubsas_auth_service.php';
+        $ubsas   = new UBSASAuthService();
+        $methods = $ubsas->getAvailableAuthMethods();
+        echo json_encode(['success' => true, 'methods' => $methods]);
+    }
+
+    /**
+     * POST /api/v1/auth/biometric — attempt biometric auto-login.
+     */
+    private function handleBiometricAuth() {
+        require_once __DIR__ . '/ubsas_auth_service.php';
+        $data = json_decode(file_get_contents('php://input'), true);
+        $app  = trim($data['app'] ?? 'truai');
+
+        $ubsas       = new UBSASAuthService();
+        $credentials = $ubsas->biometricAutoLogin($app);
+
+        if (!$credentials) {
+            echo json_encode(['success' => false, 'error' => 'Biometric authentication unavailable or failed']);
+            return;
+        }
+
+        // Authenticate with TruAi credentials
+        if ($this->auth->login($credentials['username'], $credentials['password'])) {
+            $ubsas->logBiometricLogin($this->auth->getUserId());
+            $_SESSION['auth_method']    = 'biometric';
+            $_SESSION['session_timeout'] = time() + 86400; // 24-hour session for biometric
+            echo json_encode([
+                'success'    => true,
+                'username'   => $credentials['username'],
+                'csrf_token' => Auth::generateCsrfToken(),
+                'redirect'   => '/dashboard.html',
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Biometric credentials rejected']);
+        }
+    }
+
+    /**
+     * POST /api/v1/auth/autofill — retrieve keychain credentials for form auto-fill.
+     */
+    private function handleAutoFillAuth() {
+        require_once __DIR__ . '/ubsas_auth_service.php';
+        $data = json_decode(file_get_contents('php://input'), true);
+        $app  = trim($data['app'] ?? 'truai');
+
+        $ubsas       = new UBSASAuthService();
+        $credentials = $ubsas->autofillCredentials($app);
+
+        if ($credentials) {
+            echo json_encode([
+                'success'     => true,
+                'credentials' => [
+                    'username' => $credentials['username'],
+                    'password' => $credentials['password'],
+                ],
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'No stored credentials found']);
+        }
+    }
+
+    /**
+     * POST /api/v1/auth/masterkey — validate master recovery key (Tier 4).
+     */
+    private function handleMasterKeyAuth() {
+        require_once __DIR__ . '/ubsas_auth_service.php';
+        $data      = json_decode(file_get_contents('php://input'), true);
+        $username  = trim($data['username'] ?? '');
+        $masterKey = trim($data['master_key'] ?? '');
+
+        if (empty($username) || strlen($masterKey) !== 64) {
+            http_response_code(400);
+            echo json_encode(['error' => 'username and 64-character master_key required']);
+            return;
+        }
+
+        $ubsas  = new UBSASAuthService();
+        $result = $ubsas->validateMasterKey($username, $masterKey);
+        echo json_encode($result);
+    }
+
+    // -------------------------------------------------------------------------
+    // LSRP: Recovery handlers
+    // -------------------------------------------------------------------------
+
+    /**
+     * POST /api/v1/recovery/initiate — LSRP recovery (local-only).
+     */
+    private function handleLSRPRecovery() {
+        require_once __DIR__ . '/lsrp_recovery.php';
+        $data       = json_decode(file_get_contents('php://input'), true);
+        $controller = new LSRPRecoveryController();
+        $result     = $controller->handleRecovery($data ?? []);
+        if (!$result['success']) {
+            http_response_code(403);
+        }
+        echo json_encode($result);
+    }
+
+    /**
+     * POST /api/v1/recovery/masterkey/generate — generate master key (auth required).
+     */
+    private function handleGenerateMasterKey() {
+        require_once __DIR__ . '/lsrp_recovery.php';
+        $data       = json_decode(file_get_contents('php://input'), true);
+        $controller = new LSRPRecoveryController();
+        $result     = $controller->generateMasterKey(
+            $this->auth->getUserId(),
+            $data['os_username'] ?? '',
+            $data['os_password'] ?? ''
+        );
+        if (!$result['success']) {
+            http_response_code(400);
+        }
+        echo json_encode($result);
     }
 }

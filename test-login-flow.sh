@@ -6,7 +6,7 @@ echo ""
 
 # Test 1: Server Status
 echo "1️⃣  Testing Server Status..."
-if curl -s http://localhost:8080/ > /dev/null; then
+if curl -s http://localhost:8001/ > /dev/null; then
     echo "   ✅ Server is running"
 else
     echo "   ❌ Server is not responding"
@@ -16,7 +16,7 @@ echo ""
 
 # Test 2: API Base Configuration
 echo "2️⃣  Testing API Configuration..."
-API_BASE=$(curl -s http://localhost:8080/ | grep -o "API_BASE:.*" | head -1)
+API_BASE=$(curl -s http://localhost:8001/ | grep -o "API_BASE:.*" | head -1)
 if echo "$API_BASE" | grep -q "/api/v1"; then
     echo "   ✅ API_BASE configured correctly: $API_BASE"
 else
@@ -26,7 +26,7 @@ echo ""
 
 # Test 3: Login Endpoint
 echo "3️⃣  Testing Login Endpoint..."
-LOGIN_RESPONSE=$(curl -X POST -s http://localhost:8080/api/v1/auth/login \
+LOGIN_RESPONSE=$(curl -X POST -s http://localhost:8001/api/v1/auth/login \
     -H "Content-Type: application/json" \
     -d '{"username":"admin","password":"admin123"}')
 
@@ -41,7 +41,7 @@ echo ""
 
 # Test 4: Invalid Credentials
 echo "4️⃣  Testing Invalid Credentials..."
-INVALID_RESPONSE=$(curl -X POST -s http://localhost:8080/api/v1/auth/login \
+INVALID_RESPONSE=$(curl -X POST -s http://localhost:8001/api/v1/auth/login \
     -H "Content-Type: application/json" \
     -d '{"username":"admin","password":"wrong"}')
 
@@ -56,7 +56,7 @@ echo ""
 echo "5️⃣  Testing Static Assets..."
 ASSETS=("/assets/css/main.css" "/assets/js/login.js" "/assets/js/api.js" "/assets/images/TruAi-transparent-bg.png")
 for asset in "${ASSETS[@]}"; do
-    STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080$asset")
+    STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8001$asset")
     if [ "$STATUS" = "200" ]; then
         echo "   ✅ $asset (HTTP $STATUS)"
     else
@@ -81,7 +81,7 @@ echo ""
 
 # Test 7: API.js Endpoints
 echo "7️⃣  Testing API.js Endpoint Paths..."
-API_JS=$(curl -s http://localhost:8080/assets/js/api.js)
+API_JS=$(curl -s http://localhost:8001/assets/js/api.js)
 if echo "$API_JS" | grep -q "request('/auth/login'"; then
     echo "   ✅ Login endpoint path correct (no double /api/v1)"
 else

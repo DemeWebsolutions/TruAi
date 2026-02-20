@@ -7,7 +7,7 @@ echo "🌐 SETTINGS API ENDPOINT TEST"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-BASE_URL="http://localhost:8080/api/v1"
+BASE_URL="http://localhost:8001/api/v1"
 
 # Check if server is running
 echo "1. Checking if server is running..."

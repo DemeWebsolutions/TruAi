@@ -71,10 +71,10 @@ fi
 # Start server
 echo "🚀 Starting TruAi HTML Server..."
 echo "📍 Location: $SCRIPT_DIR"
-echo "🌐 Server will be available at: http://localhost:8080"
+echo "🌐 Server will be available at: http://localhost:8001"
 echo ""
 echo "Press Ctrl+C to stop the server"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-php -S localhost:8080 router.php
+php -S localhost:8001 router.php

@@ -147,6 +147,56 @@ class Database {
             FOREIGN KEY (system_id) REFERENCES itc_systems(system_id)
         );
 
+        -- LSRP: Recovery Attempts Audit Log
+        CREATE TABLE IF NOT EXISTS recovery_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            ip_address TEXT NOT NULL,
+            device_fingerprint TEXT,
+            result TEXT NOT NULL,
+            details TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        -- LSRP: Trusted Devices
+        CREATE TABLE IF NOT EXISTS trusted_devices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            device_fingerprint TEXT NOT NULL,
+            device_name TEXT,
+            first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+            revoked INTEGER DEFAULT 0,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        -- LSRP: Master Recovery Keys (hashed)
+        CREATE TABLE IF NOT EXISTS master_recovery_keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            key_hash TEXT NOT NULL,
+            issued_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_used DATETIME,
+            use_count INTEGER DEFAULT 0,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        -- UBSAS: Biometric Login Audit
+        CREATE TABLE IF NOT EXISTS biometric_logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            ip_address TEXT,
+            user_agent TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_recovery_attempts_user ON recovery_attempts(user_id, created_at);
+        CREATE INDEX IF NOT EXISTS idx_recovery_attempts_result ON recovery_attempts(result, created_at);
+        CREATE INDEX IF NOT EXISTS idx_trusted_devices_user ON trusted_devices(user_id);
+        CREATE INDEX IF NOT EXISTS idx_biometric_logins_user ON biometric_logins(user_id, created_at);
+
         CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id);
         CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
         CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(user_id);
@@ -160,7 +210,28 @@ class Database {
         ";
 
         $this->connection->exec($schema);
+        $this->migrateSchema();
         $this->createDefaultUser();
+    }
+
+    /**
+     * Apply incremental schema migrations (idempotent).
+     * SQLite does not support ADD COLUMN IF NOT EXISTS, so we catch errors.
+     */
+    private function migrateSchema() {
+        $migrations = [
+            "ALTER TABLE users ADD COLUMN temp_password_expires DATETIME",
+            "ALTER TABLE users ADD COLUMN requires_password_change INTEGER DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN account_suspended INTEGER DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN hash_algorithm TEXT DEFAULT 'bcrypt'",
+        ];
+        foreach ($migrations as $sql) {
+            try {
+                $this->connection->exec($sql);
+            } catch (PDOException $e) {
+                // Column already exists — silently skip
+            }
+        }
     }
 
     private function createDefaultUser() {

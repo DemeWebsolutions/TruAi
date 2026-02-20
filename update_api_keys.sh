@@ -4,7 +4,7 @@
 
 set -e
 
-API_BASE="http://localhost:8080/TruAi/api/v1"
+API_BASE="http://localhost:8001/TruAi/api/v1"
 LOGIN_URL="${API_BASE}/auth/login"
 SETTINGS_URL="${API_BASE}/settings"
 
