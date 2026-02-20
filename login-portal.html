@@ -144,8 +144,89 @@
             color: rgba(255, 255, 255, 0.7);
         }
 
-        /* Hidden submit button for form submission */
-        .submit-button {
+        /* UBSAS biometric indicator */
+        .ubsas-indicator {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            z-index: 200;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .ubsas-indicator.show { display: block; }
+
+        /* UBSAS recovery link */
+        .recovery-link {
+            position: fixed;
+            bottom: 36px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            z-index: 100;
+            transition: color 0.2s;
+        }
+        .recovery-link:hover { color: rgba(255, 255, 255, 0.7); }
+
+        /* Master key recovery panel */
+        .master-key-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(11, 13, 17, 0.95);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 420px;
+            z-index: 500;
+            display: none;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .master-key-panel.show { display: block; }
+        .master-key-panel h3 { margin-bottom: 16px; font-size: 16px; }
+        .master-key-panel input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        .master-key-panel input::placeholder { color: rgba(255,255,255,0.4); }
+        .master-key-panel .mk-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .master-key-panel .mk-btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            margin-right: 8px;
+        }
+        .master-key-panel .mk-btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+        }
+        .master-key-panel .mk-status { font-size: 12px; margin-top: 10px; min-height: 16px; }
+        .master-key-panel .mk-status.error { color: #f44336; }
+        .master-key-panel .mk-status.success { color: #4caf50; }
             position: absolute;
             width: 1px;
             height: 1px;
@@ -330,6 +411,25 @@
     <!-- Roma monitor / portal protection -->
     <div id="romaMonitor" class="roma-monitor" aria-live="polite">Roma • Portal protected</div>
 
+    <!-- UBSAS biometric status indicator -->
+    <div id="ubsasIndicator" class="ubsas-indicator">👆 Biometric auth active</div>
+
+    <!-- UBSAS recovery link -->
+    <a id="recoveryLink" class="recovery-link" onclick="showMasterKeyPanel(); return false;" href="#">🔐 Recovery</a>
+
+    <!-- Master Key Recovery Panel (LSRP Tier 4) -->
+    <div id="masterKeyPanel" class="master-key-panel" role="dialog" aria-modal="true" aria-label="Master Key Recovery">
+        <h3>🔐 Master Key Recovery</h3>
+        <p style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:16px;">Enter your 64-character offline master key. Local access only.</p>
+        <input type="text" id="mkUsername" placeholder="Username" autocomplete="off">
+        <input type="text" id="mkKey" placeholder="64-character master key" maxlength="64" class="master-key-input" autocomplete="off" style="font-family:monospace;letter-spacing:1px;">
+        <div>
+            <button class="mk-btn mk-btn-primary" onclick="submitMasterKey()">Recover Account</button>
+            <button class="mk-btn mk-btn-cancel" onclick="hideMasterKeyPanel()">Cancel</button>
+        </div>
+        <p id="mkStatus" class="mk-status"></p>
+    </div>
+
     <script src="/TruAi/assets/js/api.js"></script>
     <script src="/TruAi/assets/js/crypto.js"></script>
     <script>
@@ -412,7 +512,7 @@ var encryptionReady=false;
                     return Promise.race([
                         promise,
                         new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error(`${label || 'Request'} timed out. Check server is running on port 8080.`)), ms)
+                            setTimeout(() => reject(new Error(`${label || 'Request'} timed out. Check server is running on port 8001.`)), ms)
                         )
                     ]);
                 };
@@ -520,10 +620,12 @@ var encryptionReady=false;
                     if (data.authenticated) {
                         // Already authenticated, redirect to dashboard
                         window.location.href = '/TruAi/';
+                    } else {
+                        // Attempt UBSAS biometric auto-login (Tier 1)
+                        attemptBiometricLogin();
                     }
                 })
                 .catch(err => {
-                    // Not authenticated or API error, show login form
                     console.log('Authentication check failed, showing login form');
                 });
 
@@ -548,6 +650,119 @@ var encryptionReady=false;
                     // API not reachable (e.g. server not started); keep default text
                 });
         });
+        // ─── UBSAS: Biometric Auto-Login (Tier 1) ───────────────────────────
+        function attemptBiometricLogin() {
+            fetch('/TruAi/api/v1/auth/biometric', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ app: 'truai' })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    var ind = document.getElementById('ubsasIndicator');
+                    if (ind) { ind.textContent = '✅ Biometric login successful'; ind.classList.add('show'); }
+                    setTimeout(function() {
+                        window.location.href = data.redirect || '/TruAi/';
+                    }, 800);
+                } else {
+                    // Tier 1 unavailable — attempt Tier 2 (auto-fill)
+                    attemptAutoFill();
+                }
+            })
+            .catch(function() {
+                // Biometric endpoint unavailable — continue to manual form
+            });
+        }
+
+        function attemptAutoFill() {
+            fetch('/TruAi/api/v1/auth/autofill', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ app: 'truai' })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.credentials) {
+                    var u = document.getElementById('username');
+                    var p = document.getElementById('password');
+                    if (u) u.value = data.credentials.username;
+                    if (p) p.value = data.credentials.password;
+                    var ind = document.getElementById('ubsasIndicator');
+                    if (ind) { ind.textContent = '🔑 Credentials loaded — press Enter to login'; ind.classList.add('show'); }
+                }
+            })
+            .catch(function() { /* silent fallback to manual entry */ });
+        }
+
+        // ─── UBSAS: Master Key Recovery Panel (LSRP Tier 4) ─────────────────
+        function showMasterKeyPanel() {
+            var panel = document.getElementById('masterKeyPanel');
+            if (panel) panel.classList.add('show');
+        }
+
+        function hideMasterKeyPanel() {
+            var panel = document.getElementById('masterKeyPanel');
+            if (panel) panel.classList.remove('show');
+            var st = document.getElementById('mkStatus');
+            if (st) { st.textContent = ''; st.className = 'mk-status'; }
+        }
+
+        function submitMasterKey() {
+            var username  = (document.getElementById('mkUsername')  || {}).value || '';
+            var masterKey = (document.getElementById('mkKey')        || {}).value || '';
+            var status    = document.getElementById('mkStatus');
+
+            if (!username || masterKey.length !== 64) {
+                if (status) { status.textContent = 'Enter username and 64-character master key.'; status.className = 'mk-status error'; }
+                return;
+            }
+            if (status) { status.textContent = '⏳ Validating…'; status.className = 'mk-status'; }
+
+            fetch('/TruAi/api/v1/auth/masterkey', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ username: username, master_key: masterKey })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    if (status) { status.textContent = '✅ Master key accepted. Use temporary password below.'; status.className = 'mk-status success'; }
+                    // Show temp password in a secure overlay (not alert)
+                    setTimeout(function() {
+                        hideMasterKeyPanel();
+                        var overlay = document.createElement('div');
+                        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;';
+                        var box = document.createElement('div');
+                        box.style.cssText = 'background:#1a1d23;border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:28px;max-width:400px;width:90%;color:white;font-family:-apple-system,sans-serif;';
+                        box.innerHTML = '<h3 style="margin:0 0 12px;color:#4caf50;">🔐 Temporary Password</h3>'
+                            + '<p style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:12px;">Valid for 10 minutes. Change immediately after login. Do not share.</p>'
+                            + '<code id="tmpPwDisplay" style="display:block;padding:12px;background:rgba(255,255,255,0.06);border-radius:6px;font-size:13px;word-break:break-all;margin-bottom:16px;">' + data.temporary_password + '</code>'
+                            + '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById(\'tmpPwDisplay\').textContent);this.textContent=\'✓ Copied\'" style="padding:8px 16px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;margin-right:8px;font-size:13px;">Copy</button>'
+                            + '<button id="dismissTmp" style="padding:8px 16px;background:rgba(255,255,255,0.1);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Dismiss</button>';
+                        overlay.appendChild(box);
+                        document.body.appendChild(overlay);
+                        document.getElementById('dismissTmp').addEventListener('click', function() {
+                            overlay.remove();
+                            // Pre-fill login form
+                            var u = document.getElementById('username');
+                            var p = document.getElementById('password');
+                            if (u) u.value = username;
+                            if (p) p.value = data.temporary_password;
+                        });
+                    }, 600);
+                } else {
+                    if (status) { status.textContent = '❌ ' + (data.error || 'Invalid master key'); status.className = 'mk-status error'; }
+                }
+            })
+            .catch(function() {
+                if (status) { status.textContent = '❌ Request failed. Check server connection.'; status.className = 'mk-status error'; }
+            });
+        }
+
     </script>
 
 

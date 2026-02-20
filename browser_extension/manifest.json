@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "DemeWebsolutions Biometric Auth",
+  "version": "1.0.0",
+  "description": "Auto-fill credentials using OS biometric authentication for TruAi, Gemini.ai, and Phantom.ai",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8001/*",
+    "http://127.0.0.1:8002/*",
+    "http://localhost:8001/*",
+    "http://localhost:8002/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1:8001/*login*",
+        "http://127.0.0.1:8002/*login*",
+        "http://localhost:8001/*login*",
+        "http://localhost:8002/*login*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  }
+}
