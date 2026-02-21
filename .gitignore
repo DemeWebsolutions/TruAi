@@ -40,3 +40,6 @@ composer.lock
 encryption_keys.json
 # database/encryption_keys.json
 test-phase1-fixes.php
+
+# One-time initial credentials (plaintext — must never be committed)
+database/.initial_credentials

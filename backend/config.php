@@ -55,6 +55,13 @@ define('DB_PATH', DATABASE_PATH . '/truai.db');
 define('SESSION_LIFETIME', 3600); // 1 hour
 define('CSRF_TOKEN_NAME', 'csrf_token');
 define('TRUAI_DEPLOYMENT', getenv('TRUAI_DEPLOYMENT') ?: 'development');
+
+// Argon2id password hashing parameters (LSRP-spec: 64MB, 4 iterations, 2 threads)
+define('ARGON2ID_OPTIONS', [
+    'memory_cost' => 65536,
+    'time_cost'   => 4,
+    'threads'     => 2,
+]);
 $allowedHosts = ['localhost', '127.0.0.1', '::1'];
 if (TRUAI_DEPLOYMENT === 'production' && ($extra = getenv('ALLOWED_HOSTS'))) {
     $allowedHosts = array_merge($allowedHosts, array_map('trim', explode(',', $extra)));

@@ -136,6 +136,20 @@ class Router {
 
         header('Content-Type: application/json');
 
+        // Security headers
+        header("X-Content-Type-Options: nosniff");
+        header("X-Frame-Options: DENY");
+        header("Referrer-Policy: strict-origin-when-cross-origin");
+        header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'");
+
+        // Enforce max request body size (1 MB)
+        $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+        if ($contentLength > 1048576) {
+            http_response_code(413);
+            echo json_encode(['error' => 'Request body too large']);
+            return;
+        }
+
         // Find matching route
         foreach ($this->routes[$method] ?? [] as $route => $handler) {
             $pattern = preg_replace('/\{[^}]+\}/', '([^/]+)', $route);
@@ -214,6 +228,7 @@ class Router {
             } else {
                 require_once __DIR__ . '/roma_trust.php';
                 RomaTrust::incrementSuspicion();
+                RomaTrust::emitSecurityEvent('LOGIN_FAILED', ['method' => 'encrypted']);
                 http_response_code(401);
                 echo json_encode(['error' => 'Invalid credentials']);
             }
@@ -227,14 +242,18 @@ class Router {
             return;
         }
 
-        if ($this->auth->login($data['username'], $data['password'])) {
+        $username = $data['username'];
+
+        if ($this->auth->login($username, $data['password'])) {
             echo json_encode([
                 'success' => true,
-                'username' => $data['username'],
+                'username' => $username,
                 'csrf_token' => Auth::generateCsrfToken(),
                 'encryption' => 'standard'
             ]);
         } else {
+            RomaTrust::incrementSuspicion();
+            RomaTrust::emitSecurityEvent('LOGIN_FAILED', ['username_hash' => hash('sha256', $username)]);
             http_response_code(401);
             echo json_encode(['error' => 'Invalid credentials']);
         }

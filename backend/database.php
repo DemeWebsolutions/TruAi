@@ -246,7 +246,7 @@ class Database {
                 $initialPassword = bin2hex(random_bytes(12)); // 24 alphanumeric chars
             }
             
-            $defaultPassword = password_hash($initialPassword, PASSWORD_DEFAULT);
+            $defaultPassword = password_hash($initialPassword, PASSWORD_ARGON2ID, ARGON2ID_OPTIONS);
             $apiKey = bin2hex(random_bytes(32));
             
             $stmt = $this->connection->prepare(
