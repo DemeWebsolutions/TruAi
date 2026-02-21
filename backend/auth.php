@@ -193,6 +193,37 @@ class Auth {
     }
 
     /**
+     * Validate username format (alphanumeric, underscore, hyphen; 3–32 chars).
+     */
+    public static function validateUsername(string $username): bool {
+        return preg_match('/^[a-zA-Z0-9_-]{3,32}$/', $username) === 1;
+    }
+
+    /**
+     * Validate password complexity.
+     * Returns ['valid' => bool, 'errors' => string[]].
+     */
+    public static function validatePasswordComplexity(string $password): array {
+        $errors = [];
+        if (strlen($password) < 12) {
+            $errors[] = 'Must be at least 12 characters';
+        }
+        if (!preg_match('/[A-Z]/', $password)) {
+            $errors[] = 'Must contain an uppercase letter';
+        }
+        if (!preg_match('/[a-z]/', $password)) {
+            $errors[] = 'Must contain a lowercase letter';
+        }
+        if (!preg_match('/[0-9]/', $password)) {
+            $errors[] = 'Must contain a digit';
+        }
+        if (!preg_match('/[!@#$%^&*()\-_=+\[\]{};:\'",.<>?\/\\\\|`~]/', $password)) {
+            $errors[] = 'Must contain a special character (e.g. !@#$%^&*)';
+        }
+        return ['valid' => empty($errors), 'errors' => $errors];
+    }
+
+    /**
      * Generate CSRF token
      */
     public static function generateCsrfToken() {
@@ -225,10 +256,11 @@ class Auth {
         if (empty($user) || !password_verify($currentPassword, $user[0]['password_hash'])) {
             return false;
         }
-        if (strlen($newPassword) < 8) {
-            throw new InvalidArgumentException('Password must be at least 8 characters');
+        $validation = self::validatePasswordComplexity($newPassword);
+        if (!$validation['valid']) {
+            throw new InvalidArgumentException(implode('; ', $validation['errors']));
         }
-        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $hash = password_hash($newPassword, PASSWORD_ARGON2ID, ARGON2ID_OPTIONS);
         $this->db->execute(
             "UPDATE users SET password_hash = :hash WHERE id = :id",
             [':hash' => $hash, ':id' => $this->getUserId()]
