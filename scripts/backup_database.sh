@@ -48,8 +48,8 @@ BACKUP_SIZE=$(du -h "${BACKUP_FILE}.gz" | cut -f1)
 echo "[OK] Backup size: $BACKUP_SIZE"
 
 # Cleanup old backups (keep last 30 days)
+OLD_COUNT=$(find "$BACKUP_DIR" -name "truai_*.db.gz" -mtime +$RETENTION_DAYS | wc -l)
 find "$BACKUP_DIR" -name "truai_*.db.gz" -mtime +$RETENTION_DAYS -delete
-OLD_COUNT=$(find "$BACKUP_DIR" -name "truai_*.db.gz" -mtime +$RETENTION_DAYS 2>/dev/null | wc -l)
 if [ "$OLD_COUNT" -gt 0 ]; then
     echo "[OK] Cleaned up $OLD_COUNT old backups (>$RETENTION_DAYS days)"
 fi

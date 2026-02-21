@@ -10,6 +10,7 @@
  */
 
 class CSRFProtection {
+    // 32 bytes → 64 hexadecimal characters when encoded with bin2hex()
     private const TOKEN_LENGTH = 32;
 
     /**
