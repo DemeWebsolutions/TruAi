@@ -1,11 +1,58 @@
-# TruAi HTML Server - Quick Setup Guide
+# TruAi HTML Server - Setup Guide
+
+## Prerequisites
+
+### System Requirements
+- **Operating System:** macOS 12+ or Linux (Ubuntu 20.04+, Debian 11+)
+- **PHP:** 8.2 or higher
+- **PHP Extensions:** sqlite3, openssl, mbstring, json, curl
+- **Node.js:** 18+ (optional, for Electron wrapper)
+- **Disk Space:** 500MB minimum
+- **RAM:** 512MB minimum
+
+### Optional (for biometric auth)
+- macOS Touch ID or Face ID enabled
+- Linux: fprintd installed and configured
+
+### Check Prerequisites
+```bash
+# Check PHP version
+php --version  # Should be 8.2+
+
+# Check PHP extensions
+php -m | grep -E 'sqlite3|openssl|mbstring|json|curl'
+
+# Check Node.js (optional)
+node --version  # Should be 18+
+```
+
+## Quick Start (5 minutes)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/DemeWebsolutions/TruAi.git
+cd TruAi
+
+# 2. Run automated setup (creates database, admin user, encryption keys)
+php scripts/setup_database.php
+
+# 3. Get your generated credentials
+cat database/.initial_credentials
+
+# 4. Start the server
+./start.sh
+```
+
+**Access:** http://127.0.0.1:8001/TruAi/login-portal.html
+
+⚠️ **Change the admin password immediately after first login.**
 
 ## Installation
 
 ### Step 1: Verify Requirements
 
 ```bash
-# Check PHP version (requires 8.0+)
+# Check PHP version (requires 8.2+)
 php --version
 
 # Check SQLite extension
@@ -15,7 +62,17 @@ php -m | grep sqlite3
 php -m | grep curl
 ```
 
-### Step 2: Configure AI API Keys
+### Step 2: Initialize Database
+
+```bash
+# Automated setup: creates database, admin user, and encryption keys
+php scripts/setup_database.php
+
+# Get generated credentials
+cat database/.initial_credentials
+```
+
+### Step 3: Configure AI API Keys (Optional)
 
 **Required for full AI functionality:**
 
@@ -93,9 +150,14 @@ http://localhost:8080
 ## Default Login Credentials
 
 - **Username:** `admin`
-- **Password:** `admin123`
+- **Password:** Generated automatically by `php scripts/setup_database.php` — see `database/.initial_credentials`
 
-⚠️ **Security Note:** Change these credentials immediately after first login!
+⚠️ **Security Note:** Change this password immediately after first login and delete `database/.initial_credentials`!
+
+To reset a forgotten password:
+```bash
+php scripts/reset_admin_password.php admin
+```
 
 ## Features
 

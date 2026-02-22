@@ -1,0 +1,10 @@
+[Unit]
+Description=TruAi Daily Backup Timer
+Requires=backup_database.service
+
+[Timer]
+OnCalendar=02:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

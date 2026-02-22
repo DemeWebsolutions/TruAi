@@ -30,6 +30,7 @@ class Router {
         $this->routes['POST']['/api/v1/auth/login'] = [$this, 'handleLogin'];
         $this->routes['POST']['/api/v1/auth/logout'] = [$this, 'handleLogout'];
         $this->routes['GET']['/api/v1/auth/status'] = [$this, 'handleAuthStatus'];
+        $this->routes['GET']['/api/v1/auth/csrf-token'] = [$this, 'handleGetCSRFToken'];
         $this->routes['POST']['/api/v1/auth/password/change'] = [$this, 'handlePasswordChange'];
         $this->routes['GET']['/api/v1/security/roma'] = [$this, 'handleRomaStatus'];
         $this->routes['POST']['/api/v1/security/events'] = [$this, 'handleSecurityEvents'];
@@ -162,6 +163,7 @@ class Router {
                 if ($route !== '/api/v1/auth/login' && 
                     $route !== '/api/v1/auth/status' &&
                     $route !== '/api/v1/auth/publickey' &&
+                    $route !== '/api/v1/auth/csrf-token' &&
                     $route !== '/api/v1/auth/methods' &&
                     $route !== '/api/v1/auth/biometric' &&
                     $route !== '/api/v1/auth/autofill' &&
@@ -202,6 +204,14 @@ class Router {
         ]);
     }
 
+    private function handleGetCSRFToken() {
+        require_once __DIR__ . '/csrf.php';
+        echo json_encode([
+            'csrf_token' => CSRFProtection::generateToken(),
+            'expires_in' => SESSION_LIFETIME
+        ]);
+    }
+
     private function handleLogin() {
         require_once __DIR__ . '/roma_trust.php';
         if (RomaTrust::isSuspicionBlocked()) {
@@ -214,7 +224,7 @@ class Router {
             return;
         }
         $data = json_decode(file_get_contents('php://input'), true);
-        
+
         // Check for encrypted login (Phantom.ai style)
         if (isset($data['encrypted_data']) && isset($data['session_id'])) {
             // Encrypted login
@@ -234,7 +244,7 @@ class Router {
             }
             return;
         }
-        
+
         // Standard login (fallback)
         if (!isset($data['username']) || !isset($data['password'])) {
             http_response_code(400);
@@ -243,8 +253,32 @@ class Router {
         }
 
         $username = $data['username'];
+        $clientIP = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+        // Rate limit by username (5 attempts per 5 minutes)
+        if (!$this->checkRateLimit('login_' . $username, 5, 300)) {
+            http_response_code(429);
+            echo json_encode([
+                'error' => 'Too many login attempts. Please wait 5 minutes and try again.',
+                'retry_after' => 300
+            ]);
+            return;
+        }
+
+        // Rate limit by IP (10 attempts per 5 minutes)
+        if (!$this->checkRateLimit('login_ip_' . $clientIP, 10, 300)) {
+            http_response_code(429);
+            echo json_encode([
+                'error' => 'Too many requests from your IP address. Please wait 5 minutes.',
+                'retry_after' => 300
+            ]);
+            return;
+        }
 
         if ($this->auth->login($username, $data['password'])) {
+            // Reset rate limits on successful login
+            $this->resetRateLimit('login_' . $username);
+            $this->resetRateLimit('login_ip_' . $clientIP);
             echo json_encode([
                 'success' => true,
                 'username' => $username,
@@ -257,6 +291,51 @@ class Router {
             http_response_code(401);
             echo json_encode(['error' => 'Invalid credentials']);
         }
+    }
+
+    /**
+     * Rate limiting implementation
+     *
+     * @param string $key Unique identifier (e.g., 'login_username' or 'api_ip')
+     * @param int $maxAttempts Maximum attempts allowed
+     * @param int $windowSeconds Time window in seconds
+     * @return bool True if request allowed, false if rate limited
+     */
+    private function checkRateLimit(string $key, int $maxAttempts = 5, int $windowSeconds = 300): bool {
+        $cacheKey = 'ratelimit_' . hash('sha256', $key);
+
+        // Get existing attempts from session
+        $attempts = $_SESSION[$cacheKey] ?? ['count' => 0, 'window_start' => time()];
+
+        // Reset if window expired
+        if (time() - $attempts['window_start'] > $windowSeconds) {
+            $attempts = ['count' => 0, 'window_start' => time()];
+        }
+
+        // Increment
+        $attempts['count']++;
+        $_SESSION[$cacheKey] = $attempts;
+
+        // Check threshold
+        if ($attempts['count'] > $maxAttempts) {
+            error_log(sprintf(
+                '[RATE_LIMIT] Threshold exceeded for key: %s (%d attempts in %d seconds)',
+                $key,
+                $attempts['count'],
+                time() - $attempts['window_start']
+            ));
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Reset rate limit (call on successful operation)
+     */
+    private function resetRateLimit(string $key): void {
+        $cacheKey = 'ratelimit_' . hash('sha256', $key);
+        unset($_SESSION[$cacheKey]);
     }
 
     private function handleLogout() {
