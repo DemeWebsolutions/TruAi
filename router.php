@@ -50,6 +50,27 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json)$/i'
     return true;
 }
 
+// Serve HTML pages from public/TruAi/ directory first (new UBSAS/LSRP pages take precedence)
+if (strpos($requestUri, '/TruAi/') === 0 && preg_match('/\.html$/i', $requestUri)) {
+    $publicHtmlPath = __DIR__ . '/public' . $requestUri;
+    if (file_exists($publicHtmlPath) && is_file($publicHtmlPath)) {
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile($publicHtmlPath);
+        return true;
+    }
+}
+
+// Also serve public/TruAi/ HTML pages when requested without the .html extension
+if (strpos($requestUri, '/TruAi/') === 0 && !preg_match('/\.\w+$/', $requestUri)) {
+    $slug = rtrim($requestUri, '/');
+    $publicHtmlPath = __DIR__ . '/public' . $slug . '.html';
+    if (file_exists($publicHtmlPath) && is_file($publicHtmlPath)) {
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile($publicHtmlPath);
+        return true;
+    }
+}
+
 // Check if this is a welcome page request
 if (strpos($requestUri, '/welcome') !== false || strpos($requestUri, '/welcome.html') !== false) {
     if (file_exists(__DIR__ . '/welcome.html')) {
