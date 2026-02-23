@@ -24,6 +24,26 @@ require_once __DIR__ . '/../backend/auth.php';
 require_once __DIR__ . '/../backend/validator.php';
 require_once __DIR__ . '/../backend/csrf.php';
 
+// Auto-generate encryption keys if they don't exist (e.g. fresh clone without running setup)
+$_testKeyDir = DATABASE_PATH . '/keys';
+if (!file_exists($_testKeyDir . '/private_key.pem') || !file_exists($_testKeyDir . '/public_key.pem')) {
+    if (!is_dir($_testKeyDir)) {
+        mkdir($_testKeyDir, 0700, true);
+    }
+    $privKey = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+    if ($privKey !== false) {
+        openssl_pkey_export($privKey, $privPem);
+        $pubPem = openssl_pkey_get_details($privKey)['key'];
+        file_put_contents($_testKeyDir . '/private_key.pem', $privPem);
+        file_put_contents($_testKeyDir . '/public_key.pem', $pubPem);
+        chmod($_testKeyDir . '/private_key.pem', 0600);
+        chmod($_testKeyDir . '/public_key.pem', 0644);
+    } else {
+        fwrite(STDERR, "[WARN] openssl_pkey_new() failed — encryption key tests will fail. Ensure OpenSSL is installed.\n");
+    }
+}
+unset($_testKeyDir);
+
 class TestRunner {
     private $passed = 0;
     private $failed = 0;

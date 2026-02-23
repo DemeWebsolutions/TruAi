@@ -1552,7 +1552,7 @@ class Router {
                 'success'    => true,
                 'username'   => $credentials['username'],
                 'csrf_token' => Auth::generateCsrfToken(),
-                'redirect'   => '/dashboard.html',
+                'redirect'   => '/TruAi/dashboard.html',
             ]);
         } else {
             echo json_encode(['success' => false, 'error' => 'Biometric credentials rejected']);
