@@ -31,6 +31,9 @@ class Router {
         $this->routes['POST']['/api/v1/auth/logout'] = [$this, 'handleLogout'];
         $this->routes['GET']['/api/v1/auth/status'] = [$this, 'handleAuthStatus'];
         $this->routes['GET']['/api/v1/auth/csrf-token'] = [$this, 'handleGetCSRFToken'];
+        $this->routes['GET']['/api/v1/auth/refresh-token'] = [$this, 'handleGetCSRFToken']; // alias for frontend api.js
+        $this->routes['POST']['/api/v1/auth/csrf-refresh'] = [$this, 'handleGetCSRFToken']; // explicit CSRF refresh
+        $this->routes['POST']['/api/v1/auth/enroll'] = [$this, 'handleBiometricEnroll'];
         $this->routes['POST']['/api/v1/auth/password/change'] = [$this, 'handlePasswordChange'];
         $this->routes['GET']['/api/v1/security/roma'] = [$this, 'handleRomaStatus'];
         $this->routes['POST']['/api/v1/security/events'] = [$this, 'handleSecurityEvents'];
@@ -1634,5 +1637,86 @@ class Router {
             http_response_code(400);
         }
         echo json_encode($result);
+    }
+
+    /**
+     * POST /api/v1/auth/enroll — register a biometric/keychain credential for a user.
+     * Called from ubsas-enroll.html. Logs the enrollment and stores the device fingerprint.
+     * Auth is NOT required — OS admin credential provided in body serves as the auth factor.
+     */
+    private function handleBiometricEnroll() {
+        require_once __DIR__ . '/validator.php';
+
+        $data     = json_decode(file_get_contents('php://input'), true);
+        $username = trim($data['username']  ?? '');
+        $method   = trim($data['method']    ?? '');
+        $osUser   = trim($data['os_user']   ?? '');
+        $deviceFp = trim($data['device_fp'] ?? '');
+
+        // Basic input validation
+        if (!InputValidator::validateUsername($username)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid username format']);
+            return;
+        }
+        $allowed = ['biometric', 'keychain', 'password', 'masterkey'];
+        if (!in_array($method, $allowed, true)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid enrollment method']);
+            return;
+        }
+        if (empty($osUser)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'OS username is required']);
+            return;
+        }
+
+        // Verify user exists
+        $db   = Database::getInstance();
+        $rows = $db->query("SELECT id FROM users WHERE username = :u LIMIT 1", [':u' => $username]);
+        if (empty($rows)) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'User not found']);
+            return;
+        }
+        $userId = (int)$rows[0]['id'];
+
+        // Log the enrollment attempt as a biometric login record (method stored in user_agent field)
+        $db->execute(
+            "INSERT INTO biometric_logins (user_id, ip_address, user_agent, created_at)
+             VALUES (:uid, :ip, :ua, datetime('now'))",
+            [
+                ':uid' => $userId,
+                ':ip'  => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                ':ua'  => 'enroll:' . $method . ':' . substr($deviceFp, 0, 32),
+            ]
+        );
+
+        // Register device fingerprint if provided
+        if (!empty($deviceFp)) {
+            // Upsert: update last_seen if already registered, else insert
+            $existing = $db->query(
+                "SELECT id FROM ubsas_devices WHERE user_id = :uid AND device_fingerprint = :fp LIMIT 1",
+                [':uid' => $userId, ':fp' => $deviceFp]
+            );
+            if (!empty($existing)) {
+                $db->execute(
+                    "UPDATE ubsas_devices SET last_used = datetime('now'), device_type = :t WHERE id = :id",
+                    [':t' => $method, ':id' => (int)$existing[0]['id']]
+                );
+            } else {
+                $db->execute(
+                    "INSERT INTO ubsas_devices (user_id, device_type, device_fingerprint, trusted, last_used, created_at)
+                     VALUES (:uid, :t, :fp, 1, datetime('now'), datetime('now'))",
+                    [':uid' => $userId, ':t' => $method, ':fp' => $deviceFp]
+                );
+            }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Enrollment recorded',
+            'method'  => $method,
+        ]);
     }
 }
