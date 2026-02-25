@@ -58,9 +58,14 @@ open http://127.0.0.1:8001/TruAi/ubsas-entrance.html
 | Document | Description |
 |----------|-------------|
 | [SETUP.md](SETUP.md) | Full installation and configuration guide |
+| [QUICKSTART.md](QUICKSTART.md) | Quick start guide |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture overview |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues and solutions |
 | [docs/API.md](docs/API.md) | REST API endpoint reference |
 | [docs/SECURITY.md](docs/SECURITY.md) | Security architecture & threat model |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production deployment (Plesk, Nginx, Apache) |
+| [docs/OPERATOR_GUIDE.md](docs/OPERATOR_GUIDE.md) | Operations and administration guide |
+| [docs/TESTING.md](docs/TESTING.md) | Test suite documentation |
 | [docs/LSRP_SPEC.md](docs/LSRP_SPEC.md) | Local Sovereign Recovery Protocol specification |
 | [docs/UBSAS_SPEC.md](docs/UBSAS_SPEC.md) | Unified Biometric Sovereign Authentication specification |
 | [docs/ROMA_CONTRACT.md](docs/ROMA_CONTRACT.md) | ROMA security contract & ITC specification |
@@ -88,7 +93,7 @@ TruAi/
 │
 ├── public/TruAi/      # Frontend HTML pages
 │   ├── login-portal.html      # Classic login (background image)
-│   ├── ubsas-entrance.html    # 4-tier auth selection portal  ← NEW
+│   ├── ubsas-entrance.html    # 4-tier auth selection portal
 │   ├── ubsas-enroll.html      # Biometric enrollment wizard
 │   └── secure-recovery.html   # LSRP recovery wizard
 │
@@ -109,6 +114,17 @@ TruAi/
 │   ├── setup_biometric_auth.sh
 │   └── test_biometric.sh
 │
+├── docs/              # Documentation
+│   ├── API.md             # REST API reference
+│   ├── SECURITY.md        # Security architecture
+│   ├── DEPLOYMENT.md      # Production deployment
+│   ├── OPERATOR_GUIDE.md  # Operations guide
+│   └── TESTING.md         # Test suite docs
+│
+├── design/            # Design assets (SVG, PDF mockups)
+├── dev/               # Development & test HTML files
+├── tests/             # Test suite
+│   └── integration/       # Integration tests
 ├── browser_extension/ # Chrome/Firefox native messaging
 ├── native_host/       # PHP native host for biometric
 └── deploy/            # Deployment scripts (Plesk, Nginx)
