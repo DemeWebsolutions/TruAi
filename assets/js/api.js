@@ -53,8 +53,9 @@ class TruAiAPI {
 
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
+        const method = options.method || 'GET';
         const config = {
-            method: options.method || 'GET',
+            method,
             headers: {
                 'Content-Type': 'application/json',
                 ...options.headers
@@ -62,6 +63,16 @@ class TruAiAPI {
             credentials: 'include', // CRITICAL: Send cookies with every request
             ...options
         };
+
+        // Inject CSRF token for all state-changing requests
+        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+            if (!this.csrfToken) {
+                await this.updateCsrfToken();
+            }
+            if (this.csrfToken) {
+                config.headers = { ...(config.headers || {}), 'X-CSRF-Token': this.csrfToken };
+            }
+        }
 
         if (options.body) {
             config.body = JSON.stringify(options.body);

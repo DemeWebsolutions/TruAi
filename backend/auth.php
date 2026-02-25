@@ -28,14 +28,29 @@ class Auth {
                 $credentials = $this->encryption->decryptCredentials($encryptedData, $sessionId);
                 $username = $credentials['username'];
                 $passwordHash = $credentials['password_hash'];
-                
+
                 return $this->loginWithHash($username, $passwordHash);
             } catch (Exception $e) {
                 error_log('Encrypted login failed: ' . $e->getMessage());
                 return false;
             }
         }
-        
+
+        // Validate username format before querying the database
+        require_once __DIR__ . '/validator.php';
+        $usernameValidation = Validator::username($username ?? '');
+        if (!$usernameValidation['valid']) {
+            error_log('[AUTH] Invalid username format: ' . implode(', ', $usernameValidation['errors']));
+            return false;
+        }
+        $username = $usernameValidation['value'];
+
+        // Basic password length check
+        if (strlen($password ?? '') < 8) {
+            error_log('[AUTH] Password too short for username: ' . $username);
+            return false;
+        }
+
         // Standard login
         return $this->loginStandard($username, $password);
     }
@@ -100,15 +115,28 @@ class Auth {
             [':id' => $user['id']]
         );
 
+        // Regenerate session ID to prevent fixation attacks
+        session_regenerate_id(true);
+
         // Set session with encrypted data
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['logged_in'] = true;
         $_SESSION['login_time'] = time();
-        
+        $_SESSION['last_activity'] = time();
+        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $_SESSION['ip_address'] = $_SERVER['REMOTE_ADDR'] ?? '';
+
         // Generate secure session token
         $_SESSION['session_token'] = bin2hex(random_bytes(32));
+
+        error_log(sprintf(
+            '[AUTH] User %d (%s) logged in from %s',
+            $user['id'],
+            $user['username'],
+            $_SESSION['ip_address']
+        ));
 
         $this->auditLog('USER_LOGIN', $user['username']);
     }

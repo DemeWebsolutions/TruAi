@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TruAi – Secure Recovery</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .recovery-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .logo p {
+      color: #666;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    /* Progress steps */
+    .progress-steps {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .step-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      transition: background 0.3s;
+    }
+
+    .step-dot.active   { background: #667eea; }
+    .step-dot.complete { background: #68d391; }
+
+    /* Steps */
+    .recovery-step { display: none; }
+    .recovery-step.active { display: block; }
+
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #718096;
+      margin-bottom: 20px;
+    }
+
+    .warning {
+      background: #fff5f5;
+      border: 1px solid #fed7d7;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      color: #c53030;
+      margin-bottom: 16px;
+    }
+
+    .info-box {
+      background: #ebf8ff;
+      border: 1px solid #bee3f8;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      color: #2c5282;
+      margin-bottom: 16px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #2d3748;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus { border-color: #667eea; }
+
+    /* Factor checklist */
+    .factor-checklist {
+      margin: 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .factor {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      font-size: 0.875rem;
+      color: #4a5568;
+      transition: all 0.3s;
+    }
+
+    .factor.checking { background: #ebf8ff; border-color: #bee3f8; }
+    .factor.success  { background: #f0fff4; border-color: #9ae6b4; color: #276749; }
+    .factor.warning  { background: #fffaf0; border-color: #fbd38d; color: #744210; }
+    .factor.failed   { background: #fff5f5; border-color: #fed7d7; color: #c53030; }
+
+    .factor-icon { font-size: 1.1rem; min-width: 20px; text-align: center; }
+
+    /* Temp password box */
+    .temp-password-box {
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+
+    .temp-password-box label {
+      font-size: 0.8rem;
+      color: #718096;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .temp-password-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .temp-password-row input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      background: #fff;
+    }
+
+    .countdown {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #e53e3e;
+      margin: 8px 0;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: #f7fafc;
+      color: #4a5568;
+      border: 2px solid #e2e8f0;
+      margin-top: 8px;
+    }
+
+    .btn-copy {
+      padding: 8px 14px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .status-msg {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+      display: none;
+    }
+    .status-msg.error   { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; display: block; }
+    .status-msg.info    { background: #ebf8ff; color: #2c5282; border: 1px solid #bee3f8; display: block; }
+    .status-msg.success { background: #f0fff4; color: #276749; border: 1px solid #9ae6b4; display: block; }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.75rem;
+      color: #a0aec0;
+    }
+
+    .roma-indicator { display: inline-flex; align-items: center; gap: 4px; }
+    .roma-dot { width: 8px; height: 8px; border-radius: 50%; background: #68d391; animation: pulse 2s infinite; }
+    .roma-dot.unverified { background: #f6ad55; animation: none; }
+    .roma-dot.blocked    { background: #fc8181; animation: none; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body>
+  <div class="recovery-container">
+    <div class="logo">
+      <h1>TruAi</h1>
+      <p>Local Sovereign Recovery Protocol (LSRP)</p>
+    </div>
+
+    <!-- Progress indicator -->
+    <div class="progress-steps" id="progress-steps">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+      <div class="step-dot" id="dot-4"></div>
+    </div>
+
+    <div id="status" class="status-msg" role="alert" aria-live="polite"></div>
+
+    <!-- Step 1: Username Entry -->
+    <div class="recovery-step active" id="step-username">
+      <h2>🔒 Account Recovery</h2>
+      <p class="subtitle">Enter your TruAi username to begin LSRP recovery.</p>
+      <div class="warning">⚠️ This process requires local server access. Remote recovery is not supported.</div>
+      <div class="form-group">
+        <label for="recovery-username">TruAi Username</label>
+        <input type="text" id="recovery-username" autocomplete="username" placeholder="Enter your username" required>
+      </div>
+      <button class="btn btn-primary" onclick="nextStep('os-admin')">Continue →</button>
+      <button class="btn btn-secondary" onclick="window.location.href='login-portal.html'">← Back to Login</button>
+    </div>
+
+    <!-- Step 2: OS Administrator Verification -->
+    <div class="recovery-step" id="step-os-admin">
+      <h2>🖥️ OS Administrator Confirmation</h2>
+      <p class="subtitle">Enter your macOS or Linux administrator credentials.</p>
+      <div class="info-box">ℹ️ This is your <strong>system</strong> (OS) password, NOT your TruAi password.</div>
+      <div class="form-group">
+        <label for="os-username">System Username</label>
+        <input type="text" id="os-username" autocomplete="username" placeholder="Your OS username">
+      </div>
+      <div class="form-group">
+        <label for="os-password">System Password</label>
+        <input type="password" id="os-password" autocomplete="off" placeholder="Your OS administrator password">
+      </div>
+      <button class="btn btn-primary" id="btn-submit-recovery" onclick="submitRecovery()">Verify &amp; Generate Temporary Password</button>
+      <button class="btn btn-secondary" onclick="goBack('username')">← Back</button>
+    </div>
+
+    <!-- Step 3: Factor Verification Status -->
+    <div class="recovery-step" id="step-verifying">
+      <h2>🔍 Verifying Recovery Factors</h2>
+      <p class="subtitle">LSRP is checking all required security factors…</p>
+      <div class="factor-checklist">
+        <div class="factor success" id="factor-local">
+          <span class="factor-icon">✓</span>
+          <span>Local Server Access</span>
+        </div>
+        <div class="factor checking" id="factor-roma">
+          <span class="factor-icon" id="icon-roma">⏳</span>
+          <span>ROMA Trust Validation</span>
+        </div>
+        <div class="factor checking" id="factor-os">
+          <span class="factor-icon" id="icon-os">⏳</span>
+          <span>OS Admin Verification</span>
+        </div>
+        <div class="factor" id="factor-device">
+          <span class="factor-icon" id="icon-device">⚠️</span>
+          <span>Device Fingerprint</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Temporary Password Display -->
+    <div class="recovery-step" id="step-complete">
+      <h2>✅ Recovery Successful</h2>
+      <p class="subtitle">A temporary password has been generated for your account.</p>
+
+      <div class="temp-password-box">
+        <label>Temporary Password (expires in <span id="countdown">10:00</span>):</label>
+        <div class="temp-password-row">
+          <input type="text" id="temp-password" readonly>
+          <button class="btn-copy" onclick="copyPassword()">📋 Copy</button>
+        </div>
+      </div>
+
+      <div class="warning">⚠️ You <strong>MUST</strong> change this password immediately after login.</div>
+      <button class="btn btn-primary" onclick="redirectToLogin()">🔑 Go to Login</button>
+    </div>
+
+    <footer class="footer">
+      <span class="roma-indicator">
+        <span class="roma-dot" id="roma-dot"></span>
+        <span id="roma-label">Roma • Checking…</span>
+      </span>
+    </footer>
+  </div>
+
+  <script>
+    'use strict';
+
+    const API = '/TruAi/api/v1';
+    let countdownTimer = null;
+    let currentStep = 'username';
+
+    // ── Status helpers ────────────────────────────────────────
+    function showStatus(type, message) {
+      const el = document.getElementById('status');
+      el.className = 'status-msg ' + type;
+      el.textContent = message;
+    }
+
+    function clearStatus() {
+      const el = document.getElementById('status');
+      el.className = 'status-msg';
+    }
+
+    // ── Step navigation ───────────────────────────────────────
+    function showStep(stepName) {
+      document.querySelectorAll('.recovery-step').forEach(s => s.classList.remove('active'));
+      const stepEl = document.getElementById('step-' + stepName);
+      if (stepEl) stepEl.classList.add('active');
+      currentStep = stepName;
+      updateProgress(stepName);
+      clearStatus();
+    }
+
+    function updateProgress(stepName) {
+      const steps = ['username', 'os-admin', 'verifying', 'complete'];
+      const idx = steps.indexOf(stepName);
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById('dot-' + (i + 1));
+        if (i < idx)  dot.className = 'step-dot complete';
+        else if (i === idx) dot.className = 'step-dot active';
+        else dot.className = 'step-dot';
+      }
+    }
+
+    function nextStep(stepName) {
+      const username = document.getElementById('recovery-username').value.trim();
+      if (!username) {
+        showStatus('error', 'Please enter your TruAi username.');
+        return;
+      }
+      showStep(stepName);
+    }
+
+    function goBack(stepName) {
+      showStep(stepName);
+    }
+
+    // ── Submit recovery ───────────────────────────────────────
+    async function submitRecovery() {
+      const username   = document.getElementById('recovery-username').value.trim();
+      const osUsername = document.getElementById('os-username').value.trim();
+      const osPassword = document.getElementById('os-password').value;
+      const btn = document.getElementById('btn-submit-recovery');
+
+      if (!osUsername || !osPassword) {
+        showStatus('error', 'Please enter your OS administrator credentials.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Verifying…';
+      showStep('verifying');
+
+      updateFactorStatus('roma', 'checking');
+      updateFactorStatus('os', 'checking');
+
+      try {
+        const res = await fetch(API + '/recovery/initiate', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, os_username: osUsername, os_password: osPassword })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          updateFactorStatus('roma', 'success');
+          updateFactorStatus('os', 'success');
+          updateFactorStatus('device', result.device_trusted ? 'success' : 'warning');
+
+          setTimeout(() => {
+            displayTempPassword(result.temporary_password, result.expires_at);
+          }, 1200);
+        } else if (res.status === 429) {
+          updateFactorStatus('roma', 'failed');
+          showStep('os-admin');
+          showStatus('error', result.error || 'Too many recovery attempts. Wait 24 hours or contact your administrator.');
+        } else {
+          updateFactorStatus('roma', result.roma_failed ? 'failed' : 'success');
+          updateFactorStatus('os', result.os_failed ? 'failed' : 'success');
+          showStep('os-admin');
+          showStatus('error', result.error || 'Recovery verification failed. Check your credentials and try again.');
+        }
+      } catch (err) {
+        showStep('os-admin');
+        showStatus('error', 'Connection error. Please check the server is running and try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Verify & Generate Temporary Password';
+      }
+    }
+
+    function updateFactorStatus(factor, status) {
+      const el   = document.getElementById('factor-' + factor);
+      const icon = document.getElementById('icon-' + factor);
+      if (!el) return;
+
+      el.className = 'factor ' + status;
+
+      const icons = { checking: '⏳', success: '✓', warning: '⚠️', failed: '✗' };
+      if (icon) icon.textContent = icons[status] || '⏳';
+    }
+
+    function displayTempPassword(tempPass, expiresAt) {
+      showStep('complete');
+      document.getElementById('temp-password').value = tempPass || '(see server logs)';
+
+      const secondsLeft = expiresAt
+        ? Math.max(0, Math.floor((new Date(expiresAt) - Date.now()) / 1000))
+        : 600;
+      startCountdown(secondsLeft);
+    }
+
+    function startCountdown(seconds) {
+      if (countdownTimer) clearInterval(countdownTimer);
+      const display = document.getElementById('countdown');
+      let remaining = seconds;
+
+      const tick = () => {
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        display.textContent = m + ':' + String(s).padStart(2, '0');
+        if (remaining <= 0) {
+          clearInterval(countdownTimer);
+          showStatus('error', 'Temporary password expired. Please start recovery again.');
+          setTimeout(() => showStep('username'), 3000);
+        }
+        remaining--;
+      };
+      tick();
+      countdownTimer = setInterval(tick, 1000);
+    }
+
+    function copyPassword() {
+      const input = document.getElementById('temp-password');
+      input.select();
+      navigator.clipboard.writeText(input.value).catch(() => {
+        document.execCommand('copy');
+      });
+      showStatus('info', '📋 Copied to clipboard!');
+    }
+
+    function redirectToLogin() {
+      if (countdownTimer) clearInterval(countdownTimer);
+      window.location.href = 'login-portal.html';
+    }
+
+    // ── ROMA status ───────────────────────────────────────────
+    async function checkRomaStatus() {
+      try {
+        const res  = await fetch(API + '/security/roma', { credentials: 'include' });
+        const data = await res.json();
+        const dot   = document.getElementById('roma-dot');
+        const label = document.getElementById('roma-label');
+
+        if (data.trust_state === 'VERIFIED') {
+          dot.className   = 'roma-dot';
+          label.textContent = 'Roma \u2022 Portal protected \u2022 Monitor active';
+        } else if (data.trust_state === 'BLOCKED') {
+          dot.className   = 'roma-dot blocked';
+          label.textContent = 'Roma \u2022 Blocked \u2022 Too many failures';
+        } else {
+          dot.className   = 'roma-dot unverified';
+          label.textContent = 'Roma \u2022 Unverified';
+        }
+      } catch (_) {
+        document.getElementById('roma-label').textContent = 'Roma \u2022 Offline';
+      }
+    }
+
+    // ── Boot ──────────────────────────────────────────────────
+    checkRomaStatus();
+    document.getElementById('recovery-username').focus();
+  </script>
+</body>
+</html>

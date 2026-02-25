@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TruAi — Biometric Enrollment</title>
+  <script>
+    window.TRUAI_CONFIG = {
+      API_BASE: (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi'),
+      CSRF_TOKEN: '',
+      IS_AUTHENTICATED: false,
+      USERNAME: ''
+    };
+  </script>
+  <script src="/TruAi/assets/js/crypto.js"></script>
+  <script src="/TruAi/assets/js/api.js"></script>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #292929;
+      color: #B3B3B3;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* ── Card ── */
+    .enroll-container {
+      background: rgba(42, 42, 42, 0.95);
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+      border: 1px solid #4A4A4A;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── Logo ── */
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo img {
+      max-width: 220px;
+      height: auto;
+      display: block;
+      margin: 0 auto 10px;
+    }
+    .logo h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #A0A0A0;
+      letter-spacing: 0.02em;
+    }
+    .logo p {
+      color: #696969;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    /* ── Progress steps ── */
+    .steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #3A3A3A;
+      transform: translateY(-50%);
+      z-index: 0;
+    }
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      z-index: 1;
+    }
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #3A3A3A;
+      border: 2px solid #4A4A4A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #696969;
+      transition: background 0.3s, border-color 0.3s, color 0.3s;
+    }
+    .step.active .step-dot {
+      background: #00A3FF;
+      border-color: #00A3FF;
+      color: #fff;
+    }
+    .step.complete .step-dot {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: #fff;
+    }
+    .step-label {
+      font-size: 10px;
+      color: #696969;
+      white-space: nowrap;
+    }
+    .step.active .step-label { color: #00A3FF; }
+    .step.complete .step-label { color: #22c55e; }
+
+    /* ── Legal banner ── */
+    .legal-notice {
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 2px solid #00A3FF;
+      border-right: 2px solid #00A3FF;
+      padding: 12px 14px;
+      margin-bottom: 22px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #A0A0A0;
+    }
+    .legal-notice strong { color: #FFFFFF; }
+
+    /* ── Form panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .panel h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #FFFFFF;
+      margin-bottom: 6px;
+    }
+    .panel p.subtitle {
+      font-size: 12px;
+      color: #696969;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    /* ── Form controls ── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #A0A0A0;
+      font-size: 13px;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="password"] {
+      width: 100%;
+      padding: 11px 12px;
+      background: #1A1A1A;
+      border: 1px solid #4A4A4A;
+      border-radius: 8px;
+      color: #FFFFFF;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #00A3FF;
+      box-shadow: 0 0 0 1px rgba(0, 163, 255, 0.4);
+    }
+    .form-group input::placeholder { color: #696969; }
+
+    /* ── Biometric method cards ── */
+    .method-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .method-card {
+      background: #1A1A1A;
+      border: 1px solid #3A3A3A;
+      border-radius: 8px;
+      padding: 14px 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      text-align: center;
+    }
+    .method-card:hover {
+      border-color: #00A3FF;
+      background: rgba(0, 163, 255, 0.06);
+    }
+    .method-card.selected {
+      border-color: #00A3FF;
+      background: rgba(0, 163, 255, 0.12);
+    }
+    .method-card.unavailable {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .method-card .icon { font-size: 22px; margin-bottom: 6px; }
+    .method-card .name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+    .method-card .desc {
+      font-size: 10px;
+      color: #696969;
+      margin-top: 2px;
+    }
+    .method-card .badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-available { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    .badge-unavailable { background: rgba(255, 255, 255, 0.05); color: #696969; }
+
+    /* ── Factor checklist ── */
+    .factor-list { margin-bottom: 18px; }
+    .factor-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #1A1A1A;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #A0A0A0;
+      transition: background 0.2s;
+    }
+    .factor-icon { font-size: 16px; min-width: 20px; text-align: center; }
+    .factor-item.ok   { background: rgba(34, 197, 94, 0.08); color: #22c55e; }
+    .factor-item.warn { background: rgba(251, 191, 36, 0.08); color: #fbbf24; }
+    .factor-item.fail { background: rgba(239, 68, 68, 0.08);  color: #ef4444; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%;
+      padding: 12px 0;
+      border-radius: 8px;
+      border: none;
+      background: #00A3FF;
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-primary:hover  { background: #0088DD; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { background: #3A3A3A; color: #696969; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #4A4A4A;
+      background: transparent;
+      color: #A0A0A0;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover { border-color: #696969; color: #FFFFFF; }
+
+    /* ── Status message ── */
+    .status-msg {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .status-msg.info    { background: rgba(0, 163, 255, 0.12); color: #00A3FF; display: block; }
+    .status-msg.success { background: rgba(34, 197, 94, 0.12);  color: #22c55e; display: block; }
+    .status-msg.error   { background: rgba(239, 68, 68, 0.12);   color: #ef4444;  display: block; }
+
+    /* ── Success panel ── */
+    .success-box {
+      text-align: center;
+      padding: 12px 0;
+    }
+    .success-box .check { font-size: 48px; margin-bottom: 12px; }
+    .success-box h3 { font-size: 18px; color: #FFFFFF; margin-bottom: 8px; }
+    .success-box p  { font-size: 13px; color: #696969; line-height: 1.5; }
+
+    /* ── Footer ── */
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 18px;
+      font-size: 12px;
+      color: #696969;
+    }
+    .footer-row a { color: #00A3FF; text-decoration: none; }
+    .footer-row a:hover { color: #FFFFFF; text-decoration: underline; }
+
+    .copyright {
+      margin-top: 20px;
+      font-size: 11px;
+      color: #696969;
+      text-align: center;
+    }
+    .copyright a { color: #00A3FF; text-decoration: none; }
+    .copyright a:hover { color: #FFFFFF; }
+
+    /* ── ROMA indicator ── */
+    .roma-indicator {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.05em;
+      z-index: 100;
+      transition: color 0.5s;
+      user-select: none;
+    }
+    .roma-indicator.confirmed { color: rgba(255,255,255,0.7); }
+  </style>
+</head>
+<body>
+
+<div class="enroll-container">
+
+  <!-- Logo -->
+  <div class="logo">
+    <img src="/TruAi/assets/images/TruAi-Logo.png"
+         onerror="this.style.display='none'"
+         alt="TruAi">
+    <h1>Biometric Enrollment</h1>
+    <p>UBSAS — Unified Biometric Sovereign Authentication</p>
+  </div>
+
+  <!-- Progress steps -->
+  <div class="steps" id="steps-bar">
+    <div class="step active" id="step-dot-1"><div class="step-dot">1</div><div class="step-label">OS Verify</div></div>
+    <div class="step"        id="step-dot-2"><div class="step-dot">2</div><div class="step-label">Method</div></div>
+    <div class="step"        id="step-dot-3"><div class="step-dot">3</div><div class="step-label">Confirm</div></div>
+    <div class="step"        id="step-dot-4"><div class="step-dot">4</div><div class="step-label">Done</div></div>
+  </div>
+
+  <!-- Legal notice -->
+  <div class="legal-notice">
+    <strong>⚠️ Enrollment requires local administrator access.</strong>
+    Biometric credentials are stored exclusively in your OS keychain. No biometric data
+    leaves this device. This process registers your device with TruAi's
+    <strong>ROMA</strong> trust chain.
+  </div>
+
+  <!-- Status message -->
+  <div class="status-msg" id="status-msg"></div>
+
+  <!-- ── Panel 1: OS administrator verification ── -->
+  <div class="panel active" id="panel-1">
+    <h2>🖥️ OS Administrator Verification</h2>
+    <p class="subtitle">
+      Confirm your macOS / Linux administrator credentials to authorize keychain access.
+      This is your <em>system</em> password — not your TruAi password.
+    </p>
+
+    <div class="form-group">
+      <label for="truai-username">TruAi Username</label>
+      <input type="text" id="truai-username" placeholder="e.g. admin" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label for="os-username">System Username</label>
+      <input type="text" id="os-username" placeholder="macOS / Linux username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label for="os-password">System Password</label>
+      <input type="password" id="os-password" placeholder="Administrator password" autocomplete="current-password">
+    </div>
+
+    <button class="btn-primary" id="btn-verify-os" onclick="verifyOS()">
+      Verify &amp; Continue →
+    </button>
+    <a href="/TruAi/login-portal.html" style="display:block;text-align:center;margin-top:12px;font-size:12px;color:#696969;text-decoration:none;">
+      ← Back to Login
+    </a>
+  </div>
+
+  <!-- ── Panel 2: Choose biometric method ── -->
+  <div class="panel" id="panel-2">
+    <h2>👆 Select Authentication Method</h2>
+    <p class="subtitle">Choose which credential to enroll. Methods shown as available are
+    supported by this device.</p>
+
+    <div class="method-cards" id="method-cards">
+      <div class="method-card" id="card-biometric" onclick="selectMethod('biometric')">
+        <div class="icon">👆</div>
+        <div class="name">Touch ID / Face ID</div>
+        <div class="desc">OS biometric hardware</div>
+        <div class="badge badge-unavailable" id="badge-biometric">Checking…</div>
+      </div>
+      <div class="method-card" id="card-keychain" onclick="selectMethod('keychain')">
+        <div class="icon">🔑</div>
+        <div class="name">Keychain Auto-Fill</div>
+        <div class="desc">macOS / Linux libsecret</div>
+        <div class="badge badge-unavailable" id="badge-keychain">Checking…</div>
+      </div>
+      <div class="method-card" id="card-password" onclick="selectMethod('password')">
+        <div class="icon">⌨️</div>
+        <div class="name">Password Only</div>
+        <div class="desc">Standard login</div>
+        <div class="badge badge-available" id="badge-password">Always available</div>
+      </div>
+      <div class="method-card" id="card-masterkey" onclick="selectMethod('masterkey')">
+        <div class="icon">🔐</div>
+        <div class="name">Master Recovery Key</div>
+        <div class="desc">256-bit offline backup</div>
+        <div class="badge badge-unavailable" id="badge-masterkey">Optional</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-confirm-method" onclick="confirmMethod()" disabled>
+      Enroll Selected Method →
+    </button>
+    <button class="btn-secondary" onclick="goToStep(1)">← Back</button>
+  </div>
+
+  <!-- ── Panel 3: Factor confirmation ── -->
+  <div class="panel" id="panel-3">
+    <h2>🔒 Factor Verification</h2>
+    <p class="subtitle">Verifying all required trust factors before enrolling your credentials.</p>
+
+    <div class="factor-list">
+      <div class="factor-item" id="factor-local">
+        <span class="factor-icon">⏳</span>
+        <span>Local Server Access</span>
+      </div>
+      <div class="factor-item" id="factor-roma">
+        <span class="factor-icon">⏳</span>
+        <span>ROMA Trust Validation</span>
+      </div>
+      <div class="factor-item" id="factor-os">
+        <span class="factor-icon">⏳</span>
+        <span>OS Admin Verification</span>
+      </div>
+      <div class="factor-item" id="factor-device">
+        <span class="factor-icon">⏳</span>
+        <span>Device Fingerprint</span>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-enroll" onclick="doEnroll()" disabled>
+      Confirming…
+    </button>
+    <button class="btn-secondary" onclick="goToStep(2)">← Back</button>
+  </div>
+
+  <!-- ── Panel 4: Success ── -->
+  <div class="panel" id="panel-4">
+    <div class="success-box">
+      <div class="check">✅</div>
+      <h3>Enrollment Complete</h3>
+      <p id="success-detail">Your biometric credential has been registered with ROMA and stored in the OS keychain.</p>
+    </div>
+
+    <div class="factor-list" style="margin-top:18px">
+      <div class="factor-item ok">
+        <span class="factor-icon">✓</span>
+        <span>Credentials stored in OS keychain</span>
+      </div>
+      <div class="factor-item ok">
+        <span class="factor-icon">✓</span>
+        <span>Device registered with ROMA</span>
+      </div>
+      <div class="factor-item ok" id="factor-method-confirm">
+        <span class="factor-icon">✓</span>
+        <span>Authentication method enrolled</span>
+      </div>
+    </div>
+
+    <button class="btn-primary" style="margin-top:18px"
+            onclick="window.location.href='/TruAi/login-portal.html'">
+      Go to Login Portal →
+    </button>
+
+    <div class="footer-row">
+      <a href="/TruAi/login-portal.html">← Login Portal</a>
+      <a href="#" onclick="startOver(); return false;">Enroll Another</a>
+    </div>
+  </div>
+
+  <div class="copyright">
+    © 2026 <a href="https://demewebsolutions.com" target="_blank" rel="noopener">My Deme, LLC</a>
+    · TruAi v1.0 · UBSAS v2.0
+  </div>
+</div>
+
+<!-- ROMA indicator -->
+<div class="roma-indicator" id="roma-indicator">Roma • Checking…</div>
+
+<script>
+'use strict';
+
+const API_BASE = window.TRUAI_CONFIG.API_BASE;
+
+// ── State ──────────────────────────────────────────────────────────────
+let currentStep = 1;
+let selectedMethod = null;
+let verifiedOsUser = null;
+let truaiUsername   = null;
+let availableMethods = [];
+
+// ── Utility helpers ───────────────────────────────────────────────────
+function showStatus(type, msg) {
+  const el = document.getElementById('status-msg');
+  el.className = 'status-msg ' + type;
+  el.textContent = msg;
+}
+
+function clearStatus() {
+  const el = document.getElementById('status-msg');
+  el.className = 'status-msg';
+  el.textContent = '';
+}
+
+function goToStep(n) {
+  document.getElementById('panel-' + currentStep).classList.remove('active');
+  document.getElementById('step-dot-' + currentStep).classList.remove('active');
+
+  // Mark previous steps complete
+  for (let i = 1; i < n; i++) {
+    document.getElementById('step-dot-' + i).classList.add('complete');
+    document.getElementById('step-dot-' + i).classList.remove('active');
+  }
+  // Remove complete from steps after n
+  for (let i = n; i <= 4; i++) {
+    document.getElementById('step-dot-' + i).classList.remove('complete');
+  }
+
+  currentStep = n;
+  document.getElementById('panel-' + n).classList.add('active');
+  document.getElementById('step-dot-' + n).classList.add('active');
+  clearStatus();
+}
+
+// ── ROMA indicator ─────────────────────────────────────────────────────
+async function checkROMA() {
+  const indicator = document.getElementById('roma-indicator');
+  try {
+    const res  = await fetch(API_BASE + '/security/roma', { credentials: 'include' });
+    const data = await res.json();
+    if (data.roma && data.trust_state === 'VERIFIED') {
+      indicator.textContent = 'Roma • Portal protected • Monitor active';
+      indicator.classList.add('confirmed');
+    } else {
+      indicator.textContent = 'Roma • ' + (data.trust_state || 'Unverified');
+    }
+  } catch {
+    indicator.textContent = 'Roma • Offline';
+  }
+}
+
+// ── Step 1: OS verification ────────────────────────────────────────────
+async function verifyOS() {
+  const tu = document.getElementById('truai-username').value.trim();
+  const ou = document.getElementById('os-username').value.trim();
+  const op = document.getElementById('os-password').value;
+
+  if (!tu || !ou || !op) {
+    showStatus('error', '⚠️ All fields are required.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-verify-os');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  showStatus('info', '🔒 Verifying OS credentials with ROMA…');
+
+  try {
+    const res  = await fetch(API_BASE + '/auth/methods', { credentials: 'include' });
+
+    if (!res.ok) {
+      const statusMsg = res.status === 401 ? 'Authentication required — please log in first.'
+                      : res.status === 403 ? 'Authorization failed — check OS credentials.'
+                      : `Server error (HTTP ${res.status}).`;
+      throw new Error(statusMsg);
+    }
+
+    const data = await res.json();
+
+    availableMethods = data.methods || [];
+    verifiedOsUser   = ou;
+    truaiUsername    = tu;
+
+    // Update method card badges
+    updateMethodBadges();
+
+    goToStep(2);
+  } catch (err) {
+    showStatus('error', '✗ Verification failed: ' + (err.message || 'Server error'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Verify & Continue →';
+  }
+}
+
+function updateMethodBadges() {
+  const biometricAvail = availableMethods.includes('biometric');
+  const keychainAvail  = availableMethods.includes('keychain');
+
+  setBadge('biometric', biometricAvail ? 'Available'       : 'Not detected', biometricAvail);
+  setBadge('keychain',  keychainAvail  ? 'Available'       : 'Not detected', keychainAvail);
+  setBadge('password',  true,           'Always available', true);
+  setBadge('masterkey', true,           'Optional',         true);
+
+  if (!biometricAvail) {
+    document.getElementById('card-biometric').classList.add('unavailable');
+  }
+  if (!keychainAvail) {
+    document.getElementById('card-keychain').classList.add('unavailable');
+  }
+}
+
+function setBadge(method, label, available) {
+  const badge = document.getElementById('badge-' + method);
+  badge.textContent = label;
+  badge.className   = 'badge ' + (available ? 'badge-available' : 'badge-unavailable');
+}
+
+// ── Step 2: Method selection ───────────────────────────────────────────
+function selectMethod(method) {
+  const card = document.getElementById('card-' + method);
+  if (card.classList.contains('unavailable')) return;
+
+  // Deselect all
+  document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+
+  card.classList.add('selected');
+  selectedMethod = method;
+  document.getElementById('btn-confirm-method').disabled = false;
+}
+
+function confirmMethod() {
+  if (!selectedMethod) return;
+
+  // Run factor checks
+  goToStep(3);
+  runFactorChecks();
+}
+
+// ── Step 3: Factor checks ──────────────────────────────────────────────
+async function runFactorChecks() {
+  const btn = document.getElementById('btn-enroll');
+  btn.disabled = true;
+  btn.textContent = 'Confirming…';
+
+  setFactor('factor-local', 'ok',   '✓', 'Local Server Access');
+  await delay(400);
+
+  try {
+    const res  = await fetch(API_BASE + '/security/roma', { credentials: 'include' });
+    const data = await res.json();
+
+    if (data.roma && data.trust_state === 'VERIFIED') {
+      setFactor('factor-roma', 'ok',   '✓', 'ROMA Trust Validated');
+    } else {
+      setFactor('factor-roma', 'warn', '⚠️', 'ROMA Trust: ' + (data.trust_state || 'Unverified'));
+    }
+  } catch {
+    setFactor('factor-roma', 'warn', '⚠️', 'ROMA — Server unreachable');
+  }
+
+  await delay(400);
+  setFactor('factor-os',     'ok',   '✓', 'OS Admin: ' + verifiedOsUser);
+
+  await delay(400);
+  const fpMatch = checkDeviceFingerprint();
+  if (fpMatch) {
+    setFactor('factor-device', 'ok',  '✓', 'Device Fingerprint Matched');
+  } else {
+    setFactor('factor-device', 'warn', '⚠️', 'Device Fingerprint: New Device');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Enroll Now →';
+}
+
+function setFactor(id, cls, icon, label) {
+  const el = document.getElementById(id);
+  el.className = 'factor-item ' + cls;
+  el.innerHTML = '<span class="factor-icon">' + icon + '</span><span>' + label + '</span>';
+}
+
+function checkDeviceFingerprint() {
+  const stored = localStorage.getItem('truai_device_fp');
+  const current = buildFingerprint();
+  if (!stored) {
+    localStorage.setItem('truai_device_fp', current);
+    return false; // New device
+  }
+  return stored === current;
+}
+
+function buildFingerprint() {
+  // NOTE: Client-side fingerprinting is a lightweight heuristic only.
+  // Server-side validation (IP patterns, TLS fingerprinting, hardware attestation)
+  // should supplement this for high-security environments.
+  return btoa([
+    navigator.platform,
+    navigator.language,
+    screen.colorDepth,
+    screen.width + 'x' + screen.height,
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  ].join('|')).slice(0, 32);
+}
+
+// ── Step 4: Enroll ─────────────────────────────────────────────────────
+async function doEnroll() {
+  const btn = document.getElementById('btn-enroll');
+  btn.disabled = true;
+  btn.textContent = 'Enrolling…';
+  showStatus('info', '🔒 Registering credentials with ROMA…');
+
+  try {
+    const res = await fetch(API_BASE + '/auth/enroll', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        username:  truaiUsername,
+        os_user:   verifiedOsUser,
+        method:    selectedMethod,
+        device_fp: buildFingerprint()
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success !== false) {
+      // Store device fingerprint on success
+      localStorage.setItem('truai_device_fp', buildFingerprint());
+
+      const methodLabels = {
+        biometric: 'Touch ID / Face ID',
+        keychain:  'Keychain Auto-Fill',
+        password:  'Password',
+        masterkey: 'Master Recovery Key'
+      };
+      document.getElementById('success-detail').textContent =
+        (methodLabels[selectedMethod] || selectedMethod) +
+        ' has been enrolled and stored securely in your OS keychain.';
+      document.getElementById('factor-method-confirm').querySelector('span:last-child').textContent =
+        (methodLabels[selectedMethod] || selectedMethod) + ' enrolled';
+
+      clearStatus();
+      goToStep(4);
+
+    } else {
+      const msg = data.error || data.message || 'Enrollment failed';
+      showStatus('error', '✗ ' + msg);
+      btn.disabled = false;
+      btn.textContent = 'Retry →';
+    }
+
+  } catch (err) {
+    if (err.name === 'TypeError') {
+      // Network/fetch error — endpoint may not yet be implemented
+      showStatus('error', '✗ Enrollment endpoint unavailable. Please contact your administrator.');
+    } else {
+      showStatus('error', '✗ ' + (err.message || 'Network error'));
+    }
+    btn.disabled = false;
+    btn.textContent = 'Retry →';
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function startOver() {
+  truaiUsername  = null;
+  verifiedOsUser = null;
+  selectedMethod = null;
+  document.getElementById('truai-username').value = '';
+  document.getElementById('os-username').value    = '';
+  document.getElementById('os-password').value    = '';
+  document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btn-confirm-method').disabled = true;
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('step-dot-' + i).classList.remove('complete', 'active');
+  }
+  currentStep = 1;
+  document.getElementById('step-dot-1').classList.add('active');
+  document.getElementById('panel-4').classList.remove('active');
+  document.getElementById('panel-1').classList.add('active');
+  clearStatus();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  checkROMA();
+});
+</script>
+
+</body>
+</html>

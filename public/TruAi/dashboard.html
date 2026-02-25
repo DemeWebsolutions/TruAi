@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TruAi — Dashboard</title>
+  <script>
+    window.TRUAI_CONFIG = {
+      API_BASE: (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi'),
+      CSRF_TOKEN: '',
+      IS_AUTHENTICATED: false,
+      USERNAME: ''
+    };
+  </script>
+  <script src="/TruAi/assets/js/crypto.js"></script>
+  <script src="/TruAi/assets/js/api.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #1a1d23;
+      color: #B3B3B3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top nav ── */
+    .topnav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      background: rgba(0,0,0,.35);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .topnav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-brand img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+    .topnav-brand span {
+      font-size: 17px;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: .01em;
+    }
+    .topnav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .topnav-links a {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #9ca3af;
+      text-decoration: none;
+      transition: background .15s, color .15s;
+    }
+    .topnav-links a:hover { background: rgba(255,255,255,.08); color: #fff; }
+    .topnav-links a.active { background: rgba(0,163,255,.15); color: #00A3FF; }
+    .btn-logout {
+      margin-left: 8px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3);
+      color: #ef4444;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,.2); }
+
+    /* ── Main layout ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 36px 32px 48px;
+      gap: 28px;
+    }
+
+    /* ── Welcome banner ── */
+    .welcome-banner {
+      background: linear-gradient(135deg, rgba(0,163,255,.12) 0%, rgba(120,80,255,.1) 100%);
+      border: 1px solid rgba(0,163,255,.25);
+      border-radius: 16px;
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .welcome-text h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 6px;
+    }
+    .welcome-text p {
+      font-size: 14px;
+      color: #8b8d98;
+    }
+    .welcome-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge.success { background: rgba(34,197,94,.15); color: #22c55e; border: 1px solid rgba(34,197,94,.25); }
+    .badge.info    { background: rgba(0,163,255,.15);  color: #00A3FF; border: 1px solid rgba(0,163,255,.25); }
+    .badge.warning { background: rgba(251,191,36,.15); color: #fbbf24; border: 1px solid rgba(251,191,36,.25); }
+    .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #555;
+      margin-bottom: 16px;
+    }
+
+    /* ── Quick-actions grid ── */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .action-card {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 22px 20px 18px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s, border-color .15s, transform .1s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .action-card:hover {
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.15);
+      transform: translateY(-2px);
+    }
+    .action-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .action-icon.blue   { background: rgba(0,163,255,.15); }
+    .action-icon.purple { background: rgba(120,80,255,.15); }
+    .action-icon.green  { background: rgba(34,197,94,.15); }
+    .action-icon.orange { background: rgba(251,146,60,.15); }
+    .action-icon.red    { background: rgba(239,68,68,.15); }
+    .action-icon.teal   { background: rgba(20,184,166,.15); }
+    .action-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e8e9eb;
+    }
+    .action-desc {
+      font-size: 12px;
+      color: #6b6d78;
+      line-height: 1.4;
+    }
+
+    /* ── Status row ── */
+    .status-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* ── Status panel ── */
+    .status-panel {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .status-panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e8e9eb;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: 13px;
+    }
+    .status-item:last-child { border-bottom: none; }
+    .status-item-label { color: #8b8d98; }
+    .status-item-value { color: #e8e9eb; font-weight: 500; }
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .dot-green  { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,.6); }
+    .dot-yellow { background: #fbbf24; }
+    .dot-red    { background: #ef4444; }
+    .dot-gray   { background: #555; }
+
+    /* ── Open Chat CTA ── */
+    .chat-cta {
+      background: linear-gradient(135deg, rgba(0,163,255,.15) 0%, rgba(120,80,255,.12) 100%);
+      border: 1px solid rgba(0,163,255,.3);
+      border-radius: 14px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .chat-cta-text h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .chat-cta-text p  { font-size: 13px; color: #8b8d98; }
+    .btn-primary {
+      padding: 10px 24px;
+      background: #00A3FF;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: background .15s, transform .1s;
+    }
+    .btn-primary:hover { background: #0090e0; transform: translateY(-1px); }
+
+    /* ── ROMA indicator ── */
+    .roma-indicator {
+      text-align: center;
+      font-size: 11px;
+      color: rgba(255,255,255,.25);
+      padding: 16px 0 8px;
+      letter-spacing: .04em;
+    }
+    .roma-indicator.verified { color: rgba(34,197,94,.6); }
+    .roma-indicator.error    { color: rgba(239,68,68,.6); }
+
+    /* ── Loading overlay ── */
+    #auth-loading {
+      position: fixed;
+      inset: 0;
+      background: #1a1d23;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,.1);
+      border-top-color: #00A3FF;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #auth-loading p { font-size: 13px; color: #555; }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .main { padding: 20px 16px 40px; }
+      .topnav { padding: 12px 16px; }
+      .topnav-links a:not(.btn-logout) { display: none; }
+      .status-row { grid-template-columns: 1fr; }
+      .welcome-banner { flex-direction: column; align-items: flex-start; }
+      .welcome-meta { align-items: flex-start; }
+      .chat-cta { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Auth-check loading overlay (hidden once auth confirmed) -->
+<div id="auth-loading">
+  <div class="spinner"></div>
+  <p>Verifying session…</p>
+</div>
+
+<!-- Top navigation -->
+<nav class="topnav">
+  <a class="topnav-brand" href="/TruAi/">
+    <img src="/TruAi/assets/images/TruAi-icon.png" alt="TruAi" onerror="this.style.display='none'">
+    <span>TruAi</span>
+  </a>
+  <div class="topnav-links">
+    <a href="/TruAi/dashboard.html" class="active">Dashboard</a>
+    <a href="/TruAi/">AI Chat</a>
+    <a href="/TruAi/gemini.html">Gemini</a>
+    <a href="/TruAi/phantom.html">Phantom</a>
+    <a href="/TruAi/ubsas-enroll.html">Biometric</a>
+    <button class="btn-logout" id="btn-logout">Sign out</button>
+  </div>
+</nav>
+
+<!-- Main content -->
+<main class="main" id="main-content" style="display:none">
+
+  <!-- Welcome banner -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h2>Welcome back, <span id="username-display">Administrator</span> 👋</h2>
+      <p id="session-info">Session active — TruAi v1.0 Sovereign AI Portal</p>
+    </div>
+    <div class="welcome-meta">
+      <span class="badge success"><span class="dot"></span>Authenticated</span>
+      <span class="badge info" id="roma-badge"><span class="dot"></span>ROMA Checking…</span>
+    </div>
+  </div>
+
+  <!-- CTA: Open full AI chat -->
+  <div class="chat-cta">
+    <div class="chat-cta-text">
+      <h3>Launch AI Workspace</h3>
+      <p>Open the full TruAi AI chat environment — code, automate, and collaborate.</p>
+    </div>
+    <a href="/TruAi/" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      Open AI Chat
+    </a>
+  </div>
+
+  <!-- Quick actions -->
+  <div>
+    <p class="section-title">Quick Actions</p>
+    <div class="actions-grid">
+      <a href="/TruAi/" class="action-card">
+        <div class="action-icon blue">💬</div>
+        <div>
+          <div class="action-label">AI Chat</div>
+          <div class="action-desc">Start a new conversation with TruAi</div>
+        </div>
+      </a>
+      <a href="/TruAi/gemini.html" class="action-card">
+        <div class="action-icon purple">⚙️</div>
+        <div>
+          <div class="action-label">Gemini Portal</div>
+          <div class="action-desc">Infrastructure automation &amp; monitoring</div>
+        </div>
+      </a>
+      <a href="/TruAi/phantom.html" class="action-card">
+        <div class="action-icon teal">👁️</div>
+        <div>
+          <div class="action-label">Phantom Portal</div>
+          <div class="action-desc">Phantom.ai development platform</div>
+        </div>
+      </a>
+      <a href="/TruAi/ubsas-enroll.html" class="action-card">
+        <div class="action-icon green">🔐</div>
+        <div>
+          <div class="action-label">Biometric Setup</div>
+          <div class="action-desc">Enroll Touch ID / Face ID authentication</div>
+        </div>
+      </a>
+      <a href="/TruAi/secure-recovery.html" class="action-card">
+        <div class="action-icon orange">🔑</div>
+        <div>
+          <div class="action-label">Recovery (LSRP)</div>
+          <div class="action-desc">Local Sovereign Recovery Protocol</div>
+        </div>
+      </a>
+      <a href="/TruAi/ubsas-entrance.html" class="action-card">
+        <div class="action-icon red">🛡️</div>
+        <div>
+          <div class="action-label">UBSAS Portal</div>
+          <div class="action-desc">Unified 4-tier authentication entry</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Status panels -->
+  <div class="status-row">
+
+    <!-- Security status -->
+    <div class="status-panel">
+      <div class="status-panel-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Security Status
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">ROMA Trust</span>
+        <span class="status-item-value" id="sec-roma">
+          <span class="status-dot dot-gray"></span>Checking…
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">Session</span>
+        <span class="status-item-value">
+          <span class="status-dot dot-green"></span>Active
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">CSRF Protection</span>
+        <span class="status-item-value">
+          <span class="status-dot dot-green"></span>Enabled
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">Encryption</span>
+        <span class="status-item-value">
+          <span class="status-dot dot-green"></span>RSA-2048 + AES-256-GCM
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">Password Hash</span>
+        <span class="status-item-value">
+          <span class="status-dot dot-green"></span>Argon2id
+        </span>
+      </div>
+    </div>
+
+    <!-- System status -->
+    <div class="status-panel">
+      <div class="status-panel-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        System Information
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">Application</span>
+        <span class="status-item-value">TruAi v1.0.0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">API Status</span>
+        <span class="status-item-value" id="sys-api">
+          <span class="status-dot dot-gray"></span>Checking…
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">Database</span>
+        <span class="status-item-value" id="sys-db">
+          <span class="status-dot dot-gray"></span>Checking…
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">Auth Methods</span>
+        <span class="status-item-value" id="sys-methods">—</span>
+      </div>
+      <div class="status-item">
+        <span class="status-item-label">Deployment</span>
+        <span class="status-item-value" id="sys-env">—</span>
+      </div>
+    </div>
+
+  </div><!-- /status-row -->
+
+  <div class="roma-indicator" id="roma-indicator">Roma • Initialising…</div>
+</main>
+
+<script>
+  const API_BASE = window.TRUAI_CONFIG.API_BASE;
+
+  // ── On load: verify authentication ──────────────────────────────────────────
+  (async function init() {
+    try {
+      const res = await fetch(API_BASE + '/auth/status', { credentials: 'include' });
+      const data = await res.json();
+
+      if (!data.authenticated) {
+        window.location.replace('/TruAi/login-portal.html');
+        return;
+      }
+
+      // Populate username
+      const name = data.username || 'Administrator';
+      document.getElementById('username-display').textContent = name;
+      document.getElementById('session-info').textContent =
+        'Session active · TruAi v1.0 Sovereign AI Portal';
+
+      // Store CSRF token
+      if (data.csrf_token) {
+        window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token;
+      }
+
+      // Show content, hide loading
+      document.getElementById('auth-loading').style.display = 'none';
+      document.getElementById('main-content').style.display = '';
+
+      // Run async checks
+      checkAPIHealth();
+      checkROMA();
+      loadAuthMethods();
+
+    } catch (err) {
+      // Network error – redirect to login rather than exposing blank page
+      window.location.replace('/TruAi/login-portal.html');
+    }
+  })();
+
+  // ── API health check ─────────────────────────────────────────────────────────
+  async function checkAPIHealth() {
+    const apiEl  = document.getElementById('sys-api');
+    const dbEl   = document.getElementById('sys-db');
+    const envEl  = document.getElementById('sys-env');
+    try {
+      const res  = await fetch(API_BASE + '/health', { credentials: 'include' });
+      const data = await res.json();
+      const ok   = res.ok;
+
+      apiEl.innerHTML = ok
+        ? '<span class="status-dot dot-green"></span>Online'
+        : '<span class="status-dot dot-yellow"></span>Degraded';
+      dbEl.innerHTML  = (data.database === 'connected' || ok)
+        ? '<span class="status-dot dot-green"></span>Connected'
+        : '<span class="status-dot dot-red"></span>Disconnected';
+      envEl.textContent = data.environment || data.deployment || 'Local';
+    } catch (_) {
+      apiEl.innerHTML = '<span class="status-dot dot-red"></span>Unreachable';
+      dbEl.innerHTML  = '<span class="status-dot dot-red"></span>Unknown';
+    }
+  }
+
+  // ── ROMA trust check ─────────────────────────────────────────────────────────
+  async function checkROMA() {
+    const ind   = document.getElementById('roma-indicator');
+    const badge = document.getElementById('roma-badge');
+    const sec   = document.getElementById('sec-roma');
+    try {
+      const res  = await fetch(API_BASE + '/security/roma', { credentials: 'include' });
+      const data = await res.json();
+      const ok   = data.roma && data.trust_state === 'VERIFIED';
+
+      const label = ok ? 'VERIFIED' : (data.trust_state || 'UNVERIFIED');
+
+      ind.textContent = 'ROMA · ' + label;
+      ind.className   = 'roma-indicator ' + (ok ? 'verified' : '');
+
+      badge.innerHTML = ok
+        ? '<span class="dot"></span>ROMA Verified'
+        : '<span class="dot"></span>ROMA ' + label;
+      badge.className = 'badge ' + (ok ? 'success' : 'warning');
+
+      sec.innerHTML = ok
+        ? '<span class="status-dot dot-green"></span>VERIFIED'
+        : '<span class="status-dot dot-yellow"></span>' + label;
+
+    } catch (_) {
+      ind.textContent  = 'ROMA · Unavailable';
+      badge.innerHTML  = '<span class="dot"></span>ROMA Unavailable';
+      badge.className  = 'badge warning';
+      sec.innerHTML    = '<span class="status-dot dot-red"></span>Unavailable';
+    }
+  }
+
+  // ── Auth methods ─────────────────────────────────────────────────────────────
+  async function loadAuthMethods() {
+    const el = document.getElementById('sys-methods');
+    try {
+      const res  = await fetch(API_BASE + '/auth/methods', { credentials: 'include' });
+      const data = await res.json();
+      const methods = data.methods || data.available || [];
+      if (methods.length) {
+        // Each method may be an object {name, type, ...} or a plain string
+        const labels = methods.map(m => (typeof m === 'string' ? m : (m.name || m.type || 'Unknown')));
+        el.textContent = labels.join(', ');
+      } else {
+        el.textContent = 'Password';
+      }
+    } catch (_) {
+      el.textContent = 'Password';
+    }
+  }
+
+  // ── Logout ───────────────────────────────────────────────────────────────────
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    try {
+      const api = new TruAiAPI();
+      await api.request('/auth/logout', { method: 'POST', body: {} });
+    } catch (_) { /* ignore */ }
+    window.location.replace('/TruAi/login-portal.html');
+  });
+</script>
+</body>
+</html>

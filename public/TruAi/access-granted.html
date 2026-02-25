@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi - Access Granted</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #34383C;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .access-card {
+            position: relative;
+            width: 400px;
+            max-width: 100%;
+            border: 1.5px solid #4CAF50;
+            border-radius: 20px;
+            padding: 40px 48px;
+            background-color: #3F4449;
+            text-align: center;
+            animation: fadeInScale 0.5s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .success-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(76, 175, 80, 0.3) 0%, rgba(76, 175, 80, 0.1) 100%);
+            border: 3px solid #4CAF50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(76, 175, 80, 0);
+            }
+        }
+
+        .checkmark {
+            width: 50px;
+            height: 50px;
+            position: relative;
+        }
+
+        .checkmark::before {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .title {
+            color: #4CAF50;
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .message {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+
+        .submessage {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            font-weight: 300;
+            margin-bottom: 32px;
+        }
+
+        .divider-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 24px;
+        }
+
+        .divider-dot {
+            width: 4px;
+            height: 4px;
+            background-color: rgba(76, 175, 80, 0.4);
+            border-radius: 50%;
+        }
+
+        .divider-bar {
+            width: 80px;
+            height: 1px;
+            background-color: rgba(76, 175, 80, 0.4);
+        }
+
+        .user-info {
+            background-color: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .user-info-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            margin-bottom: 4px;
+        }
+
+        .user-info-value {
+            color: #4CAF50;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .redirect-message {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-bottom: 16px;
+        }
+
+        .redirect-countdown {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .manual-button {
+            padding: 12px 32px;
+            background-color: transparent;
+            border: 1.5px solid #4CAF50;
+            border-radius: 10px;
+            color: #4CAF50;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .manual-button:hover {
+            background-color: rgba(76, 175, 80, 0.1);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="access-card">
+        <div class="success-icon">
+            <div class="success-circle">
+                <div class="checkmark"></div>
+            </div>
+        </div>
+
+        <h1 class="title">ACCESS GRANTED</h1>
+        <p class="message">Authentication Successful</p>
+        <p class="submessage">Welcome to TruAi Platform</p>
+
+        <div class="divider-line">
+            <div class="divider-dot"></div>
+            <div class="divider-bar"></div>
+            <div class="divider-dot"></div>
+        </div>
+
+        <div class="user-info">
+            <div class="user-info-label">AUTHORIZED USER</div>
+            <div class="user-info-value" id="username">admin</div>
+        </div>
+
+        <p class="redirect-message">
+            Redirecting to dashboard in <span class="redirect-countdown" id="countdown">3</span> seconds...
+        </p>
+
+        <a href="/TruAi/" class="manual-button" id="continueButton">Continue to Dashboard</a>
+    </div>
+
+    <script>
+        // Get username from URL parameter or default
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username') || 'admin';
+        document.getElementById('username').textContent = username;
+
+        // Countdown timer
+        let countdown = 3;
+        const countdownElement = document.getElementById('countdown');
+        const continueButton = document.getElementById('continueButton');
+
+        const timer = setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            
+            if (countdown <= 0) {
+                clearInterval(timer);
+                // Redirect to loading page first
+                window.location.href = `/TruAi/loading.html?redirect=${encodeURIComponent('/TruAi/')}&username=${encodeURIComponent(username)}`;
+            }
+        }, 1000);
+
+        // Manual redirect button
+        continueButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            clearInterval(timer);
+            // Redirect to loading page first
+            window.location.href = `/TruAi/loading.html?redirect=${encodeURIComponent('/TruAi/')}&username=${encodeURIComponent(username)}`;
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,13 @@
 .env.local
 
 # Database files (keep structure, exclude data)
-# database/truai.db
+database/truai.db
+database/truai.db-wal
+database/truai.db-shm
+database/.initial_credentials
+
+# Encryption keys (sensitive - generated on setup)
+database/keys/
 
 # Logs
 logs/
@@ -38,8 +44,4 @@ composer.lock
 
 # API keys and sensitive data
 encryption_keys.json
-# database/encryption_keys.json
 test-phase1-fixes.php
-
-# One-time initial credentials (plaintext — must never be committed)
-database/.initial_credentials
