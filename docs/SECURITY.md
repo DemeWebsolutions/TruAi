@@ -1,116 +1,215 @@
-# TruAi Security Architecture
+# TruAi Security Model & Architecture
 
-## Philosophy
-
-TruAi is built on a **self-sovereign, zero-trust** security model:
-- All authentication is local (no third-party SSO)
-- Trust must be actively verified, never assumed
-- Every action is audited
-- Secrets never leave the local system
+**Version:** 1.0.0  
+**Last Updated:** 2026-02-25  
+**Classification:** Public (Architecture Overview)
 
 ---
 
-## Threat Model
+## **Table of Contents**
 
-### Attack Vectors Addressed
+1. [Security Philosophy](#security-philosophy)
+2. [Threat Model](#threat-model)
+3. [Authentication Architecture](#authentication-architecture)
+4. [Encryption Standards](#encryption-standards)
+5. [ROMA Trust Protocol](#roma-trust-protocol)
+6. [Session Management](#session-management)
+7. [CSRF Protection](#csrf-protection)
+8. [Input Validation](#input-validation)
+9. [Rate Limiting](#rate-limiting)
+10. [Audit Logging](#audit-logging)
+11. [Incident Response](#incident-response)
+12. [Vulnerability Disclosure](#vulnerability-disclosure)
+13. [Security Checklist](#security-checklist)
+14. [Compliance](#compliance)
+
+---
+
+## **Security Philosophy**
+
+TruAi is designed with **self-sovereign security** as its core principle:
+
+1. **Local-First Control** — All sensitive data stored locally; no cloud dependencies for authentication
+2. **Zero-Trust by Default** — Every request authenticated and validated; session timeout enforcement
+3. **Defense in Depth** — Multiple authentication layers (UBSAS 4-tier); encryption at rest and in transit
+4. **Transparent Security** — ROMA status indicator on every page; audit logging for all security events
+
+---
+
+## **Threat Model**
+
+### **Attack Vectors Addressed**
 
 | Threat | Mitigation |
+|--------|------------|
+| **Password Brute Force** | Rate limiting (5 attempts/5min), Argon2id hashing (64MB memory-hard) |
+| **Session Hijacking** | HttpOnly/Secure/SameSite cookies, session regeneration on login |
+| **CSRF** | Token validation on all state-changing requests, token rotation |
+| **XSS** | Input sanitization, HTML entity encoding |
+| **SQL Injection** | Parameterized queries (PDO prepared statements), input validation |
+| **Path Traversal** | Path sanitization, whitelist validation |
+| **Credential Theft** | Keychain storage (macOS), encrypted credentials, biometric auth |
+| **Replay Attacks** | Timestamp validation, CSRF tokens, session timeout |
+| **Man-in-the-Middle** | HTTPS enforcement (production) |
+| **Privilege Escalation** | Role-based access control (RBAC), audit logging |
+
+### **Attack Vectors NOT Addressed (Out of Scope)**
+
+| Threat | Rationale |
 |--------|-----------|
-| Brute force login | Rate limiting (5/5min per username, 10/5min per IP) |
-| Session fixation | Session ID regenerated on every login |
-| Session hijacking | HttpOnly, Secure, SameSite cookies; idle timeout |
-| CSRF attacks | CSRF token required for all state-changing requests |
-| SQL injection | Prepared statements (PDO) throughout |
-| XSS | HTML output sanitized via `htmlspecialchars()` |
-| Path traversal | File path sanitization in `Validator::sanitizeFilePath()` |
-| Credential exposure | Argon2id hashing; no plaintext passwords stored |
-| Key compromise | RSA-2048 private key stored at `chmod 600` |
-| Unauthorized recovery | LSRP requires 4 independent factors |
-
-### Attack Vectors NOT Addressed (Out of Scope)
-
-- Physical access to the server
-- Compromise of the OS administrator account
-- Supply-chain attacks on dependencies
-- Nation-state level cryptographic attacks
+| **Physical Access** | Assumes trusted device |
+| **Keylogger Malware** | OS-level security responsibility |
+| **Supply Chain Attacks** | Trust in OS vendor and package managers |
+| **Coercion** | Cannot protect against forced disclosure |
 
 ---
 
-## Authentication Architecture (UBSAS)
+## **Authentication Architecture**
 
-**Unified Biometric Sovereign Authentication System (UBSAS)** provides 4-tier auth:
+### **UBSAS (Unified Biometric Sovereign Auth System)**
 
-| Tier | Method | Description |
-|------|--------|-------------|
-| 1 | OS Biometric | Touch ID / Face ID via native OS APIs |
-| 2 | Auto-Fill | macOS/Linux Keychain stored credentials |
-| 3 | Manual Entry | Username + password (always available) |
-| 4 | Master Key | 256-bit offline recovery key (emergency only) |
+4-tier authentication hierarchy:
 
-All tiers funnel into the same session establishment process.
+#### **Tier 1: OS Biometric (Recommended)** 👆
+
+- Touch ID or Face ID on macOS 12+
+- fprintd on Linux (experimental)
+- Credentials stored in OS Keychain (never transmitted)
+- Native messaging host for browser integration
+- Biometric data stored in Secure Enclave (hardware-isolated)
+
+#### **Tier 2: Auto-Fill (Convenient)** 🔑
+
+- macOS Keychain Auto-Fill
+- Linux libsecret integration
+- Requires device unlock
+
+#### **Tier 3: Manual Entry (Always Available)** ⌨️
+
+- Username + password form
+- Argon2id hashing (64MB memory-hard, 4 iterations, 1 parallelism)
+- Rate limiting (5 attempts per 5 minutes)
+
+```php
+$passwordHash = password_hash(
+    $password,
+    PASSWORD_ARGON2ID,
+    ['memory_cost' => 65536, 'time_cost' => 4, 'threads' => 1]
+);
+```
+
+#### **Tier 4: Master Key (Emergency Recovery)** 🔐
+
+- 64-character hex key (256 bits)
+- Generated on first login (Settings → Security)
+- Stored offline (printed or password manager)
+- Rate limited (3 attempts per 24 hours)
+- SHA-256 hashed before storage
+- Generates 10-minute temporary password
 
 ---
 
-## Recovery Architecture (LSRP)
+### **LSRP (Local Sovereign Recovery Protocol)**
 
-**Local Sovereign Recovery Protocol (LSRP)** requires 4 factors:
+4-factor authentication for password recovery:
 
-1. **Local Server Access** – Request must originate from localhost or trusted VPN
-2. **ROMA Trust Verification** – ROMA security monitor must be in VERIFIED state
-3. **OS Administrator Verification** – Valid macOS/Linux admin credentials required
-4. **Device Fingerprint** – Known device preferred; warnings issued for unknown devices
+1. **Local Access** — Request must originate from `localhost` or trusted VPN
+2. **ROMA Trust** — ROMA status must be `VERIFIED`
+3. **OS Administrator** — Valid OS admin credentials (macOS/Linux)
+4. **Device Fingerprint** — Browser + OS + hardware fingerprint (warning if mismatch)
 
-Recovery generates a temporary password valid for **10 minutes** that must be changed immediately.
+**Recovery Flow:**
+```
+User → Enter Username → Enter OS Admin Creds → System validates:
+  ✓ Local access (localhost)
+  ✓ ROMA trust (VERIFIED)
+  ✓ OS admin (sudo valid)
+  ⚠ Device fingerprint (mismatch warning)
+→ Temporary password (10 minutes)
+→ Force password change on login
+```
 
 ---
 
-## Encryption Standards
+## **Encryption Standards**
 
-| Use | Algorithm | Key Size |
-|-----|-----------|----------|
-| Password hashing | Argon2id | 64MB memory, 4 iterations, 2 threads |
+| Use | Algorithm | Parameters |
+|-----|-----------|------------|
+| Password hashing | Argon2id | 64MB memory, 4 iterations, 1 thread |
 | RSA encryption | RSA-OAEP-SHA256 | 2048-bit |
 | Symmetric encryption | AES-256-GCM | 256-bit |
-| Session tokens | CSPRNG (random_bytes) | 256-bit |
-| CSRF tokens | CSPRNG (random_bytes) | 256-bit |
+| Session tokens | CSPRNG (`random_bytes`) | 256-bit |
+| CSRF tokens | CSPRNG (`random_bytes`) | 256-bit |
 
-### Why Argon2id?
+### **Why Argon2id?**
 
-Argon2id is the winner of the Password Hashing Competition (PHC) and is recommended by OWASP. The `memory_cost = 65536` (64MB) parameter makes GPU/ASIC attacks impractical.
+Argon2id won the Password Hashing Competition (2015) and is recommended by OWASP. With `memory_cost = 65536` (64MB), GPU/ASIC attacks are impractical — 16,000× more memory required than bcrypt.
 
----
+### **Key Storage**
 
-## ROMA Trust Protocol
-
-**Resilient Operations Monitoring Architecture (ROMA)** provides continuous trust verification:
-
-- Checks encryption keys exist and are valid
-- Verifies database is accessible and writable
-- Monitors session health
-- Tracks suspicion score (failed auth attempts)
-- **BLOCKED** state triggered after 5 failures in 5 minutes
-
-ROMA status is checked on every sensitive operation (login, password change, recovery).
+```
+database/keys/ (chmod 700)
+  ├── private_key.pem  (RSA-2048, chmod 600)
+  └── public_key.pem   (RSA-2048, chmod 644)
+```
 
 ---
 
-## Session Management
+## **ROMA Trust Protocol**
+
+**ROMA** = **R**eal-time **O**perational **M**onitoring & **A**uthentication
+
+ROMA validates on every sensitive operation:
+
+1. ✅ Encryption keys exist and are valid
+2. ✅ Session is active and valid
+3. ✅ Workspace (database) is writable
+4. ✅ Local-only access (no remote requests)
+
+**Trust States:**
+- `VERIFIED` — All checks passed
+- `UNVERIFIED` — One or more checks failed
+- `BLOCKED` — Suspicion threshold exceeded (5 failures in 5 minutes)
+
+**ROMA UI Indicator:**
+```javascript
+fetch('/TruAi/api/v1/security/roma')
+  .then(r => r.json())
+  .then(data => {
+    const el = document.getElementById('romaIndicator');
+    el.textContent = data.trust_state === 'VERIFIED'
+      ? 'Roma • Portal protected • Monitor active'
+      : 'Roma • Unverified';
+  });
+```
+
+---
+
+## **Session Management**
 
 | Parameter | Value | Purpose |
 |-----------|-------|---------|
-| `session.cookie_httponly` | 1 | Prevent JavaScript access to cookie |
+| `session.cookie_httponly` | 1 | Prevent JavaScript access |
 | `session.cookie_secure` | 1 (production) | HTTPS only |
-| `session.cookie_samesite` | Lax | CSRF mitigation |
-| Session name | `TRUAI_SESSION` | Custom name (obscures tech stack) |
-| Absolute timeout | 3600s (1 hour) | Limits exposure of stolen sessions |
+| `session.cookie_samesite` | Strict | CSRF mitigation |
+| Session name | `TRUAI_SESSION` | Custom name |
+| Absolute timeout | 3600s (1 hour) | Limits stolen session exposure |
 | Idle timeout | 1800s (30 minutes) | Clears inactive sessions |
-| ID regeneration | On every login | Prevents fixation attacks |
+| ID regeneration | On every login | Prevents session fixation |
+
+```php
+// Session regeneration on login (backend/auth.php)
+session_regenerate_id(true);
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['login_time'] = time();
+$_SESSION['last_activity'] = time();
+```
 
 ---
 
-## CSRF Protection
+## **CSRF Protection**
 
-All `POST`, `PUT`, `DELETE`, and `PATCH` requests to protected endpoints must include a valid CSRF token.
+All `POST`, `PUT`, `DELETE` requests to protected endpoints require a valid CSRF token.
 
 **Token flow:**
 1. Client fetches `GET /api/v1/auth/csrf-token` after login
@@ -119,9 +218,20 @@ All `POST`, `PUT`, `DELETE`, and `PATCH` requests to protected endpoints must in
 4. Server validates with `hash_equals()` (timing-safe comparison)
 5. Token rotated after sensitive operations
 
+```javascript
+// Client-side usage
+const { csrf_token } = await fetch('/TruAi/api/v1/auth/csrf-token').then(r => r.json());
+
+fetch('/TruAi/api/v1/settings/save', {
+  method: 'POST',
+  headers: { 'X-CSRF-Token': csrf_token, 'Content-Type': 'application/json' },
+  body: JSON.stringify(settings)
+});
+```
+
 ---
 
-## Input Validation
+## **Input Validation**
 
 All user-supplied input is validated through `backend/validator.php`:
 
@@ -129,14 +239,14 @@ All user-supplied input is validated through `backend/validator.php`:
 |-------|-----------|
 | Username | 3-32 chars, `[a-zA-Z0-9_-]` only |
 | Password | 8+ chars, upper/lower/digit/special required |
-| File paths | Directory traversal stripped, special chars removed |
-| HTML output | `htmlspecialchars()` with ENT_QUOTES |
+| File paths | Directory traversal stripped (`..`, `~`) |
+| HTML output | `htmlspecialchars(ENT_QUOTES \| ENT_HTML5)` |
 | SQL LIKE | `%` and `_` escaped |
 | Conversation IDs | Numeric only |
 
 ---
 
-## Rate Limiting
+## **Rate Limiting**
 
 | Endpoint | Limit | Window |
 |----------|-------|--------|
@@ -149,38 +259,37 @@ Rate limit counters are stored in the session and reset on successful authentica
 
 ---
 
-## Audit Logging
+## **Audit Logging**
 
-All authentication and security events are logged to `audit_logs` table:
+All authentication and security events are logged to the `audit_logs` table:
 
-- `USER_LOGIN` – Successful login with IP and user agent
-- `USER_LOGOUT` – Session logout
-- `PASSWORD_CHANGE` – Password successfully changed
-- `LOGIN_FAILED` – Failed authentication attempt
-- `ROMA_SUSPICION_BLOCKED` – Too many failures
-- `ROMA_VALIDATION_FAILURE` – ROMA trust check failed
-- `PASSWORD_CHANGE_BLOCKED` – Blocked by ROMA
+| Event | Trigger |
+|-------|---------|
+| `USER_LOGIN` | Successful login |
+| `USER_LOGOUT` | Session logout |
+| `PASSWORD_CHANGE` | Password successfully changed |
+| `LOGIN_FAILED` | Failed authentication attempt |
+| `ROMA_SUSPICION_BLOCKED` | Too many failures |
+| `ROMA_VALIDATION_FAILURE` | ROMA trust check failed |
+| `RECOVERY_ATTEMPT` | LSRP or master key recovery |
+| `SETTINGS_CHANGE` | Settings modified |
 
 ---
 
-## Incident Response
+## **Incident Response**
 
-### Suspected Brute Force
-
+### **Suspected Brute Force**
 1. Check `audit_logs` for repeated `LOGIN_FAILED` events
 2. Review ROMA status: `curl http://127.0.0.1:8001/TruAi/api/v1/security/roma`
 3. If `trust_state: BLOCKED`, restart server to reset suspicion score
 4. Consider blocking source IP at firewall level
 
-### Compromised Account
-
-1. Reset password immediately: `php scripts/reset_admin_password.php admin`
+### **Compromised Account**
+1. Reset password: `php scripts/reset_admin_password.php admin`
 2. Review `audit_logs` for suspicious activity
 3. Rotate encryption keys if needed (delete `database/keys/` and re-run setup)
-4. Review and revoke any trusted devices
 
-### Data Breach
-
+### **Data Breach**
 1. Rotate all encryption keys: delete `database/keys/` and run `php scripts/setup_database.php`
 2. Force password reset for all users
 3. Rotate API keys (OpenAI, Anthropic)
@@ -188,25 +297,56 @@ All authentication and security events are logged to `audit_logs` table:
 
 ---
 
-## Vulnerability Disclosure
+## **Vulnerability Disclosure**
 
-Security issues should be reported privately to:
+**Contact:** security@demewebsolutions.com
 
-**Email:** security@demewebsolutions.com
+**Do NOT** open public GitHub issues for security vulnerabilities.
 
-Please do not create public GitHub issues for security vulnerabilities.
+**Response Timeline:**
+- **Critical:** Patch within 48 hours
+- **High:** Patch within 7 days
+- **Medium:** Patch within 30 days
+- **Low:** Patch in next release
 
 ---
 
-## Security Checklist for Administrators
+## **Security Checklist**
 
-- [ ] Default admin password changed on first login
-- [ ] `database/.initial_credentials` deleted after setup
-- [ ] `database/truai.db` permissions: `chmod 600`
-- [ ] `database/keys/` permissions: `chmod 700`
-- [ ] HTTPS enforced in production
-- [ ] Firewall blocks external access to port 8001
-- [ ] API keys not committed to repository
-- [ ] Audit log review scheduled (weekly)
-- [ ] Backup automation verified
-- [ ] ROMA status monitored
+### **Initial Setup**
+- [ ] Change default admin password
+- [ ] Delete `database/.initial_credentials`
+- [ ] Set database permissions: `chmod 600 database/truai.db`
+- [ ] Set encryption key permissions: `chmod 700 database/keys/`
+- [ ] Generate master recovery key (Settings → Security)
+- [ ] Store master recovery key offline
+
+### **Configuration**
+- [ ] `.env` file created (not in repository)
+- [ ] API keys set (if using AI features)
+- [ ] `TRUAI_DEPLOYMENT` set to `production` (if production)
+- [ ] HTTPS enforced (if production)
+
+### **Monitoring**
+- [ ] Verified ROMA status: `curl http://127.0.0.1:8001/TruAi/api/v1/security/roma`
+- [ ] Tested login flow
+- [ ] Confirmed session timeout works
+- [ ] Reviewed audit logs
+
+---
+
+## **Compliance**
+
+TruAi is designed for **self-hosted deployment** and does not store user data on third-party servers.
+
+| Standard | Status | Notes |
+|----------|--------|-------|
+| **GDPR** | ✅ Compliant | Data stored locally; user can export/delete all data |
+| **CCPA** | ✅ Compliant | No third-party data sharing |
+| **SOC 2** | ⚠️ Partial | Architecture supports SOC 2; formal audit not included |
+
+---
+
+**Last Updated:** 2026-02-25  
+**Version:** 1.0.0  
+**Contact:** security@demewebsolutions.com
