@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TruAi Prototype</title>
+
+  <!-- PHASE 2: TRUAI_CONFIG — must be first script on page -->
+  <script>
+    window.TRUAI_CONFIG = {
+      APP_NAME: 'TruAi',
+      APP_VERSION: '1.0.0',
+      API_BASE: (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi'),
+      CSRF_TOKEN: '',
+      IS_AUTHENTICATED: false,
+      USERNAME: ''
+    };
+  </script>
+
+  <!-- PHASE 1: Visual / Layout styles -->
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background-image: url('/TruAi/tru-dashboard.jpg');
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #0b0d11;
+      transition: background-image 1s ease-in-out;
+      min-height: 100vh;
+      color: #b3b4be;
+      overflow-x: hidden;
+    }
+
+    /* ── Header actions ── */
+    .header-actions {
+      position: fixed;
+      left: 95px;
+      right: 95px;
+      top: 6px;
+      display: flex;
+      justify-content: space-between;
+      z-index: 100;
+    }
+    .header-actions a {
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px;
+      width: 200px;
+      text-align: center;
+      color: #8b8d98;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 0;
+      transition: color 0.2s, border-color 0.2s;
+      display: inline-block;
+    }
+    .header-actions a:hover {
+      color: #008ed6;
+      border-color: rgba(0,142,214,0.4);
+    }
+
+    /* ── Main 3-column layout ── */
+    .main-layout {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0;
+      padding-top: 32px;
+    }
+
+    /* Left column — content extended */
+    .content-extended {
+      position: relative;
+      bottom: 175px;
+      min-height: 350px;
+      max-height: 500px;
+      width: 600px;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    .content-extended.truai-content-panel-drag-over {
+      border-color: rgba(0,142,214,0.6);
+      background: rgba(0,142,214,0.08);
+    }
+
+    /* Center column */
+    .center-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 340px;
+      max-width: 400px;
+      flex: 0 0 380px;
+    }
+
+    /* AI response area */
+    .ai-response-area {
+      position: relative;
+      bottom: 80px;
+      width: 100%;
+    }
+
+    /* Right column — code review extended */
+    .code-review-extended {
+      position: relative;
+      bottom: 175px;
+      min-height: 350px;
+      max-height: 500px;
+      width: 600px;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    .code-review-extended.maximized {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      bottom: 20px;
+      width: calc(50vw - 40px);
+      max-height: none;
+      z-index: 200;
+    }
+
+    body.panel-max-open .code-review-extended.maximized {
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);
+    }
+
+    /* ── Panels container (bottom) ── */
+    .panels-container {
+      margin: 0 80px;
+      width: calc(100vw - 160px);
+      height: 290px;
+      gap: 24px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .center-panel {
+      border-radius: 32px;
+      height: 235px;
+      background: rgba(0,0,0,0.07);
+      flex: 1;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 16px 16px;
+      position: relative;
+    }
+
+    .operations-panel {
+      width: 200px;
+      height: 200px;
+      flex-shrink: 0;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .chat-panel {
+      width: 200px;
+      height: 200px;
+      flex-shrink: 0;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Panel headers ── */
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b6d78;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+    .panel-header .panel-expand-btn {
+      background: none;
+      border: none;
+      color: #6b6d78;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .panel-header .panel-expand-btn:hover {
+      color: #008ed6;
+      background: rgba(0,142,214,0.1);
+    }
+
+    /* ── Operations panel content ── */
+    .operations-panel .panel-header {
+      padding: 6px 8px;
+    }
+    #operationsContent {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    #operationsContent::-webkit-scrollbar { width: 4px; }
+    #operationsContent::-webkit-scrollbar-track { background: transparent; }
+    #operationsContent::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .ops-task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .ops-task-list li {
+      padding: 4px 8px;
+      font-size: 10px;
+      color: #8b8d98;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      transition: background 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .ops-task-list li:hover { background: rgba(255,255,255,0.04); }
+    .ops-task-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ops-task-id {
+      font-family: monospace;
+      color: #008ed6;
+      font-size: 9px;
+    }
+    .ops-task-status {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.06);
+    }
+    .ops-task-status.completed { background: rgba(0,142,214,0.2); color: #008ed6; }
+    .ops-task-status.failed { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .ops-task-status.pending, .ops-task-status.processing { background: rgba(250,204,21,0.2); color: #facc15; }
+    .ops-task-prompt {
+      font-size: 9px;
+      color: #6b6d78;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+    .ops-task-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .ops-task-btn {
+      font-size: 8px;
+      padding: 1px 4px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 3px;
+      color: #8b8d98;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .ops-task-btn:hover { background: rgba(0,142,214,0.2); color: #008ed6; }
+
+    .task-section {
+      padding: 4px 8px;
+      font-size: 9px;
+      color: #6b6d78;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+      line-height: 1.6;
+    }
+    .task-section span { font-weight: 600; }
+    #exec-current-label { color: #8b8d98; }
+    #exec-risk-label { color: #facc15; }
+    #exec-roi-label { color: #008ed6; }
+    #exec-roma-label { color: rgba(255,255,255,0.6); }
+
+    /* ── Chat panel content ── */
+    #chatContent {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-conv-list {
+      padding: 4px 0;
+      overflow-y: auto;
+      flex-shrink: 0;
+      max-height: 60px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .chat-conv-list::-webkit-scrollbar { width: 4px; }
+    .chat-conv-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .chat-conv-item {
+      padding: 3px 8px;
+      font-size: 9px;
+      color: #8b8d98;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background 0.15s;
+    }
+    .chat-conv-item:hover, .chat-conv-item.active { background: rgba(0,142,214,0.1); color: #008ed6; }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 8px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .chat-message {
+      margin-bottom: 6px;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+    .chat-message.user { color: #b3b4be; text-align: right; }
+    .chat-message.assistant { color: #8b8d98; }
+    .chat-message .msg-bubble {
+      display: inline-block;
+      padding: 3px 7px;
+      border-radius: 6px;
+      max-width: 90%;
+      word-break: break-word;
+    }
+    .chat-message.user .msg-bubble { background: rgba(0,142,214,0.2); }
+    .chat-message.assistant .msg-bubble { background: rgba(255,255,255,0.05); }
+    .chat-input-row {
+      display: flex;
+      gap: 4px;
+      padding: 4px 6px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .chat-input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      color: #b3b4be;
+      font-size: 10px;
+      padding: 4px 6px;
+      resize: none;
+      font-family: inherit;
+    }
+    .chat-input:focus { outline: none; border-color: rgba(0,142,214,0.4); }
+    .chat-send-btn, .chat-new-btn {
+      background: rgba(0,142,214,0.2);
+      border: 1px solid rgba(0,142,214,0.3);
+      border-radius: 6px;
+      color: #008ed6;
+      font-size: 10px;
+      padding: 4px 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .chat-send-btn:hover, .chat-new-btn:hover { background: rgba(0,142,214,0.35); }
+
+    /* ── Code review panel ── */
+    .code-review-extended .panel-header {
+      justify-content: space-between;
+    }
+    .code-review-header-actions {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .cr-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      color: #6b6d78;
+      font-size: 10px;
+      padding: 2px 6px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .cr-btn:hover { background: rgba(0,142,214,0.15); color: #008ed6; }
+    #codeReviewTargetChip {
+      display: none;
+      font-size: 9px;
+      background: rgba(0,142,214,0.15);
+      border: 1px solid rgba(0,142,214,0.3);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: #008ed6;
+      align-items: center;
+      gap: 4px;
+    }
+    #codeReviewTargetChip.visible { display: inline-flex; }
+    #codeReviewTargetChip .chip-close {
+      cursor: pointer;
+      color: rgba(0,142,214,0.7);
+      font-size: 10px;
+      line-height: 1;
+    }
+    #codeReviewTargetChip .chip-close:hover { color: #008ed6; }
+    .code-review-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .code-review-body::-webkit-scrollbar { width: 4px; }
+    .code-review-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    #codeReviewPlaceholder {
+      color: #4a4d5c;
+      font-size: 12px;
+      font-style: italic;
+    }
+    #codeReviewSnippet {
+      display: none;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 11px;
+      color: #b3b4be;
+      line-height: 1.5;
+    }
+    #codeReviewDiff {
+      display: none;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .diff-same { color: #6b6d78; }
+    .diff-add  { color: #4ade80; background: rgba(74,222,128,0.05); }
+    .diff-rem  { color: #f87171; background: rgba(248,113,113,0.05); text-decoration: line-through; }
+
+    /* ── Center panel ── */
+    .icon-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0;
+      flex-shrink: 0;
+    }
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+      padding: 0;
+      color: #8b8d98;
+      font-size: 14px;
+    }
+    .icon-btn:hover {
+      background: rgba(0,142,214,0.15);
+      border-color: rgba(0,142,214,0.3);
+      color: #008ed6;
+    }
+    .icon-btn img {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* ── AI text input area ── */
+    .ai-input-wrapper {
+      width: 100%;
+      position: relative;
+      flex-shrink: 0;
+    }
+    #aiTextEntry {
+      width: 100%;
+      min-height: 60px;
+      max-height: 120px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: #b3b4be;
+      font-size: 13px;
+      padding: 10px 48px 10px 14px;
+      resize: vertical;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    #aiTextEntry:focus { outline: none; border-color: rgba(0,142,214,0.4); }
+    #aiTextEntry::placeholder { color: #4a4d5c; }
+    #aiTextEntry:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #submitButton {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+    #submitButton img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+    #submitButton .submit-fallback {
+      display: none;
+      width: 28px;
+      height: 28px;
+      background: rgba(0,142,214,0.3);
+      border: 1px solid rgba(0,142,214,0.5);
+      border-radius: 6px;
+      color: #008ed6;
+      font-size: 14px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── AI response display ── */
+    #aiResponse {
+      width: 100%;
+      min-height: 60px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #b3b4be;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 200px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+    #aiResponse.empty { color: #4a4d5c; font-style: italic; }
+    #aiResponse::-webkit-scrollbar { width: 4px; }
+    #aiResponse::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    /* ── File list ── */
+    #fileList {
+      list-style: none;
+      padding: 2px 4px;
+      margin: 0;
+      max-height: 60px;
+      overflow-y: auto;
+      width: 100%;
+    }
+    #fileList::-webkit-scrollbar { width: 4px; }
+    #fileList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #8b8d98;
+      padding: 2px 4px;
+      border-radius: 4px;
+      cursor: default;
+      transition: background 0.15s;
+    }
+    .file-item:hover { background: rgba(255,255,255,0.04); }
+    .file-icon { font-size: 10px; }
+
+    /* ── URL input (slide-in) ── */
+    #urlInputBar {
+      display: none;
+      width: 100%;
+      margin-bottom: 4px;
+    }
+    #urlInputBar.visible { display: flex; gap: 4px; }
+    #urlInputField {
+      flex: 1;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      color: #b3b4be;
+      font-size: 11px;
+      padding: 5px 8px;
+      font-family: inherit;
+    }
+    #urlInputField:focus { outline: none; border-color: rgba(0,142,214,0.4); }
+
+    /* ── Settings popup ── */
+    .settings-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a1d23;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 24px;
+      z-index: 1000;
+      width: 420px;
+      max-width: 95vw;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .settings-popup.visible { display: block; }
+    .settings-popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+    .settings-popup-overlay.visible { display: block; }
+    .settings-popup h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #e8e9eb;
+      margin-bottom: 20px;
+    }
+    .settings-group {
+      margin-bottom: 16px;
+    }
+    .settings-group label {
+      display: block;
+      font-size: 12px;
+      color: #8b8d98;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    .settings-input-wrap {
+      display: flex;
+      gap: 6px;
+    }
+    .settings-input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 7px;
+      color: #b3b4be;
+      font-size: 12px;
+      padding: 8px 10px;
+      font-family: inherit;
+    }
+    .settings-input:focus { outline: none; border-color: rgba(0,142,214,0.4); }
+    .reveal-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      color: #6b6d78;
+      font-size: 11px;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .reveal-btn:hover { background: rgba(255,255,255,0.1); color: #b3b4be; }
+    .settings-select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 7px;
+      color: #b3b4be;
+      font-size: 12px;
+      padding: 8px 10px;
+      font-family: inherit;
+    }
+    .settings-select:focus { outline: none; border-color: rgba(0,142,214,0.4); }
+    .settings-checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #8b8d98;
+    }
+    .settings-checkbox-row input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+    .settings-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    .settings-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+    }
+    .settings-btn.primary {
+      background: #008ed6;
+      color: #fff;
+    }
+    .settings-btn.primary:hover { background: #0079b8; }
+    .settings-btn.secondary {
+      background: rgba(255,255,255,0.07);
+      color: #8b8d98;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .settings-btn.secondary:hover { background: rgba(255,255,255,0.12); }
+
+    /* ── Popup overlays (Operations / Chat) ── */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 800;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-overlay.visible { display: flex; }
+    .popup-panel {
+      background: #1a1d23;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      width: 600px;
+      max-width: 90vw;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .popup-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      font-size: 13px;
+      font-weight: 600;
+      color: #e8e9eb;
+      flex-shrink: 0;
+    }
+    .popup-close-btn {
+      background: none;
+      border: none;
+      color: #6b6d78;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .popup-close-btn:hover { color: #008ed6; background: rgba(0,142,214,0.1); }
+    #operationsPopupContent, #chatPopupContent {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Why? popover ── */
+    .why-popover {
+      position: fixed;
+      background: #1a1d23;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+      z-index: 1200;
+      max-width: 280px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      font-size: 11px;
+      color: #b3b4be;
+    }
+    .why-popover .popover-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e8e9eb;
+      margin-bottom: 6px;
+    }
+    .why-popover .popover-copy {
+      margin-top: 8px;
+      font-size: 10px;
+      background: rgba(0,142,214,0.15);
+      border: 1px solid rgba(0,142,214,0.3);
+      border-radius: 4px;
+      color: #008ed6;
+      padding: 3px 8px;
+      cursor: pointer;
+    }
+    .why-popover .popover-copy:hover { background: rgba(0,142,214,0.25); }
+
+    /* ── File context menu ── */
+    .file-ctx-menu {
+      position: fixed;
+      background: #1a1d23;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 4px 0;
+      z-index: 1300;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      min-width: 140px;
+    }
+    .file-ctx-menu button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      color: #b3b4be;
+      font-size: 12px;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .file-ctx-menu button:hover { background: rgba(255,255,255,0.06); }
+
+    /* ── Status notification ── */
+    #statusNotification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(26,29,35,0.95);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #b3b4be;
+      z-index: 1500;
+      display: none;
+      max-width: 400px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    #statusNotification.info  { border-color: rgba(0,142,214,0.4); color: #008ed6; }
+    #statusNotification.error { border-color: rgba(239,68,68,0.4); color: #ef4444; }
+    #statusNotification.success { border-color: rgba(74,222,128,0.4); color: #4ade80; }
+
+    /* ── Copy chat history button ── */
+    .copy-chat-btn {
+      font-size: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      color: #6b6d78;
+      padding: 2px 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .copy-chat-btn:hover { background: rgba(0,142,214,0.15); color: #008ed6; }
+
+    /* ── Truai capabilities hidden text ── */
+    #truaiCapabilities { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- PHASE 1: Header navigation actions -->
+<div class="header-actions" style="left:95px; right:95px; top:6px;">
+  <a href="/TruAi/phantom" title="Phantom.ai Portal">Phantom.Ai</a>
+  <a href="/TruAi/gemini" title="Gemini.ai Portal">Gemini.Ai</a>
+</div>
+
+<!-- Hidden capabilities text for @TRUAI_CAPS payload -->
+<span id="truaiCapabilities">biometric,chat,code-review,settings,operations,roma</span>
+
+<!-- PHASE 1: Main 3-column layout -->
+<div class="main-layout">
+
+  <!-- Left column: Content / Files extended panel -->
+  <div class="content-extended" id="contentExtended">
+    <div class="panel-header">
+      <span>Context &amp; Files</span>
+    </div>
+    <!-- File list -->
+    <ul id="fileList"></ul>
+    <!-- URL input bar (hidden by default) -->
+    <div id="urlInputBar">
+      <input id="urlInputField" type="text" placeholder="Paste URL and press Enter…">
+    </div>
+  </div>
+
+  <!-- Center column: main AI interaction -->
+  <div class="center-column">
+
+    <!-- AI response area -->
+    <div class="ai-response-area">
+      <div id="aiResponse" class="empty">Response will appear here…</div>
+    </div>
+
+    <!-- Center bottom panel -->
+    <div class="center-panel">
+      <!-- Icon row: 7 action buttons -->
+      <div class="icon-row">
+        <!-- Add Photos -->
+        <button class="icon-btn" title="Add Photos" id="btnAddPhotos">
+          <img src="/TruAi/TruAi-dashboard-logos/TruAi-images.png"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="Photos">
+          <span style="display:none">🖼</span>
+        </button>
+        <!-- Add URL -->
+        <button class="icon-btn" title="Add URL" id="btnAddURL">
+          <img src="/TruAi/TruAi-dashboard-logos/TruAi-URL.png"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="URL">
+          <span style="display:none">🔗</span>
+        </button>
+        <!-- Add File / Folder -->
+        <button class="icon-btn" title="Add File / Folder" id="btnAddFile">
+          <img src="/TruAi/TruAi-dashboard-logos/TruAi-File-folder.png"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="File">
+          <span style="display:none">📁</span>
+        </button>
+        <!-- Settings -->
+        <button class="icon-btn" title="Settings" id="btnSettings">
+          <img src="/TruAi/TruAi-dashboard-logos/TruAi-Settings.png"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="Settings">
+          <span style="display:none">⚙️</span>
+        </button>
+        <!-- Terminal -->
+        <button class="icon-btn" title="Terminal" id="btnTerminal">
+          <img src="/TruAi/TruAi-dashboard-logos/TruAi-Terminal.png"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="Terminal">
+          <span style="display:none">&gt;_</span>
+        </button>
+        <!-- GitHub -->
+        <button class="icon-btn" title="GitHub" id="btnGitHub">
+          <img src="/TruAi/TruAi-dashboard-logos/TruAi-Github.png"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="GitHub">
+          <span style="display:none">🐙</span>
+        </button>
+        <!-- Code View -->
+        <button class="icon-btn" title="Code View" id="btnCodeView">
+          <img src="/TruAi/TruAi-dashboard-logos/TruAi-Code-Editor.png"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="Code">
+          <span style="display:none">&lt;/&gt;</span>
+        </button>
+      </div>
+
+      <!-- AI text input -->
+      <div class="ai-input-wrapper">
+        <textarea id="aiTextEntry" placeholder="Ask TruAi anything…" rows="3"></textarea>
+        <button id="submitButton" title="Submit (Cmd/Ctrl+Enter)">
+          <img src="/TruAi/TruAi-Submit-button.gif"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="Submit">
+          <span class="submit-fallback">▶</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column: Code review extended panel -->
+  <div class="code-review-extended" id="codeReviewExtended">
+    <div class="panel-header">
+      <span>Code Review</span>
+      <div class="code-review-header-actions">
+        <span id="codeReviewTargetChip">
+          <span id="codeReviewTargetPath"></span>
+          <span class="chip-close" id="codeReviewTargetClose">×</span>
+        </span>
+        <button class="cr-btn" id="crDiffToggleBtn">Diff</button>
+        <button class="panel-expand-btn" id="crExpandBtn" title="Maximize">⤢</button>
+      </div>
+    </div>
+    <div class="code-review-body">
+      <div id="codeReviewPlaceholder">No code review available</div>
+      <pre id="codeReviewSnippet"></pre>
+      <div id="codeReviewDiff"></div>
+    </div>
+  </div>
+
+</div><!-- /.main-layout -->
+
+<!-- PHASE 1: Bottom panels container -->
+<div class="panels-container">
+
+  <!-- Operations panel -->
+  <div class="operations-panel">
+    <div class="panel-header">
+      <span>Operations</span>
+      <button class="panel-expand-btn" id="operationsExpandBtn" title="Expand">⤢</button>
+    </div>
+    <div id="operationsContent">
+      <ul class="ops-task-list" id="opsTaskList">
+        <li style="color:#4a4d5c; font-size:10px; padding:8px;">Loading…</li>
+      </ul>
+    </div>
+    <div class="task-section">
+      Current: <span id="exec-current-label">Idle</span> ·
+      <span id="exec-risk-label">SAFE</span> ·
+      <span id="exec-roi-label">AUTO-ROI</span> ·
+      <span id="exec-roma-label" title="ROMA trust state">Roma: —</span>
+    </div>
+  </div>
+
+  <!-- Center panel (part of bottom) — already rendered above, this spacer keeps layout -->
+  <div style="flex:1;max-width:480px;"></div>
+
+  <!-- Chat panel -->
+  <div class="chat-panel">
+    <div class="panel-header">
+      <span>Chat</span>
+      <div style="display:flex;gap:4px;align-items:center;">
+        <button class="copy-chat-btn" id="copyChatBtn" title="Copy chat history">Copy</button>
+        <button class="panel-expand-btn" id="chatExpandBtn" title="Expand">⤢</button>
+      </div>
+    </div>
+    <div id="chatContent">
+      <div class="chat-conv-list" id="chatConvList"></div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-row">
+        <button class="chat-new-btn" id="chatNewBtn" title="New conversation">+</button>
+        <textarea class="chat-input" id="chatInput" rows="1" placeholder="Message…"></textarea>
+        <button class="chat-send-btn" id="chatSendBtn">↑</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.panels-container -->
+
+<!-- PHASE 6: Settings popup -->
+<div class="settings-popup-overlay" id="settingsOverlay"></div>
+<div class="settings-popup" id="settingsPopup">
+  <h3>⚙️ Settings</h3>
+  <div class="settings-group">
+    <label>OpenAI API Key</label>
+    <div class="settings-input-wrap">
+      <input class="settings-input" id="aiApiKeyOpenAI" type="password" placeholder="sk-…">
+      <button class="reveal-btn" id="revealApiKeyOpenAI">Show</button>
+    </div>
+  </div>
+  <div class="settings-group">
+    <label>OpenAI Model</label>
+    <input class="settings-input" id="aiModelOpenAI" type="text" placeholder="gpt-4o">
+  </div>
+  <div class="settings-group">
+    <label>Sonnet (Claude) API Key</label>
+    <div class="settings-input-wrap">
+      <input class="settings-input" id="aiApiKeySonnet" type="password" placeholder="sk-ant-…">
+      <button class="reveal-btn" id="revealApiKeySonnet">Show</button>
+    </div>
+  </div>
+  <div class="settings-group">
+    <label>Sonnet Model</label>
+    <input class="settings-input" id="aiModelSonnet" type="text" placeholder="claude-3-5-sonnet-20241022">
+  </div>
+  <div class="settings-group">
+    <label>Default Provider</label>
+    <select class="settings-select" id="defaultProvider">
+      <option value="openai">OpenAI</option>
+      <option value="claude">Claude / Sonnet</option>
+      <option value="auto">Auto</option>
+    </select>
+  </div>
+  <div class="settings-group">
+    <div class="settings-checkbox-row">
+      <input type="checkbox" id="enableStreaming">
+      <label for="enableStreaming" style="margin:0">Enable Streaming</label>
+    </div>
+  </div>
+  <div class="settings-actions">
+    <button class="settings-btn secondary" id="settingsExitBtn">Exit</button>
+    <button class="settings-btn primary" id="settingsSaveBtn">Save</button>
+  </div>
+</div>
+
+<!-- PHASE 3: Operations popup overlay -->
+<div class="popup-overlay" id="operationsPopup">
+  <div class="popup-panel">
+    <div class="popup-panel-header">
+      <span>Operations</span>
+      <button class="popup-close-btn" id="operationsPopupClose">×</button>
+    </div>
+    <div id="operationsPopupContent"></div>
+  </div>
+</div>
+
+<!-- PHASE 4: Chat popup overlay -->
+<div class="popup-overlay" id="chatPopup">
+  <div class="popup-panel">
+    <div class="popup-panel-header">
+      <span>Chat History</span>
+      <button class="popup-close-btn" id="chatPopupClose">×</button>
+    </div>
+    <div id="chatPopupContent"></div>
+  </div>
+</div>
+
+<!-- Status notification -->
+<div id="statusNotification"></div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="photoFileInput" accept="image/*" multiple style="display:none">
+<input type="file" id="fileInput" multiple style="display:none">
+
+<!-- PHASE 2: External script loading (order matters) -->
+<script src="/TruAi/assets/js/crypto.js"></script>
+<script src="/TruAi/assets/js/ai-client.js"></script>
+<script src="/TruAi/assets/js/settings-client.js"></script>
+
+<!-- PHASE 2: Stage 1 AI client init (immediate, before DOMContentLoaded) -->
+<script>
+(function() {
+  try {
+    if (window.TruAiAIClient) {
+      window.truAiClient = new TruAiAIClient(window.TRUAI_CONFIG);
+    }
+  } catch(e) { console.error('AI client init failed:', e); }
+})();
+</script>
+
+<!-- PHASE 9: Background swap helpers -->
+<script>
+var BG_MAP = {
+  idle:       '/TruAi/tru-dashboard.jpg',
+  processing: '/TruAi/tru-dashboard.jpg'
+};
+
+function setDashboardBackground(state) {
+  document.body.style.backgroundImage = "url('" + (BG_MAP[state] || BG_MAP.idle) + "')";
+}
+
+// Test if background image loads; if not, keep dark fallback
+var bgTest = new Image();
+bgTest.onerror = function() {
+  document.body.style.backgroundImage = 'none';
+};
+bgTest.src = '/TruAi/tru-dashboard.jpg';
+</script>
+
+<!-- PHASE 8: Cursor Parity — inline implementation -->
+<script>
+// Context files array
+window.__truaiContextFiles = [];
+
+// Expose getter
+window.TruAiGetContextFiles = function() {
+  return window.__truaiContextFiles || [];
+};
+
+// TRUAI_CAPS
+window.TRUAI_CAPS_TEXT = 'biometric,chat,code-review,settings,operations,roma';
+
+// Render the file list UI
+function renderFileList() {
+  var list = document.getElementById('fileList');
+  if (!list) return;
+  list.innerHTML = '';
+  (window.__truaiContextFiles || []).forEach(function(f, i) {
+    var li = document.createElement('li');
+    li.className = 'file-item';
+    li.innerHTML = '<span class="file-icon">📄</span><span title="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</span>';
+    li.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      showFileContextMenu(e, i);
+    });
+    list.appendChild(li);
+  });
+}
+
+// Add files to context array
+function addFilesToContext(files) {
+  var promises = [];
+  files.forEach(function(file) {
+    var p = new Promise(function(resolve) {
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        window.__truaiContextFiles.push({
+          name: file.name,
+          type: file.type || 'application/octet-stream',
+          content: ev.target.result
+        });
+        resolve();
+      };
+      reader.onerror = function() {
+        window.__truaiContextFiles.push({ name: file.name, type: file.type || '', content: '' });
+        resolve();
+      };
+      reader.readAsText(file);
+    });
+    promises.push(p);
+  });
+  Promise.all(promises).then(renderFileList);
+}
+
+// File context menu
+var activeCtxMenu = null;
+function showFileContextMenu(e, index) {
+  closeFileContextMenu();
+  var menu = document.createElement('div');
+  menu.className = 'file-ctx-menu';
+  menu.style.top = e.clientY + 'px';
+  menu.style.left = e.clientX + 'px';
+
+  var copyBtn = document.createElement('button');
+  copyBtn.textContent = 'Copy path';
+  copyBtn.addEventListener('click', function() {
+    var f = window.__truaiContextFiles[index];
+    if (f) {
+      navigator.clipboard.writeText(f.name).catch(function() {});
+    }
+    closeFileContextMenu();
+  });
+
+  var removeBtn = document.createElement('button');
+  removeBtn.textContent = 'Remove';
+  removeBtn.addEventListener('click', function() {
+    window.__truaiContextFiles.splice(index, 1);
+    renderFileList();
+    closeFileContextMenu();
+  });
+
+  menu.appendChild(copyBtn);
+  menu.appendChild(removeBtn);
+  document.body.appendChild(menu);
+  activeCtxMenu = menu;
+}
+function closeFileContextMenu() {
+  if (activeCtxMenu) {
+    activeCtxMenu.remove();
+    activeCtxMenu = null;
+  }
+}
+document.addEventListener('click', function() { closeFileContextMenu(); });
+
+// Utility: escape HTML
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+
+<!-- PHASE 2 / 3 / 4 / 5 / 6 / 7 / 10: Main application logic -->
+<script>
+// ── Utility: status notification ─────────────────────────────────────────
+function showStatus(type, msg, duration) {
+  var el = document.getElementById('statusNotification');
+  el.textContent = msg;
+  el.className = type || 'info';
+  el.style.display = 'block';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(function() { el.style.display = 'none'; }, duration || 3000);
+}
+
+// ── Copy payload helper ───────────────────────────────────────────────────
+function buildTruAiCopyPayload(targetId, rawText) {
+  var text = (rawText || '').trim();
+  if (!text) return '';
+  if (targetId === 'operationsContent' || targetId === 'chatMessages') {
+    var sections = ['@TRUAI_TASKLOG', text];
+    var capsText = (typeof window.TRUAI_CAPS_TEXT === 'string' && window.TRUAI_CAPS_TEXT.trim())
+      ? window.TRUAI_CAPS_TEXT.trim()
+      : (document.getElementById('truaiCapabilities') ? document.getElementById('truaiCapabilities').textContent.trim() : '');
+    if (capsText) { sections.push('', '@TRUAI_CAPS', capsText); }
+    return sections.join('\n');
+  }
+  return text;
+}
+
+// ── PHASE 5: Code Review ──────────────────────────────────────────────────
+window.__truaiCodeReviewContent = '';
+var crDiffMode = false;
+
+window.updateCodeReview = function(content, label) {
+  var placeholder = document.getElementById('codeReviewPlaceholder');
+  var snippet = document.getElementById('codeReviewSnippet');
+  var diffEl = document.getElementById('codeReviewDiff');
+  if (!content || !content.toString().trim()) {
+    placeholder.style.display = 'block';
+    placeholder.textContent = label || 'No code review available';
+    snippet.style.display = 'none';
+    if (diffEl) diffEl.style.display = 'none';
+    return;
+  }
+  var text = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+  var display = (label ? label + '\n\n' : '') + text;
+  var truncated = display.length > 8000 ? display.slice(0, 8000) + '\n\n… (truncated)' : display;
+  placeholder.style.display = 'none';
+  snippet.style.display = 'block';
+  snippet.textContent = truncated;
+  if (diffEl) { diffEl.style.display = 'none'; diffEl.innerHTML = ''; }
+  window.__truaiCodeReviewContent = truncated;
+  crDiffMode = false;
+  var diffBtn = document.getElementById('crDiffToggleBtn');
+  if (diffBtn) diffBtn.textContent = 'Diff';
+};
+
+// Diff toggle
+document.getElementById('crDiffToggleBtn').addEventListener('click', function() {
+  var snippet = document.getElementById('codeReviewSnippet');
+  var diffEl = document.getElementById('codeReviewDiff');
+  var btn = this;
+  if (!crDiffMode) {
+    // Switch to diff view
+    var lines = (window.__truaiCodeReviewContent || '').split('\n');
+    diffEl.innerHTML = '';
+    lines.forEach(function(line) {
+      var d = document.createElement('div');
+      d.className = 'diff-same';
+      d.textContent = line;
+      diffEl.appendChild(d);
+    });
+    diffEl.style.display = 'block';
+    snippet.style.display = 'none';
+    btn.textContent = 'Snippet';
+    crDiffMode = true;
+  } else {
+    // Switch back to snippet
+    diffEl.style.display = 'none';
+    snippet.style.display = 'block';
+    btn.textContent = 'Diff';
+    crDiffMode = false;
+  }
+});
+
+// Target chip
+window.TruAiUpdateTargetChip = function() {
+  var chip = document.getElementById('codeReviewTargetChip');
+  var pathEl = document.getElementById('codeReviewTargetPath');
+  if (window.__truaiXcodeTargetPath) {
+    if (pathEl) pathEl.textContent = window.__truaiXcodeTargetPath;
+    chip.classList.add('visible');
+  } else {
+    chip.classList.remove('visible');
+  }
+};
+document.getElementById('codeReviewTargetClose').addEventListener('click', function() {
+  window.__truaiXcodeTargetPath = null;
+  window.TruAiUpdateTargetChip();
+});
+
+// PHASE 10: Code Review expand/maximize
+document.getElementById('crExpandBtn').addEventListener('click', function() {
+  var panel = document.querySelector('.code-review-extended');
+  panel.classList.toggle('maximized');
+  document.body.classList.toggle('panel-max-open');
+});
+
+// ── PHASE 6: Settings Popup ───────────────────────────────────────────────
+function openSettingsPopup() {
+  // Load from localStorage
+  try {
+    var saved = JSON.parse(localStorage.getItem('truai_settings') || '{}');
+    if (saved.openai_api_key) document.getElementById('aiApiKeyOpenAI').value = saved.openai_api_key;
+    if (saved.openai_model) document.getElementById('aiModelOpenAI').value = saved.openai_model;
+    if (saved.sonnet_api_key) document.getElementById('aiApiKeySonnet').value = saved.sonnet_api_key;
+    if (saved.sonnet_model) document.getElementById('aiModelSonnet').value = saved.sonnet_model;
+    if (saved.default_provider) document.getElementById('defaultProvider').value = saved.default_provider;
+    if (typeof saved.enable_streaming !== 'undefined') {
+      document.getElementById('enableStreaming').checked = !!saved.enable_streaming;
+    }
+  } catch(e) {}
+  document.getElementById('settingsPopup').classList.add('visible');
+  document.getElementById('settingsOverlay').classList.add('visible');
+}
+function closeSettingsPopup() {
+  document.getElementById('settingsPopup').classList.remove('visible');
+  document.getElementById('settingsOverlay').classList.remove('visible');
+}
+document.getElementById('settingsExitBtn').addEventListener('click', closeSettingsPopup);
+document.getElementById('settingsOverlay').addEventListener('click', closeSettingsPopup);
+document.getElementById('settingsSaveBtn').addEventListener('click', function() {
+  var settings = {
+    openai_api_key: document.getElementById('aiApiKeyOpenAI').value,
+    openai_model: document.getElementById('aiModelOpenAI').value,
+    sonnet_api_key: document.getElementById('aiApiKeySonnet').value,
+    sonnet_model: document.getElementById('aiModelSonnet').value,
+    default_provider: document.getElementById('defaultProvider').value,
+    enable_streaming: document.getElementById('enableStreaming').checked
+  };
+  localStorage.setItem('truai_settings', JSON.stringify(settings));
+  // Delegate to settings client if available
+  if (window.TruAiSettingsClient && window.TruAiSettingsClient.save) {
+    window.TruAiSettingsClient.save(settings);
+  }
+  closeSettingsPopup();
+  showStatus('success', 'Settings saved.');
+});
+
+// API key reveal toggles
+document.getElementById('revealApiKeyOpenAI').addEventListener('click', function() {
+  var inp = document.getElementById('aiApiKeyOpenAI');
+  if (inp.type === 'password') { inp.type = 'text'; this.textContent = 'Hide'; }
+  else { inp.type = 'password'; this.textContent = 'Show'; }
+});
+document.getElementById('revealApiKeySonnet').addEventListener('click', function() {
+  var inp = document.getElementById('aiApiKeySonnet');
+  if (inp.type === 'password') { inp.type = 'text'; this.textContent = 'Hide'; }
+  else { inp.type = 'password'; this.textContent = 'Show'; }
+});
+
+// ── PHASE 3: Operations Panel ─────────────────────────────────────────────
+var operationsOriginalParent = null;
+
+function loadOperationsList() {
+  var list = document.getElementById('opsTaskList');
+  fetch(window.TRUAI_CONFIG.API_BASE + '/task/list?limit=15', { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var tasks = (data && data.tasks) ? data.tasks : [];
+      list.innerHTML = '';
+      if (!tasks.length) {
+        list.innerHTML = '<li style="color:#4a4d5c;font-size:10px;padding:8px;">No tasks yet.</li>';
+        return;
+      }
+      tasks.forEach(function(task) {
+        var li = document.createElement('li');
+        li.setAttribute('data-task-id', task.id);
+        var shortId = String(task.id).slice(-8);
+        var promptPreview = (task.prompt || '').slice(0, 50);
+        var statusClass = (task.status || '').toLowerCase();
+        li.innerHTML = '<div class="ops-task-meta">' +
+          '<span class="ops-task-id">' + escapeHtml(shortId) + '</span>' +
+          '<span class="ops-task-status ' + escapeHtml(statusClass) + '">' + escapeHtml(task.status || '') + '</span>' +
+          '</div>' +
+          '<div class="ops-task-prompt">' + escapeHtml(promptPreview) + '</div>' +
+          '<div class="ops-task-actions">' +
+          '<button class="ops-task-btn view-btn">View details</button>' +
+          '<button class="ops-task-btn why-btn">Why?</button>' +
+          '</div>';
+        // Click on li → load task
+        li.addEventListener('click', function(e) {
+          if (e.target.classList.contains('view-btn') || e.target.classList.contains('why-btn')) return;
+          loadTaskIntoResponse(task.id);
+        });
+        li.querySelector('.view-btn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          loadTaskIntoResponse(task.id);
+        });
+        li.querySelector('.why-btn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          showWhyPopover(e.currentTarget, task);
+        });
+        list.appendChild(li);
+      });
+    })
+    .catch(function() {
+      list.innerHTML = '<li style="color:#4a4d5c;font-size:10px;padding:8px;">Failed to load tasks.</li>';
+    });
+}
+window.TruAiRefreshOperationsList = loadOperationsList;
+
+function loadTaskIntoResponse(taskId) {
+  var aiResponse = document.getElementById('aiResponse');
+  aiResponse.textContent = 'Loading task ' + taskId + '…';
+  aiResponse.classList.remove('empty');
+  fetch(window.TRUAI_CONFIG.API_BASE + '/task/' + encodeURIComponent(taskId), { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var output = (data && (data.output || data.results || data.text)) || JSON.stringify(data, null, 2);
+      aiResponse.textContent = output;
+      if (window.updateCodeReview) window.updateCodeReview(output, 'Task ' + taskId);
+    })
+    .catch(function(err) {
+      aiResponse.textContent = 'Error loading task: ' + err.message;
+    });
+}
+
+function loadOperationsStatus() {
+  fetch(window.TRUAI_CONFIG.API_BASE + '/operations/status', { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var romaEl = document.getElementById('exec-roma-label');
+      if (!data || !data.roma) return;
+      var roma = data.roma;
+      if (roma.monitor === 'active') {
+        romaEl.textContent = 'Roma • Portal protected • Monitor active';
+        romaEl.style.color = '#008ed6';
+      } else if (roma.trust_state === 'BLOCKED') {
+        romaEl.textContent = 'Roma • Blocked';
+        romaEl.style.color = '#1d3e52';
+      } else {
+        romaEl.textContent = 'Roma • Unverified';
+        romaEl.style.color = 'rgba(255,255,255,0.6)';
+      }
+    })
+    .catch(function() {});
+}
+
+// Why? popover
+var activeWhyPopover = null;
+function showWhyPopover(anchor, task) {
+  closeWhyPopover();
+  var rect = anchor.getBoundingClientRect();
+  var pop = document.createElement('div');
+  pop.className = 'why-popover';
+  pop.style.top = (rect.bottom + 6) + 'px';
+  pop.style.left = rect.left + 'px';
+  pop.innerHTML = '<div class="popover-title">Why this task ran</div>' +
+    '<div>' + escapeHtml((task.prompt || '').slice(0, 200)) + '</div>' +
+    '<div>Status: ' + escapeHtml(task.status || '') + ' · Risk: ' + escapeHtml(task.risk_level || 'N/A') + '</div>' +
+    (task.auto_executed ? '<div>Auto-executed ✓</div>' : '') +
+    '<button class="popover-copy">Copy</button>';
+  pop.querySelector('.popover-copy').addEventListener('click', function() {
+    var txt = buildTruAiCopyPayload('operationsContent',
+      'Task: ' + task.id + '\nStatus: ' + task.status + '\nPrompt: ' + (task.prompt || ''));
+    navigator.clipboard.writeText(txt).catch(function() {});
+    showStatus('success', 'Copied to clipboard');
+    closeWhyPopover();
+  });
+  document.body.appendChild(pop);
+  activeWhyPopover = pop;
+}
+function closeWhyPopover() {
+  if (activeWhyPopover) { activeWhyPopover.remove(); activeWhyPopover = null; }
+}
+document.addEventListener('click', function(e) {
+  if (activeWhyPopover && !activeWhyPopover.contains(e.target)) closeWhyPopover();
+});
+
+// Operations popup (⤢ expand)
+function openOperationsPopup() {
+  var content = document.getElementById('operationsContent');
+  var popupContent = document.getElementById('operationsPopupContent');
+  operationsOriginalParent = content.parentElement;
+  popupContent.appendChild(content);
+  document.getElementById('operationsPopup').classList.add('visible');
+}
+function closeOperationsPopup() {
+  var content = document.getElementById('operationsContent');
+  if (operationsOriginalParent) {
+    operationsOriginalParent.insertBefore(content, operationsOriginalParent.querySelector('.task-section'));
+  }
+  document.getElementById('operationsPopup').classList.remove('visible');
+}
+document.getElementById('operationsExpandBtn').addEventListener('click', openOperationsPopup);
+document.getElementById('operationsPopupClose').addEventListener('click', closeOperationsPopup);
+document.getElementById('operationsPopup').addEventListener('click', function(e) {
+  if (e.target === this) closeOperationsPopup();
+});
+
+// ── PHASE 4: Chat Panel ───────────────────────────────────────────────────
+var chatCurrentConvId = null;
+var chatOriginalParent = null;
+
+function loadConversations() {
+  var list = document.getElementById('chatConvList');
+  fetch(window.TRUAI_CONFIG.API_BASE + '/chat/conversations', { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var convs = (data && data.conversations) ? data.conversations : [];
+      list.innerHTML = '';
+      convs.forEach(function(c) {
+        var div = document.createElement('div');
+        div.className = 'chat-conv-item' + (c.id === chatCurrentConvId ? ' active' : '');
+        div.setAttribute('data-conv-id', c.id);
+        div.textContent = (c.title || 'Conversation ' + c.id) + (c.message_count ? ' (' + c.message_count + ')' : '');
+        div.addEventListener('click', function() {
+          chatCurrentConvId = c.id;
+          loadConversation(c.id);
+          list.querySelectorAll('.chat-conv-item').forEach(function(el) { el.classList.remove('active'); });
+          div.classList.add('active');
+        });
+        list.appendChild(div);
+      });
+    })
+    .catch(function() {});
+}
+
+function loadConversation(convId) {
+  var msgs = document.getElementById('chatMessages');
+  fetch(window.TRUAI_CONFIG.API_BASE + '/chat/conversation/' + encodeURIComponent(convId), { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var conv = data.conversation || data;
+      var messages = conv.messages || [];
+      msgs.innerHTML = '';
+      messages.forEach(function(m) {
+        appendChatMessage(m.role, m.content);
+      });
+      msgs.scrollTop = msgs.scrollHeight;
+    })
+    .catch(function(err) {
+      msgs.innerHTML = '<div style="color:#6b6d78;font-size:10px;padding:8px;">Failed to load conversation.</div>';
+    });
+}
+
+function appendChatMessage(role, content) {
+  var msgs = document.getElementById('chatMessages');
+  var div = document.createElement('div');
+  div.className = 'chat-message ' + (role === 'user' ? 'user' : 'assistant');
+  var bubble = document.createElement('span');
+  bubble.className = 'msg-bubble';
+  bubble.textContent = content;
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendChatMessage() {
+  var input = document.getElementById('chatInput');
+  var msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendChatMessage('user', msg);
+  var body = { message: msg, model: 'auto' };
+  if (chatCurrentConvId) body.conversation_id = chatCurrentConvId;
+  fetch(window.TRUAI_CONFIG.API_BASE + '/chat/message', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': window.TRUAI_CONFIG.CSRF_TOKEN || ''
+    },
+    body: JSON.stringify(body)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.conversation_id) chatCurrentConvId = data.conversation_id;
+    var reply = data.reply || data.content || data.message || data.output || '';
+    if (reply) appendChatMessage('assistant', reply);
+    loadConversations();
+    if (chatCurrentConvId) loadConversation(chatCurrentConvId);
+  })
+  .catch(function(err) {
+    appendChatMessage('assistant', 'Error: ' + err.message);
+  });
+}
+
+document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+});
+document.getElementById('chatNewBtn').addEventListener('click', function() {
+  chatCurrentConvId = null;
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatInput').focus();
+  document.querySelectorAll('.chat-conv-item').forEach(function(el) { el.classList.remove('active'); });
+});
+
+// Copy chat history
+document.getElementById('copyChatBtn').addEventListener('click', function() {
+  var msgs = document.querySelectorAll('#chatMessages .chat-message');
+  var lines = [];
+  msgs.forEach(function(m) {
+    var bubble = m.querySelector('.msg-bubble');
+    var text = bubble ? bubble.textContent : m.textContent;
+    if (m.classList.contains('user')) lines.push('User: ' + text);
+    else lines.push('Assistant: ' + text);
+  });
+  var raw = lines.join('\n\n');
+  var payload = buildTruAiCopyPayload('chatMessages', raw);
+  navigator.clipboard.writeText(payload).catch(function() {});
+  showStatus('success', 'Chat history copied');
+});
+
+// Chat popup (⤢ expand)
+function openChatPopup() {
+  var content = document.getElementById('chatContent');
+  var popupContent = document.getElementById('chatPopupContent');
+  chatOriginalParent = content.parentElement;
+  popupContent.appendChild(content);
+  document.getElementById('chatPopup').classList.add('visible');
+}
+function closeChatPopup() {
+  var content = document.getElementById('chatContent');
+  if (chatOriginalParent) {
+    chatOriginalParent.appendChild(content);
+  }
+  document.getElementById('chatPopup').classList.remove('visible');
+}
+document.getElementById('chatExpandBtn').addEventListener('click', openChatPopup);
+document.getElementById('chatPopupClose').addEventListener('click', closeChatPopup);
+document.getElementById('chatPopup').addEventListener('click', function(e) {
+  if (e.target === this) closeChatPopup();
+});
+
+// ── PHASE 2: Submit handler ───────────────────────────────────────────────
+var aiTextEntry = document.getElementById('aiTextEntry');
+var submitButton = document.getElementById('submitButton');
+var aiResponse = document.getElementById('aiResponse');
+
+async function handleSubmission() {
+  var prompt = aiTextEntry.value.trim();
+  if (!prompt) return;
+
+  // Wait for client (5s max)
+  var t0 = Date.now();
+  while (!window.truAiClient && Date.now() - t0 < 5000) {
+    await new Promise(function(r) { setTimeout(r, 100); });
+  }
+  if (!window.truAiClient) {
+    aiResponse.textContent = 'Error: AI client not ready. Please refresh.';
+    aiResponse.classList.remove('empty');
+    return;
+  }
+
+  // Disable UI
+  aiTextEntry.disabled = true;
+  submitButton.disabled = true;
+  submitButton.style.opacity = '0.5';
+  aiResponse.classList.remove('empty');
+  aiResponse.textContent = 'Submitting…';
+  setDashboardBackground('processing');
+
+  if (window.truAiClient.updateCsrfToken) window.truAiClient.updateCsrfToken();
+
+  var context = (window.TruAiGetContextFiles && window.TruAiGetContextFiles().length)
+    ? { context_files: window.TruAiGetContextFiles() } : null;
+
+  try {
+    var result = await window.truAiClient.submitPrompt(prompt, context, function(progress) {
+      if (progress && progress.status && progress.status !== 'pending') {
+        aiResponse.textContent = 'Status: ' + progress.status + '…';
+      }
+    });
+
+    var output = result.output != null ? result.output : (result.results != null ? result.results : (result.text != null ? result.text : JSON.stringify(result)));
+    aiResponse.textContent = output;
+    aiResponse.classList.remove('empty');
+    setDashboardBackground('idle');
+
+    if (result.task_id) {
+      document.getElementById('exec-current-label').textContent = String(result.task_id).slice(-12);
+    }
+    if (result.risk_level) {
+      document.getElementById('exec-risk-label').textContent = result.risk_level;
+    }
+    document.getElementById('exec-roi-label').textContent = result.auto_executed ? 'AUTO-ROI' : 'MANUAL';
+    if (window.TruAiRefreshOperationsList) setTimeout(window.TruAiRefreshOperationsList, 300);
+    if (output && window.updateCodeReview) window.updateCodeReview(output, 'Generated');
+
+  } catch (err) {
+    setDashboardBackground('idle');
+    var msg = err.message || 'Unknown error';
+    if (msg.includes('Unauthorized') || msg.includes('Session expired')) {
+      msg = 'Session expired. Please refresh and log in again.';
+      setTimeout(function() {
+        if (confirm('Session expired. Go to login?')) {
+          window.location.href = '/TruAi/login-portal.html';
+        }
+      }, 2000);
+    }
+    aiResponse.textContent = 'Error: ' + msg;
+    aiResponse.classList.remove('empty');
+  } finally {
+    aiTextEntry.disabled = false;
+    submitButton.disabled = false;
+    submitButton.style.opacity = '1';
+    aiTextEntry.value = '';
+    aiTextEntry.focus();
+  }
+}
+
+// Submit button click
+submitButton.addEventListener('click', handleSubmission);
+
+// Cmd/Ctrl+Enter in textarea
+aiTextEntry.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    handleSubmission();
+  }
+});
+
+// ── PHASE 7: Icon button handlers ─────────────────────────────────────────
+
+// Add Photos
+document.getElementById('btnAddPhotos').addEventListener('click', function() {
+  document.getElementById('photoFileInput').click();
+});
+document.getElementById('photoFileInput').addEventListener('change', function() {
+  if (this.files && this.files.length) {
+    addFilesToContext(Array.from(this.files));
+  }
+  this.value = '';
+});
+
+// Add URL
+document.getElementById('btnAddURL').addEventListener('click', function() {
+  var bar = document.getElementById('urlInputBar');
+  bar.classList.toggle('visible');
+  if (bar.classList.contains('visible')) {
+    document.getElementById('urlInputField').focus();
+  }
+});
+document.getElementById('urlInputField').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    var url = this.value.trim();
+    if (url) {
+      window.__truaiContextFiles.push({ name: url, type: 'url', content: '' });
+      renderFileList();
+      this.value = '';
+    }
+    document.getElementById('urlInputBar').classList.remove('visible');
+  } else if (e.key === 'Escape') {
+    document.getElementById('urlInputBar').classList.remove('visible');
+  }
+});
+
+// Add File / Folder
+document.getElementById('btnAddFile').addEventListener('click', function() {
+  document.getElementById('fileInput').click();
+});
+document.getElementById('fileInput').addEventListener('change', function() {
+  if (this.files && this.files.length) {
+    addFilesToContext(Array.from(this.files));
+  }
+  this.value = '';
+});
+
+// Settings
+document.getElementById('btnSettings').addEventListener('click', openSettingsPopup);
+
+// Terminal
+document.getElementById('btnTerminal').addEventListener('click', function() {
+  showStatus('info', 'Terminal: connect to /TruAi/terminal');
+});
+
+// GitHub
+document.getElementById('btnGitHub').addEventListener('click', function() {
+  showStatus('info', 'GitHub: integration coming soon');
+});
+
+// Code View
+document.getElementById('btnCodeView').addEventListener('click', function() {
+  var panel = document.querySelector('.code-review-extended');
+  panel.classList.toggle('expanded');
+  document.body.classList.toggle('panel-max-open');
+});
+
+// ── PHASE 8: Drag and drop onto content-extended ──────────────────────────
+var contentExtended = document.getElementById('contentExtended');
+contentExtended.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  this.classList.add('truai-content-panel-drag-over');
+});
+contentExtended.addEventListener('dragleave', function() {
+  this.classList.remove('truai-content-panel-drag-over');
+});
+contentExtended.addEventListener('drop', function(e) {
+  e.preventDefault();
+  this.classList.remove('truai-content-panel-drag-over');
+  var files = Array.from(e.dataTransfer.files);
+  addFilesToContext(files);
+});
+
+// ── PHASE 10: Global Escape key handler ───────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeSettingsPopup();
+    closeOperationsPopup();
+    closeChatPopup();
+    var cr = document.querySelector('.code-review-extended');
+    if (cr) cr.classList.remove('maximized');
+    document.body.classList.remove('panel-max-open');
+    closeWhyPopover();
+    closeFileContextMenu();
+  }
+});
+
+// ── PHASE 2: DOMContentLoaded init ───────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async function() {
+  // Stage 2: Attach UI and init settings client
+  if (window.truAiClient) {
+    window.truAiClient.attachToUI({ textareaId: 'aiTextEntry', responseId: 'aiResponse' });
+  }
+  if (window.TruAiSettingsClient) {
+    window.TruAiSettingsClient.init(window.TRUAI_CONFIG);
+  }
+
+  // Auth status check
+  try {
+    var res = await fetch(window.TRUAI_CONFIG.API_BASE + '/auth/status', { credentials: 'include' });
+    var data = await res.json();
+    if (data.authenticated) {
+      window.TRUAI_CONFIG.IS_AUTHENTICATED = true;
+      window.TRUAI_CONFIG.USERNAME = data.username || '';
+      window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token || '';
+      if (window.truAiClient) window.truAiClient.updateCsrfToken();
+    }
+  } catch(e) {}
+
+  // Phase 3: Load operations
+  loadOperationsList();
+  loadOperationsStatus();
+
+  // Phase 4: Load conversations
+  loadConversations();
+
+  // Phase 8: Initial render
+  renderFileList();
+});
+</script>
+
+</body>
+</html>
