@@ -268,7 +268,7 @@
 
     <!-- Status icon and text -->
     <div class="status-area">
-      <div id="status-icon" style="display:inline-block;width:90px;height:90px;background:#00A3FF;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;font-size:24px;">🔒</div>
+      <div id="status-icon" style="width:90px;height:90px;background:#00A3FF;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;font-size:24px;">🔒</div>
       <div id="status-text">Access Restricted</div>
     </div>
 
@@ -400,8 +400,17 @@
       section.style.opacity = '1';
     }
 
+    // Standalone: status-icon is a div, update emoji and color instead of src
+    const STATUS_ICONS = {
+      '/TruAi/assets/images/1.png': { bg: '#00A3FF', emoji: '🔒' },
+      '/TruAi/assets/images/2.png': { bg: '#22c55e', emoji: '✓' },
+      '/TruAi/assets/images/3.png': { bg: '#ef4444', emoji: '✗' }
+    };
     function setStatusIcon(src) {
-      document.getElementById('status-icon').src = src;
+      const el = document.getElementById('status-icon');
+      const icon = STATUS_ICONS[src] || { bg: '#00A3FF', emoji: '🔒' };
+      el.style.background = icon.bg;
+      el.textContent = icon.emoji;
     }
 
     function setStatusText(text) {
