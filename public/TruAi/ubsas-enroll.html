@@ -15,13 +15,17 @@
   <script src="/TruAi/assets/js/crypto.js"></script>
   <script src="/TruAi/assets/js/api.js"></script>
   <style>
-    /* ── Reset ── */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: #292929;
-      color: #B3B3B3;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                   'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      background-image: url('/Users/mydemellc./Desktop/TruAi+/assets/images/TruAiLoginPortalBackground.png');
+      background-color: #0b0d11;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      color: #ffffff;
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -31,36 +35,41 @@
 
     /* ── Card ── */
     .enroll-container {
-      background: rgba(42, 42, 42, 0.95);
+      background: rgb(42 42 42 / 0%);
+      border: 1px solid #c3c2c26b;
       border-radius: 12px;
-      padding: 40px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      padding: 32px 28px 24px;
       max-width: 480px;
       width: 100%;
-      border: 1px solid #4A4A4A;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
 
     /* ── Logo ── */
     .logo {
       text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
+
     .logo img {
-      max-width: 220px;
-      height: auto;
+      width: 180px;
+      height: 180px;
       display: block;
-      margin: 0 auto 10px;
+      margin: 0 auto 8px;
     }
+
     .logo h1 {
-      font-size: 20px;
+      font-size: 1.1rem;
       font-weight: 600;
-      color: #A0A0A0;
-      letter-spacing: 0.02em;
+      color: #ffffff;
+      letter-spacing: 0.5px;
     }
+
     .logo p {
-      color: #696969;
-      font-size: 12px;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
       margin-top: 4px;
+      letter-spacing: 1px;
+      font-weight: 200;
     }
 
     /* ── Progress steps ── */
@@ -68,20 +77,19 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 28px;
+      margin-bottom: 22px;
       position: relative;
     }
+
     .steps::before {
       content: '';
       position: absolute;
-      top: 50%;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: #3A3A3A;
-      transform: translateY(-50%);
+      top: 14px; left: 0; right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
       z-index: 0;
     }
+
     .step {
       display: flex;
       flex-direction: column;
@@ -89,37 +97,34 @@
       gap: 4px;
       z-index: 1;
     }
+
     .step-dot {
-      width: 28px;
-      height: 28px;
+      width: 28px; height: 28px;
       border-radius: 50%;
-      background: #3A3A3A;
-      border: 2px solid #4A4A4A;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
+      font-size: 0.7rem;
       font-weight: 700;
-      color: #696969;
+      color: rgba(255,255,255,0.3);
       transition: background 0.3s, border-color 0.3s, color 0.3s;
     }
-    .step.active .step-dot {
-      background: #00A3FF;
-      border-color: #00A3FF;
-      color: #fff;
-    }
-    .step.complete .step-dot {
-      background: #22c55e;
-      border-color: #22c55e;
-      color: #fff;
-    }
+
+    .step.active   .step-dot { background: #00A3FF; border-color: #00A3FF; color: #fff; }
+    .step.complete .step-dot { background: #4caf50; border-color: #4caf50; color: #fff; }
+
     .step-label {
-      font-size: 10px;
-      color: #696969;
+      font-size: 0.62rem;
+      color: rgba(255,255,255,0.3);
       white-space: nowrap;
+      font-weight: 200;
+      letter-spacing: 0.5px;
     }
-    .step.active .step-label { color: #00A3FF; }
-    .step.complete .step-label { color: #22c55e; }
+
+    .step.active   .step-label { color: #00A3FF; }
+    .step.complete .step-label { color: #4caf50; }
 
     /* ── Legal banner ── */
     .legal-notice {
@@ -127,128 +132,177 @@
       border-left: 2px solid #00A3FF;
       border-right: 2px solid #00A3FF;
       padding: 12px 14px;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
       border-radius: 8px;
       font-size: 11px;
       line-height: 1.5;
       color: #A0A0A0;
     }
-    .legal-notice strong { color: #FFFFFF; }
 
-    /* ── Form panels ── */
-    .panel { display: none; }
-    .panel.active { display: block; }
+    .legal-notice strong { color: #ffffff; }
 
-    .panel h2 {
-      font-size: 16px;
-      font-weight: 600;
-      color: #FFFFFF;
-      margin-bottom: 6px;
-    }
-    .panel p.subtitle {
-      font-size: 12px;
-      color: #696969;
-      margin-bottom: 18px;
+    /* ── Status message ── */
+    .status-msg {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+      display: none;
+      text-align: center;
       line-height: 1.5;
     }
 
+    .status-msg.info {
+      background: rgba(0,163,255,0.08);
+      color: #00A3FF;
+      border-left: 2px solid #00A3FF;
+      border-right: 2px solid #00A3FF;
+      display: block;
+    }
+
+    .status-msg.success {
+      background: rgba(76,175,80,0.08);
+      color: #4caf50;
+      border-left: 2px solid #4caf50;
+      border-right: 2px solid #4caf50;
+      display: block;
+    }
+
+    .status-msg.error {
+      background: rgba(244,67,54,0.08);
+      color: #ef5350;
+      border-left: 2px solid #ef5350;
+      border-right: 2px solid #ef5350;
+      display: block;
+    }
+
+    /* ── Panels ── */
+    .panel        { display: none; }
+    .panel.active { display: block; }
+
+    .panel h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .panel p.subtitle {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 18px;
+      line-height: 1.5;
+      font-weight: 200;
+    }
+
     /* ── Form controls ── */
-    .form-group { margin-bottom: 16px; }
+    .form-group { margin-bottom: 14px; }
+
     .form-group label {
       display: block;
+      font-weight: 200;
+      font-size: 0.78rem;
+      color: #ffffff;
       margin-bottom: 6px;
-      font-weight: 600;
-      color: #A0A0A0;
-      font-size: 13px;
+      letter-spacing: 1px;
+      text-align: center;
     }
+
     .form-group input[type="text"],
     .form-group input[type="password"] {
       width: 100%;
-      padding: 11px 12px;
-      background: #1A1A1A;
-      border: 1px solid #4A4A4A;
-      border-radius: 8px;
-      color: #FFFFFF;
-      font-size: 14px;
+      padding: 11px 14px;
+      border: 1px solid #ffffffad;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      color: #ffffff;
+      background: transparent;
       transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-group input:focus {
       outline: none;
-      border-color: #00A3FF;
-      box-shadow: 0 0 0 1px rgba(0, 163, 255, 0.4);
+      text-align: center;
     }
-    .form-group input::placeholder { color: #696969; }
 
-    /* ── Biometric method cards ── */
+    .form-group input::placeholder { color: rgba(255,255,255,0.3); }
+
+    .form-group input:focus {
+      border-color: #00A3FF;
+      box-shadow: 0 0 0 3px rgba(0,163,255,0.12);
+    }
+
+    /* ── Method cards ── */
     .method-cards {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
+
     .method-card {
-      background: #1A1A1A;
-      border: 1px solid #3A3A3A;
-      border-radius: 8px;
-      padding: 14px 12px;
+      background: rgb(42 42 42 / 0%);
+      border: 1px solid #c3c2c26b;
+      border-radius: 10px;
+      padding: 14px 10px;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
       text-align: center;
     }
-    .method-card:hover {
-      border-color: #00A3FF;
-      background: rgba(0, 163, 255, 0.06);
-    }
-    .method-card.selected {
-      border-color: #00A3FF;
-      background: rgba(0, 163, 255, 0.12);
-    }
-    .method-card.unavailable {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    .method-card .icon { font-size: 22px; margin-bottom: 6px; }
+
+    .method-card:hover     { border-color: #00A3FF; background: rgba(0,163,255,0.04); }
+    .method-card.selected  { border-left: 2px solid #00A3FF; border-right: 2px solid #00A3FF; background: rgba(0,163,255,0.06); }
+    .method-card.unavailable { opacity: 0.3; cursor: not-allowed; }
+    .method-card.unavailable:hover { border-color: #c3c2c26b; background: transparent; }
+
+    .method-card .icon { font-size: 1.6rem; margin-bottom: 6px; }
+
     .method-card .name {
-      font-size: 12px;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: #FFFFFF;
+      color: #ffffff;
     }
+
     .method-card .desc {
-      font-size: 10px;
-      color: #696969;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.4);
       margin-top: 2px;
+      font-weight: 200;
     }
+
     .method-card .badge {
       display: inline-block;
       margin-top: 6px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 9px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.6rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
-    .badge-available { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
-    .badge-unavailable { background: rgba(255, 255, 255, 0.05); color: #696969; }
+
+    .badge-available   { background: rgba(76,175,80,0.12);   color: #4caf50; }
+    .badge-unavailable { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); }
 
     /* ── Factor checklist ── */
-    .factor-list { margin-bottom: 18px; }
+    .factor-list { margin-bottom: 16px; }
+
     .factor-item {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 10px 12px;
       border-radius: 8px;
-      background: #1A1A1A;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
       margin-bottom: 8px;
-      font-size: 13px;
-      color: #A0A0A0;
-      transition: background 0.2s;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      transition: all 0.2s;
     }
-    .factor-icon { font-size: 16px; min-width: 20px; text-align: center; }
-    .factor-item.ok   { background: rgba(34, 197, 94, 0.08); color: #22c55e; }
-    .factor-item.warn { background: rgba(251, 191, 36, 0.08); color: #fbbf24; }
-    .factor-item.fail { background: rgba(239, 68, 68, 0.08);  color: #ef4444; }
+
+    .factor-icon { font-size: 0.9rem; min-width: 18px; text-align: center; }
+
+    .factor-item.ok   { background: rgba(76,175,80,0.06);   color: #4caf50;  border-color: rgba(76,175,80,0.2); }
+    .factor-item.warn { background: rgba(251,191,36,0.06);  color: #fbbf24;  border-color: rgba(251,191,36,0.2); }
+    .factor-item.fail { background: rgba(244,67,54,0.06);   color: #ef5350;  border-color: rgba(244,67,54,0.2); }
 
     /* ── Buttons ── */
     .btn-primary {
@@ -257,86 +311,130 @@
       border-radius: 8px;
       border: none;
       background: #00A3FF;
-      color: #FFFFFF;
+      color: #ffffff;
       font-weight: 600;
-      font-size: 15px;
+      font-size: 0.92rem;
       cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(0,163,255,0.3);
     }
-    .btn-primary:hover  { background: #0088DD; transform: translateY(-1px); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-primary:disabled { background: #3A3A3A; color: #696969; cursor: not-allowed; transform: none; }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,163,255,0.52);
+    }
+
+    .btn-primary:disabled {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.3);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
 
     .btn-secondary {
       width: 100%;
       padding: 10px 0;
       border-radius: 8px;
-      border: 1px solid #4A4A4A;
+      border: 1px solid rgba(255,255,255,0.15);
       background: transparent;
-      color: #A0A0A0;
-      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.82rem;
       cursor: pointer;
       margin-top: 8px;
       transition: border-color 0.2s, color 0.2s;
     }
-    .btn-secondary:hover { border-color: #696969; color: #FFFFFF; }
 
-    /* ── Status message ── */
-    .status-msg {
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 14px;
-      display: none;
-    }
-    .status-msg.info    { background: rgba(0, 163, 255, 0.12); color: #00A3FF; display: block; }
-    .status-msg.success { background: rgba(34, 197, 94, 0.12);  color: #22c55e; display: block; }
-    .status-msg.error   { background: rgba(239, 68, 68, 0.12);   color: #ef4444;  display: block; }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.35); color: #ffffff; }
 
-    /* ── Success panel ── */
+    /* ── Success box ── */
     .success-box {
       text-align: center;
       padding: 12px 0;
     }
-    .success-box .check { font-size: 48px; margin-bottom: 12px; }
-    .success-box h3 { font-size: 18px; color: #FFFFFF; margin-bottom: 8px; }
-    .success-box p  { font-size: 13px; color: #696969; line-height: 1.5; }
+
+    .success-box .check { font-size: 3rem; margin-bottom: 10px; }
+
+    .success-box h3 {
+      font-size: 1.1rem;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .success-box p {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.5;
+      font-weight: 200;
+    }
 
     /* ── Footer ── */
     .footer-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 18px;
-      font-size: 12px;
-      color: #696969;
+      margin-top: 16px;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.3);
     }
-    .footer-row a { color: #00A3FF; text-decoration: none; }
-    .footer-row a:hover { color: #FFFFFF; text-decoration: underline; }
+
+    .footer-row a { color: #00A3FF; text-decoration: none; font-size: 0.7rem; }
+    .footer-row a:hover { opacity: 0.75; text-decoration: underline; }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 12px;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.3);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover { color: #00A3FF; }
 
     .copyright {
-      margin-top: 20px;
-      font-size: 11px;
-      color: #696969;
+      margin-top: 18px;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.2);
       text-align: center;
     }
+
     .copyright a { color: #00A3FF; text-decoration: none; }
-    .copyright a:hover { color: #FFFFFF; }
+    .copyright a:hover { opacity: 0.75; }
 
     /* ── ROMA indicator ── */
     .roma-indicator {
       position: fixed;
-      bottom: 12px;
+      bottom: 4px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 11px;
-      color: rgba(255,255,255,0.4);
+      color: rgba(255,255,255,0.45);
       letter-spacing: 0.05em;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
       z-index: 100;
-      transition: color 0.5s;
       user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.5s;
     }
-    .roma-indicator.confirmed { color: rgba(255,255,255,0.7); }
+
+    .roma-indicator.confirmed { color: rgba(255,255,255,0.75); }
+
+    .roma-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4caf50;
+      animation: romaPulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    .roma-dot.unverified { background: #f6ad55; animation: none; }
+    .roma-dot.offline    { background: #a0aec0; animation: none; }
+
+    @keyframes romaPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
   </style>
 </head>
 <body>
@@ -345,19 +443,21 @@
 
   <!-- Logo -->
   <div class="logo">
-    <img src="/TruAi/assets/images/TruAi-Logo.png"
-         onerror="this.style.display='none'"
-         alt="TruAi">
+    <img
+      src="/Users/mydemellc./Desktop/TruAi+/assets/images/TruAi by DemeWebsolutions.com.png"
+      onerror="this.style.display='none'"
+      alt="TruAi Logo"
+    >
     <h1>Biometric Enrollment</h1>
     <p>UBSAS — Unified Biometric Sovereign Authentication</p>
   </div>
 
   <!-- Progress steps -->
   <div class="steps" id="steps-bar">
-    <div class="step active" id="step-dot-1"><div class="step-dot">1</div><div class="step-label">OS Verify</div></div>
-    <div class="step"        id="step-dot-2"><div class="step-dot">2</div><div class="step-label">Method</div></div>
-    <div class="step"        id="step-dot-3"><div class="step-dot">3</div><div class="step-label">Confirm</div></div>
-    <div class="step"        id="step-dot-4"><div class="step-dot">4</div><div class="step-label">Done</div></div>
+    <div class="step active"  id="step-dot-1"><div class="step-dot">1</div><div class="step-label">OS Verify</div></div>
+    <div class="step"         id="step-dot-2"><div class="step-dot">2</div><div class="step-label">Method</div></div>
+    <div class="step"         id="step-dot-3"><div class="step-dot">3</div><div class="step-label">Confirm</div></div>
+    <div class="step"         id="step-dot-4"><div class="step-dot">4</div><div class="step-label">Done</div></div>
   </div>
 
   <!-- Legal notice -->
@@ -378,7 +478,6 @@
       Confirm your macOS / Linux administrator credentials to authorize keychain access.
       This is your <em>system</em> password — not your TruAi password.
     </p>
-
     <div class="form-group">
       <label for="truai-username">TruAi Username</label>
       <input type="text" id="truai-username" placeholder="e.g. admin" autocomplete="username">
@@ -391,20 +490,14 @@
       <label for="os-password">System Password</label>
       <input type="password" id="os-password" placeholder="Administrator password" autocomplete="current-password">
     </div>
-
-    <button class="btn-primary" id="btn-verify-os" onclick="verifyOS()">
-      Verify &amp; Continue →
-    </button>
-    <a href="/TruAi/login-portal.html" style="display:block;text-align:center;margin-top:12px;font-size:12px;color:#696969;text-decoration:none;">
-      ← Back to Login
-    </a>
+    <button class="btn-primary" id="btn-verify-os" onclick="verifyOS()">Verify &amp; Continue →</button>
+    <a href="/TruAi/login-portal.html" class="back-link">← Back to Login</a>
   </div>
 
   <!-- ── Panel 2: Choose biometric method ── -->
   <div class="panel" id="panel-2">
     <h2>👆 Select Authentication Method</h2>
-    <p class="subtitle">Choose which credential to enroll. Methods shown as available are
-    supported by this device.</p>
+    <p class="subtitle">Choose which credential to enroll. Methods shown as available are supported by this device.</p>
 
     <div class="method-cards" id="method-cards">
       <div class="method-card" id="card-biometric" onclick="selectMethod('biometric')">
@@ -446,26 +539,20 @@
 
     <div class="factor-list">
       <div class="factor-item" id="factor-local">
-        <span class="factor-icon">⏳</span>
-        <span>Local Server Access</span>
+        <span class="factor-icon">⏳</span><span>Local Server Access</span>
       </div>
       <div class="factor-item" id="factor-roma">
-        <span class="factor-icon">⏳</span>
-        <span>ROMA Trust Validation</span>
+        <span class="factor-icon">⏳</span><span>ROMA Trust Validation</span>
       </div>
       <div class="factor-item" id="factor-os">
-        <span class="factor-icon">⏳</span>
-        <span>OS Admin Verification</span>
+        <span class="factor-icon">⏳</span><span>OS Admin Verification</span>
       </div>
       <div class="factor-item" id="factor-device">
-        <span class="factor-icon">⏳</span>
-        <span>Device Fingerprint</span>
+        <span class="factor-icon">⏳</span><span>Device Fingerprint</span>
       </div>
     </div>
 
-    <button class="btn-primary" id="btn-enroll" onclick="doEnroll()" disabled>
-      Confirming…
-    </button>
+    <button class="btn-primary" id="btn-enroll" onclick="doEnroll()" disabled>Confirming…</button>
     <button class="btn-secondary" onclick="goToStep(2)">← Back</button>
   </div>
 
@@ -477,22 +564,15 @@
       <p id="success-detail">Your biometric credential has been registered with ROMA and stored in the OS keychain.</p>
     </div>
 
-    <div class="factor-list" style="margin-top:18px">
-      <div class="factor-item ok">
-        <span class="factor-icon">✓</span>
-        <span>Credentials stored in OS keychain</span>
-      </div>
-      <div class="factor-item ok">
-        <span class="factor-icon">✓</span>
-        <span>Device registered with ROMA</span>
-      </div>
+    <div class="factor-list" style="margin-top:16px;">
+      <div class="factor-item ok"><span class="factor-icon">✓</span><span>Credentials stored in OS keychain</span></div>
+      <div class="factor-item ok"><span class="factor-icon">✓</span><span>Device registered with ROMA</span></div>
       <div class="factor-item ok" id="factor-method-confirm">
-        <span class="factor-icon">✓</span>
-        <span>Authentication method enrolled</span>
+        <span class="factor-icon">✓</span><span>Authentication method enrolled</span>
       </div>
     </div>
 
-    <button class="btn-primary" style="margin-top:18px"
+    <button class="btn-primary" style="margin-top:16px;"
             onclick="window.location.href='/TruAi/login-portal.html'">
       Go to Login Portal →
     </button>
@@ -510,80 +590,78 @@
 </div>
 
 <!-- ROMA indicator -->
-<div class="roma-indicator" id="roma-indicator">Roma • Checking…</div>
+<div class="roma-indicator" id="roma-indicator">
+  <span class="roma-dot" id="roma-dot"></span>
+  <span id="roma-label">ROMA • Checking…</span>
+</div>
 
 <script>
 'use strict';
 
 const API_BASE = window.TRUAI_CONFIG.API_BASE;
-
-// ── State ──────────────────────────────────────────────────────────────
-let currentStep = 1;
-let selectedMethod = null;
-let verifiedOsUser = null;
-let truaiUsername   = null;
+let currentStep      = 1;
+let selectedMethod   = null;
+let verifiedOsUser   = null;
+let truaiUsername    = null;
 let availableMethods = [];
 
-// ── Utility helpers ───────────────────────────────────────────────────
+/* ── Status helpers ──────────────────────────────────────────────────── */
 function showStatus(type, msg) {
   const el = document.getElementById('status-msg');
-  el.className = 'status-msg ' + type;
+  el.className   = 'status-msg ' + type;
   el.textContent = msg;
 }
 
 function clearStatus() {
   const el = document.getElementById('status-msg');
-  el.className = 'status-msg';
+  el.className   = 'status-msg';
   el.textContent = '';
 }
 
 function goToStep(n) {
   document.getElementById('panel-' + currentStep).classList.remove('active');
   document.getElementById('step-dot-' + currentStep).classList.remove('active');
-
-  // Mark previous steps complete
   for (let i = 1; i < n; i++) {
     document.getElementById('step-dot-' + i).classList.add('complete');
     document.getElementById('step-dot-' + i).classList.remove('active');
   }
-  // Remove complete from steps after n
   for (let i = n; i <= 4; i++) {
     document.getElementById('step-dot-' + i).classList.remove('complete');
   }
-
   currentStep = n;
   document.getElementById('panel-' + n).classList.add('active');
   document.getElementById('step-dot-' + n).classList.add('active');
   clearStatus();
 }
 
-// ── ROMA indicator ─────────────────────────────────────────────────────
+/* ── ROMA indicator ──────────────────────────────────────────────────── */
 async function checkROMA() {
-  const indicator = document.getElementById('roma-indicator');
+  const dot   = document.getElementById('roma-dot');
+  const label = document.getElementById('roma-label');
+  const ind   = document.getElementById('roma-indicator');
   try {
     const res  = await fetch(API_BASE + '/security/roma', { credentials: 'include' });
     const data = await res.json();
     if (data.roma && data.trust_state === 'VERIFIED') {
-      indicator.textContent = 'Roma • Portal protected • Monitor active';
-      indicator.classList.add('confirmed');
+      dot.className     = 'roma-dot';
+      label.textContent = 'ROMA • Portal Protected • Monitor Active';
+      ind.classList.add('confirmed');
     } else {
-      indicator.textContent = 'Roma • ' + (data.trust_state || 'Unverified');
+      dot.className     = 'roma-dot unverified';
+      label.textContent = 'ROMA • ' + (data.trust_state || 'Unverified');
     }
   } catch {
-    indicator.textContent = 'Roma • Offline';
+    dot.className     = 'roma-dot offline';
+    label.textContent = 'ROMA • Offline';
   }
 }
 
-// ── Step 1: OS verification ────────────────────────────────────────────
+/* ── Step 1: OS verification ─────────────────────────────────────────── */
 async function verifyOS() {
   const tu = document.getElementById('truai-username').value.trim();
   const ou = document.getElementById('os-username').value.trim();
   const op = document.getElementById('os-password').value;
-
-  if (!tu || !ou || !op) {
-    showStatus('error', '⚠️ All fields are required.');
-    return;
-  }
+  if (!tu || !ou || !op) { showStatus('error', '⚠️ All fields are required.'); return; }
 
   const btn = document.getElementById('btn-verify-os');
   btn.disabled = true;
@@ -591,29 +669,23 @@ async function verifyOS() {
   showStatus('info', '🔒 Verifying OS credentials with ROMA…');
 
   try {
-    const res  = await fetch(API_BASE + '/auth/methods', { credentials: 'include' });
-
+    const res = await fetch(API_BASE + '/auth/methods', { credentials: 'include' });
     if (!res.ok) {
-      const statusMsg = res.status === 401 ? 'Authentication required — please log in first.'
-                      : res.status === 403 ? 'Authorization failed — check OS credentials.'
-                      : `Server error (HTTP ${res.status}).`;
-      throw new Error(statusMsg);
+      const msg = res.status === 401 ? 'Authentication required — please log in first.'
+                : res.status === 403 ? 'Authorization failed — check OS credentials.'
+                : 'Server error (HTTP ' + res.status + ').';
+      throw new Error(msg);
     }
-
-    const data = await res.json();
-
+    const data   = await res.json();
     availableMethods = data.methods || [];
     verifiedOsUser   = ou;
     truaiUsername    = tu;
-
-    // Update method card badges
     updateMethodBadges();
-
     goToStep(2);
   } catch (err) {
     showStatus('error', '✗ Verification failed: ' + (err.message || 'Server error'));
   } finally {
-    btn.disabled = false;
+    btn.disabled    = false;
     btn.textContent = 'Verify & Continue →';
   }
 }
@@ -621,18 +693,12 @@ async function verifyOS() {
 function updateMethodBadges() {
   const biometricAvail = availableMethods.includes('biometric');
   const keychainAvail  = availableMethods.includes('keychain');
-
-  setBadge('biometric', biometricAvail ? 'Available'       : 'Not detected', biometricAvail);
-  setBadge('keychain',  keychainAvail  ? 'Available'       : 'Not detected', keychainAvail);
-  setBadge('password',  true,           'Always available', true);
-  setBadge('masterkey', true,           'Optional',         true);
-
-  if (!biometricAvail) {
-    document.getElementById('card-biometric').classList.add('unavailable');
-  }
-  if (!keychainAvail) {
-    document.getElementById('card-keychain').classList.add('unavailable');
-  }
+  setBadge('biometric', biometricAvail ? 'Available' : 'Not detected', biometricAvail);
+  setBadge('keychain',  keychainAvail  ? 'Available' : 'Not detected', keychainAvail);
+  setBadge('password',  true, 'Always available', true);
+  setBadge('masterkey', true, 'Optional', true);
+  if (!biometricAvail) document.getElementById('card-biometric').classList.add('unavailable');
+  if (!keychainAvail)  document.getElementById('card-keychain').classList.add('unavailable');
 }
 
 function setBadge(method, label, available) {
@@ -641,14 +707,11 @@ function setBadge(method, label, available) {
   badge.className   = 'badge ' + (available ? 'badge-available' : 'badge-unavailable');
 }
 
-// ── Step 2: Method selection ───────────────────────────────────────────
+/* ── Step 2: Method selection ────────────────────────────────────────── */
 function selectMethod(method) {
   const card = document.getElementById('card-' + method);
   if (card.classList.contains('unavailable')) return;
-
-  // Deselect all
   document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
-
   card.classList.add('selected');
   selectedMethod = method;
   document.getElementById('btn-confirm-method').disabled = false;
@@ -656,27 +719,24 @@ function selectMethod(method) {
 
 function confirmMethod() {
   if (!selectedMethod) return;
-
-  // Run factor checks
   goToStep(3);
   runFactorChecks();
 }
 
-// ── Step 3: Factor checks ──────────────────────────────────────────────
+/* ── Step 3: Factor checks ───────────────────────────────────────────── */
 async function runFactorChecks() {
   const btn = document.getElementById('btn-enroll');
-  btn.disabled = true;
+  btn.disabled    = true;
   btn.textContent = 'Confirming…';
 
-  setFactor('factor-local', 'ok',   '✓', 'Local Server Access');
+  setFactor('factor-local', 'ok', '✓', 'Local Server Access');
   await delay(400);
 
   try {
     const res  = await fetch(API_BASE + '/security/roma', { credentials: 'include' });
     const data = await res.json();
-
     if (data.roma && data.trust_state === 'VERIFIED') {
-      setFactor('factor-roma', 'ok',   '✓', 'ROMA Trust Validated');
+      setFactor('factor-roma', 'ok',   '✓',  'ROMA Trust Validated');
     } else {
       setFactor('factor-roma', 'warn', '⚠️', 'ROMA Trust: ' + (data.trust_state || 'Unverified'));
     }
@@ -685,17 +745,17 @@ async function runFactorChecks() {
   }
 
   await delay(400);
-  setFactor('factor-os',     'ok',   '✓', 'OS Admin: ' + verifiedOsUser);
+  setFactor('factor-os', 'ok', '✓', 'OS Admin: ' + verifiedOsUser);
 
   await delay(400);
   const fpMatch = checkDeviceFingerprint();
-  if (fpMatch) {
-    setFactor('factor-device', 'ok',  '✓', 'Device Fingerprint Matched');
-  } else {
-    setFactor('factor-device', 'warn', '⚠️', 'Device Fingerprint: New Device');
-  }
+  setFactor('factor-device',
+    fpMatch ? 'ok'   : 'warn',
+    fpMatch ? '✓'    : '⚠️',
+    fpMatch ? 'Device Fingerprint Matched' : 'Device Fingerprint: New Device'
+  );
 
-  btn.disabled = false;
+  btn.disabled    = false;
   btn.textContent = 'Enroll Now →';
 }
 
@@ -706,19 +766,13 @@ function setFactor(id, cls, icon, label) {
 }
 
 function checkDeviceFingerprint() {
-  const stored = localStorage.getItem('truai_device_fp');
+  const stored  = localStorage.getItem('truai_device_fp');
   const current = buildFingerprint();
-  if (!stored) {
-    localStorage.setItem('truai_device_fp', current);
-    return false; // New device
-  }
+  if (!stored) { localStorage.setItem('truai_device_fp', current); return false; }
   return stored === current;
 }
 
 function buildFingerprint() {
-  // NOTE: Client-side fingerprinting is a lightweight heuristic only.
-  // Server-side validation (IP patterns, TLS fingerprinting, hardware attestation)
-  // should supplement this for high-security environments.
   return btoa([
     navigator.platform,
     navigator.language,
@@ -728,73 +782,55 @@ function buildFingerprint() {
   ].join('|')).slice(0, 32);
 }
 
-// ── Step 4: Enroll ─────────────────────────────────────────────────────
+/* ── Step 4: Enroll ──────────────────────────────────────────────────── */
 async function doEnroll() {
   const btn = document.getElementById('btn-enroll');
-  btn.disabled = true;
+  btn.disabled    = true;
   btn.textContent = 'Enrolling…';
   showStatus('info', '🔒 Registering credentials with ROMA…');
 
   try {
     const res = await fetch(API_BASE + '/auth/enroll', {
-      method:  'POST',
+      method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({
-        username:  truaiUsername,
-        os_user:   verifiedOsUser,
-        method:    selectedMethod,
-        device_fp: buildFingerprint()
+        username: truaiUsername, os_user: verifiedOsUser,
+        method: selectedMethod, device_fp: buildFingerprint()
       })
     });
-
     const data = await res.json();
 
     if (res.ok && data.success !== false) {
-      // Store device fingerprint on success
       localStorage.setItem('truai_device_fp', buildFingerprint());
-
-      const methodLabels = {
-        biometric: 'Touch ID / Face ID',
-        keychain:  'Keychain Auto-Fill',
-        password:  'Password',
-        masterkey: 'Master Recovery Key'
-      };
+      const labels = { biometric:'Touch ID / Face ID', keychain:'Keychain Auto-Fill',
+                       password:'Password', masterkey:'Master Recovery Key' };
       document.getElementById('success-detail').textContent =
-        (methodLabels[selectedMethod] || selectedMethod) +
-        ' has been enrolled and stored securely in your OS keychain.';
+        (labels[selectedMethod] || selectedMethod) + ' has been enrolled and stored securely in your OS keychain.';
       document.getElementById('factor-method-confirm').querySelector('span:last-child').textContent =
-        (methodLabels[selectedMethod] || selectedMethod) + ' enrolled';
-
+        (labels[selectedMethod] || selectedMethod) + ' enrolled';
       clearStatus();
       goToStep(4);
-
     } else {
-      const msg = data.error || data.message || 'Enrollment failed';
-      showStatus('error', '✗ ' + msg);
-      btn.disabled = false;
+      showStatus('error', '✗ ' + (data.error || data.message || 'Enrollment failed'));
+      btn.disabled    = false;
       btn.textContent = 'Retry →';
     }
-
   } catch (err) {
     if (err.name === 'TypeError') {
-      // Network/fetch error — endpoint may not yet be implemented
       showStatus('error', '✗ Enrollment endpoint unavailable. Please contact your administrator.');
     } else {
       showStatus('error', '✗ ' + (err.message || 'Network error'));
     }
-    btn.disabled = false;
+    btn.disabled    = false;
     btn.textContent = 'Retry →';
   }
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────
+/* ── Helpers ─────────────────────────────────────────────────────────── */
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function startOver() {
-  truaiUsername  = null;
-  verifiedOsUser = null;
-  selectedMethod = null;
+  truaiUsername = null; verifiedOsUser = null; selectedMethod = null;
   document.getElementById('truai-username').value = '';
   document.getElementById('os-username').value    = '';
   document.getElementById('os-password').value    = '';
@@ -810,10 +846,8 @@ function startOver() {
   clearStatus();
 }
 
-// ── Init ───────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  checkROMA();
-});
+/* ── Init ────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', checkROMA);
 </script>
 
 </body>
