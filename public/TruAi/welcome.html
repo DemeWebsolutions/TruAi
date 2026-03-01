@@ -32,7 +32,7 @@
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const username = urlParams.get('username') || 'Deme';
-        // Flow: welcome.html (welcome.gif) -> start.html (selection) -> http://localhost:8080/TruAi/
+        // Flow: welcome.html (welcome.gif) -> start.html (selection) -> http://localhost:8001/TruAi/
         const nextPage = urlParams.get('next') || '/TruAi/start.html';
 
         // Wait for GIF to play, then redirect to start.html
