@@ -1,601 +1,512 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TruAi – Login</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi - Login Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            min-height: 100vh;
+            background-image: url('/Users/mydemellc./Desktop/TruAi+/assets/images/TruAiLoginPortalBackground.png');
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                         'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            overflow-x: auto;
+            background-color: #0b0d11;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
 
-    .login-container {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 40px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    }
+        .enrollment-container {
+            background: rgb(42 42 42 / 0%);
+            border-radius: 12px;
+            padding-top: 10px;
+            width: 282px;
+            margin-bottom: 5px;
+            height: 562px;
+            border: 1px solid #c3c2c26b;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
 
-    .logo {
-      text-align: center;
-      margin-bottom: 32px;
-    }
+        .logo-header {
+            text-align: center;
+            margin-bottom: 0;
+        }
 
-    .logo h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #667eea;
-      letter-spacing: -0.5px;
-    }
+        .logo-header img.main-logo {
+            width: 210px;
+            height: 210px;
+            display: block;
+            margin: auto;
+        }
 
-    .logo p {
-      color: #666;
-      font-size: 0.875rem;
-      margin-top: 4px;
-    }
+        .step-title {
+            text-align: center;
+        }
 
-    .status-msg {
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: 0.875rem;
-      display: none;
-    }
+        .step-title .label-spacer {
+            font-size: 21px;
+            color: transparent;
+            margin-bottom: 5px;
+            letter-spacing: 1.1px;
+            font-weight: 200;
+        }
 
-    .status-msg.info    { background: #e8f4fd; color: #1a6aa8; border: 1px solid #bee3f8; display: block; }
-    .status-msg.success { background: #e6fffa; color: #276749; border: 1px solid #9ae6b4; display: block; }
-    .status-msg.error   { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; display: block; }
+        .step-title .state-label {
+            font-size: 21px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 5px;
+            letter-spacing: 1.1px;
+            font-weight: 200;
+        }
 
-    .auth-methods {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
+        /* ── Status icon — the submit button ── */
+        #statusIcon {
+            width: 90px;
+            display: block;
+            margin: auto;
+            cursor: pointer;
+            transition: opacity 600ms ease, transform 0.15s ease;
+            opacity: 1;
+        }
 
-    .auth-card {
-      border: 2px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 16px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: center;
-      background: #fff;
-    }
+        #statusIcon.clickable:hover  { transform: scale(1.06); }
+        #statusIcon.clickable:active { transform: scale(0.94); }
 
-    .auth-card:hover:not(.disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+        #statusIcon.locked {
+            cursor: default;
+            pointer-events: none;
+        }
 
-    .auth-card.disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
+        /* ── Status message bar ── */
+        .status-message {
+            text-align: center;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin: 8px 16px;
+            font-size: 14px;
+            display: none;
+        }
 
-    .auth-card.biometric  { border-color: #667eea; background: linear-gradient(135deg, #ebf4ff, #f0e6ff); }
-    .auth-card.autofill   { border-color: #9f7aea; background: linear-gradient(135deg, #f3e8ff, #ede9fe); }
-    .auth-card.manual     { border-color: #a0aec0; background: #f7fafc; }
-    .auth-card.masterkey  { border-color: #e53e3e; background: linear-gradient(135deg, #fff5f5, #fed7d7); }
+        .status-message.show    { display: block; }
+        .status-message.info    { background: rgba(33,150,243,0.10); color: #1976d2; border: 1px solid rgba(33,150,243,0.3); }
+        .status-message.success { background: rgba(76,175,80,0.10);  color: #388e3c; border: 1px solid rgba(76,175,80,0.3); }
+        .status-message.error   { background: rgba(244,67,54,0.10);  color: #d32f2f; border: 1px solid rgba(244,67,54,0.3); }
 
-    .auth-card .icon  { font-size: 2rem; display: block; margin-bottom: 8px; }
-    .auth-card .label { font-size: 0.8rem; font-weight: 600; color: #4a5568; }
-    .auth-card .tier  { font-size: 0.7rem; color: #718096; margin-top: 2px; }
+        /* ── Form fields ── */
+        .form-group {
+            margin-bottom: 10px;
+        }
 
-    .divider {
-      display: flex;
-      align-items: center;
-      margin: 16px 0;
-      color: #a0aec0;
-      font-size: 0.8rem;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #e2e8f0;
-    }
-    .divider span { padding: 0 12px; }
+        .form-group label {
+            display: block;
+            font-weight: 200;
+            font-size: 16px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 2px;
+            letter-spacing: 1px;
+            margin-top: 14px;
+            transition: opacity 0.6s ease;
+        }
 
-    .manual-form { display: none; }
-    .manual-form.active { display: block; }
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            padding: 13px 16px;
+            background: #ffffff00;
+            border: 1px solid #ffffffad;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 14px;
+            margin: auto;
+            text-align: center;
+            display: block;
+            width: calc(100% - 32px);
+            transition: opacity 0.6s ease;
+        }
 
-    .form-group { margin-bottom: 16px; }
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.45);
+        }
 
-    .form-group label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #4a5568;
-      margin-bottom: 6px;
-    }
+        .form-group input:focus {
+            outline: none;
+            border-color: #00A3FF;
+            box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.15);
+        }
 
-    .form-group input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      color: #2d3748;
-      transition: border-color 0.2s;
-      outline: none;
-    }
+        #formWrapper {
+            padding: 0 16px;
+        }
 
-    .form-group input:focus { border-color: #667eea; }
+        /* ── state-label fades independently ── */
+        #stateLabel {
+            transition: opacity 0.6s ease;
+        }
 
-    .btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+        /* ── status icon fades independently ── */
+        #statusIcon {
+            transition: opacity 600ms ease, transform 0.15s ease;
+        }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
-    }
+        .roma-indicator {
+            position: fixed;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.05em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
 
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .roma-indicator.confirmed {
+            color: rgba(255,255,255,0.9);
+        }
 
-    .btn-link {
-      background: none;
-      border: none;
-      color: #667eea;
-      font-size: 0.8rem;
-      cursor: pointer;
-      text-decoration: underline;
-      padding: 0;
-      width: auto;
-    }
-
-    .back-link {
-      text-align: center;
-      margin-top: 12px;
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 0.75rem;
-      color: #a0aec0;
-    }
-
-    .roma-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .roma-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #68d391;
-      animation: pulse 2s infinite;
-    }
-
-    .roma-dot.unverified { background: #f6ad55; animation: none; }
-    .roma-dot.blocked    { background: #fc8181; animation: none; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    @media (max-width: 480px) {
-      .auth-methods { grid-template-columns: 1fr 1fr; }
-      .login-container { padding: 24px; }
-    }
-  </style>
+        @media (max-width: 768px) {
+            .enrollment-container { width: 95%; }
+        }
+    </style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="logo">
-      <h1>TruAi</h1>
-      <p>Secure AI Assistant</p>
+
+<div class="enrollment-container">
+
+    <!-- Main Logo -->
+    <div class="logo-header">
+        <img
+            class="main-logo"
+            src="/Users/mydemellc./Desktop/TruAi+/assets/images/TruAi by DemeWebsolutions.com.png"
+            alt="TruAi Logo"
+        >
     </div>
 
-    <div id="status" class="status-msg" role="alert" aria-live="polite"></div>
-
-    <!-- UBSAS 4-Tier Authentication Cards -->
-    <div class="auth-methods" id="auth-methods">
-      <div class="auth-card biometric disabled" id="card-biometric" onclick="attemptBiometric()" role="button" tabindex="0" aria-label="Biometric login">
-        <span class="icon">👆</span>
-        <div class="label">Biometric</div>
-        <div class="tier">Tier 1 · Touch ID / Face ID</div>
-      </div>
-
-      <div class="auth-card autofill disabled" id="card-autofill" onclick="attemptAutoFill()" role="button" tabindex="0" aria-label="Auto-fill login">
-        <span class="icon">🔑</span>
-        <div class="label">Auto-Fill</div>
-        <div class="tier">Tier 2 · Keychain</div>
-      </div>
-
-      <div class="auth-card manual" id="card-manual" onclick="showManualForm()" role="button" tabindex="0" aria-label="Manual password login">
-        <span class="icon">⌨️</span>
-        <div class="label">Password</div>
-        <div class="tier">Tier 3 · Always available</div>
-      </div>
-
-      <div class="auth-card masterkey" id="card-masterkey" onclick="showMasterKeyForm()" role="button" tabindex="0" aria-label="Master key recovery">
-        <span class="icon">🔐</span>
-        <div class="label">Master Key</div>
-        <div class="tier">Tier 4 · Emergency</div>
-      </div>
-    </div>
-
-    <!-- Manual Login Form -->
-    <div class="manual-form" id="form-manual">
-      <div class="divider"><span>Password Login</span></div>
-      <form onsubmit="submitManualLogin(event)">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input type="text" id="username" name="username" autocomplete="username" required placeholder="Enter username">
+    <!-- State label + status icon -->
+    <div class="logo-header">
+        <div class="step-title">
+            <p class="label-spacer">Login</p>
+            <p id="stateLabel" class="state-label">Access Restricted</p>
         </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="Enter password">
-        </div>
-        <button type="submit" class="btn btn-primary" id="btn-login">Sign In</button>
-      </form>
-      <div class="back-link">
-        <button class="btn-link" onclick="hideAllForms()">← Back to options</button>
-        &nbsp;·&nbsp;
-        <a href="secure-recovery.html" style="font-size:0.8rem; color:#667eea;">Forgot password?</a>
-      </div>
+
+        <!-- Status icon — doubles as the login submit button -->
+        <img
+            id="statusIcon"
+            class="clickable"
+            src="/Users/mydemellc./Desktop/TruAi+/assets/images/1.png"
+            alt="Status Icon"
+        >
     </div>
 
-    <!-- Master Key Form -->
-    <div class="manual-form" id="form-masterkey">
-      <div class="divider"><span>Master Key Recovery</span></div>
-      <form onsubmit="submitMasterKey(event)">
-        <div class="form-group">
-          <label for="mk-username">Username</label>
-          <input type="text" id="mk-username" name="username" autocomplete="username" required placeholder="Enter username">
-        </div>
-        <div class="form-group">
-          <label for="master-key">Master Recovery Key</label>
-          <input type="password" id="master-key" name="master_key" required placeholder="Enter 64-character recovery key" minlength="16">
-        </div>
-        <button type="submit" class="btn btn-primary" id="btn-masterkey">Recover Access</button>
-      </form>
-      <div class="back-link">
-        <button class="btn-link" onclick="hideAllForms()">← Back to options</button>
-      </div>
+    <!-- Status message bar -->
+    <div class="status-message" id="statusMessage"></div>
+
+    <!-- Credential form — no submit button -->
+    <div id="formWrapper">
+        <form id="verifyForm">
+            <div class="form-group" id="usernameGroup">
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username"
+                    required
+                    autocomplete="username"
+                >
+                <label for="username">User</label>
+            </div>
+
+            <div class="form-group" id="passwordGroup">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                    autocomplete="current-password"
+                >
+                <label for="password">Password</label>
+            </div>
+        </form>
     </div>
 
-    <!-- Temp Password Modal -->
-    <div class="manual-form" id="form-temppass">
-      <div class="divider"><span>Recovery Successful</span></div>
-      <div class="form-group">
-        <label>Temporary Password (expires in <span id="countdown">10:00</span>)</label>
-        <input type="text" id="temp-password" readonly style="font-family:monospace; background:#f7fafc;">
-        <button type="button" class="btn-link" style="margin-top:6px;" onclick="copyTempPassword()">📋 Copy to clipboard</button>
-      </div>
-      <p style="font-size:0.8rem;color:#c53030;margin-bottom:12px;">⚠️ You MUST change this password immediately after login.</p>
-      <button class="btn btn-primary" onclick="redirectToLogin()">Go to Login</button>
-    </div>
+</div>
 
-    <footer class="footer">
-      <span class="roma-indicator">
-        <span class="roma-dot" id="roma-dot"></span>
-        <span id="roma-label">Roma • Checking...</span>
-      </span>
-    </footer>
-  </div>
+<div id="romaIndicator" class="roma-indicator">ROMA • Portal Protected</div>
 
-  <script>
-    'use strict';
+<!-- ================================================================
+     DEV / OFFLINE TESTING FLAG
+     DEV_MODE = true  → no real API call; uses hardcoded credentials.
+     DEV_MODE = false → real fetch to /TruAi/api/v1/auth/login.
+     ================================================================ -->
+<script>
+    const DEV_MODE      = true;
+    const DEV_USER      = 'admin';
+    const DEV_PASS      = 'password123';
+    const DASHBOARD_URL = '/TruAi/';
+</script>
 
-    const API = '/TruAi/api/v1';
-    let countdownTimer = null;
+<script src="/TruAi/assets/js/api.js"></script>
+<script>
+(function () {
 
-    // ── Status helpers ────────────────────────────────────────
+    /* ── Asset paths ── */
+    const IMG = {
+        restricted : '/Users/mydemellc./Desktop/TruAi+/assets/images/1.png',
+        granted    : '/Users/mydemellc./Desktop/TruAi+/assets/images/2.png',
+        denied     : '/Users/mydemellc./Desktop/TruAi+/assets/images/3.png',
+    };
+
+    /* ── DOM refs ── */
+    const stateLabel    = document.getElementById('stateLabel');
+    const statusIcon    = document.getElementById('statusIcon');
+    const usernameGroup = document.getElementById('usernameGroup');
+    const passwordGroup = document.getElementById('passwordGroup');
+
+    /* ─────────────────────────────────────────────────────────────
+       Targeted fade helpers
+       Each accepts an opacity value and optional duration (ms).
+       They return a Promise that resolves after the transition.
+    ───────────────────────────────────────────────────────────── */
+
+    /* Fades ONLY the icon and state label */
+    function fadeHeader(val, duration) {
+        duration = duration || 600;
+        [statusIcon, stateLabel].forEach(function (el) {
+            el.style.transition = 'opacity ' + duration + 'ms ease';
+            el.style.opacity    = val;
+        });
+        return new Promise(function (r) { setTimeout(r, duration); });
+    }
+
+    /* Fades ONLY the two form-groups (inputs + labels inside them) */
+    function fadeForm(val, duration) {
+        duration = duration || 600;
+
+        [usernameGroup, passwordGroup].forEach(function (group) {
+            /* Fade the input */
+            var input = group.querySelector('input');
+            if (input) {
+                input.style.transition = 'opacity ' + duration + 'ms ease';
+                input.style.opacity    = val;
+            }
+            /* Fade the label */
+            var label = group.querySelector('label');
+            if (label) {
+                label.style.transition = 'opacity ' + duration + 'ms ease';
+                label.style.opacity    = val;
+            }
+        });
+
+        return new Promise(function (r) { setTimeout(r, duration); });
+    }
+
+    /* Fades EVERYTHING (header + form) together */
+    function fadeAll(val, duration) {
+        fadeHeader(val, duration);
+        fadeForm(val, duration);
+        return new Promise(function (r) { setTimeout(r, duration || 600); });
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       setStateVisuals — swap label + icon src while at opacity 0
+    ───────────────────────────────────────────────────────────── */
+    function setStateVisuals(labelText, iconSrc) {
+        stateLabel.textContent = labelText;
+        statusIcon.src         = iconSrc;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       lockIcon / unlockIcon
+    ───────────────────────────────────────────────────────────── */
+    function lockIcon() {
+        statusIcon.classList.remove('clickable');
+        statusIcon.classList.add('locked');
+    }
+
+    function unlockIcon() {
+        statusIcon.classList.remove('locked');
+        statusIcon.classList.add('clickable');
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       showStatus / hideStatus
+    ───────────────────────────────────────────────────────────── */
     function showStatus(type, message) {
-      const el = document.getElementById('status');
-      el.className = 'status-msg ' + type;
-      el.textContent = message;
+        var el = document.getElementById('statusMessage');
+        el.className   = 'status-message show ' + type;
+        el.textContent = message;
+        if (type === 'success' || type === 'error') {
+            setTimeout(function () { el.classList.remove('show'); }, 5000);
+        }
     }
 
-    function clearStatus() {
-      const el = document.getElementById('status');
-      el.className = 'status-msg';
-      el.textContent = '';
+    function hideStatus() {
+        document.getElementById('statusMessage').classList.remove('show');
     }
 
-    // ── Form visibility ───────────────────────────────────────
-    function hideAllForms() {
-      ['form-manual', 'form-masterkey', 'form-temppass'].forEach(id => {
-        document.getElementById(id).classList.remove('active');
-      });
-      document.getElementById('auth-methods').style.display = 'grid';
-      clearStatus();
+    /* ─────────────────────────────────────────────────────────────
+       resetForm
+    ───────────────────────────────────────────────────────────── */
+    function resetForm() {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        hideStatus();
     }
 
-    function showManualForm() {
-      document.getElementById('auth-methods').style.display = 'none';
-      ['form-masterkey', 'form-temppass'].forEach(id => document.getElementById(id).classList.remove('active'));
-      document.getElementById('form-manual').classList.add('active');
-      document.getElementById('username').focus();
-      clearStatus();
-    }
+    /* ─────────────────────────────────────────────────────────────
+       transition — the core animation sequence
 
-    function showMasterKeyForm() {
-      document.getElementById('auth-methods').style.display = 'none';
-      ['form-manual', 'form-temppass'].forEach(id => document.getElementById(id).classList.remove('active'));
-      document.getElementById('form-masterkey').classList.add('active');
-      document.getElementById('mk-username').focus();
-      clearStatus();
-    }
+       GRANTED / DENIED shared flow:
+         1. Fade form-groups OUT          (0.6 s)  ← form disappears
+         2. Fade header OUT               (0.6 s)  ← icon+label disappear
+         3. Swap visuals while invisible
+         4. Fade header back IN           (0.6 s)  ← new icon+label appear
+            form-groups stay at opacity 0
+         5. Hold result screen            (5 s)
+         6a. Granted → redirect
+         6b. Denied  → fade header out, reset everything, fade all back in
+    ───────────────────────────────────────────────────────────── */
+    async function transition(outcome) {
+        const FADE = 600;
+        const HOLD = 5000;
 
-    // ── Init: fetch available methods ─────────────────────────
-    async function init() {
-      try {
-        const res = await fetch(API + '/auth/methods', { credentials: 'include' });
-        if (!res.ok) return;
-        const data = await res.json();
-        updateMethodAvailability(data.methods || []);
-      } catch (_) {
-        // Silently fail – manual is always available
-      }
-      checkRomaStatus();
-    }
+        lockIcon();
 
-    function updateMethodAvailability(methods) {
-      const biometricAvail = methods.some(m => m.type === 'biometric' && m.available);
-      const autofillAvail  = methods.some(m => m.type === 'autofill' && m.available);
+        /* 1 – form fades out */
+        await fadeForm(0, FADE);
 
-      const cardBio  = document.getElementById('card-biometric');
-      const cardAuto = document.getElementById('card-autofill');
+        /* 2 – header fades out */
+        await fadeHeader(0, FADE);
 
-      if (biometricAvail) cardBio.classList.remove('disabled');
-      if (autofillAvail)  cardAuto.classList.remove('disabled');
-    }
-
-    // ── ROMA status ───────────────────────────────────────────
-    async function checkRomaStatus() {
-      try {
-        const res = await fetch(API + '/security/roma', { credentials: 'include' });
-        const data = await res.json();
-        const dot   = document.getElementById('roma-dot');
-        const label = document.getElementById('roma-label');
-
-        if (data.trust_state === 'VERIFIED') {
-          dot.className = 'roma-dot';
-          label.textContent = 'Roma \u2022 Portal protected \u2022 Monitor active';
-        } else if (data.trust_state === 'BLOCKED') {
-          dot.className = 'roma-dot blocked';
-          label.textContent = 'Roma \u2022 Blocked \u2022 Too many failures';
+        /* 3 – swap visuals while everything is invisible */
+        if (outcome === 'granted') {
+            setStateVisuals('Access Granted', IMG.granted);
         } else {
-          dot.className = 'roma-dot unverified';
-          label.textContent = 'Roma \u2022 Unverified';
+            setStateVisuals('Access Denied', IMG.denied);
         }
-      } catch (_) {
-        document.getElementById('roma-label').textContent = 'Roma \u2022 Offline';
-      }
-    }
 
-    // ── Biometric auth ────────────────────────────────────────
-    async function attemptBiometric() {
-      if (document.getElementById('card-biometric').classList.contains('disabled')) return;
-      showStatus('info', '\uD83D\uDC46 Touch sensor to authenticate\u2026');
-      try {
-        const res = await fetch(API + '/auth/biometric', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ app: 'truai' })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showStatus('success', '\u2705 Biometric verified! Redirecting\u2026');
-          setTimeout(() => { window.location.href = '/TruAi/'; }, 1000);
+        /* 4 – only the header fades back in; form stays hidden */
+        await fadeHeader(1, FADE);
+
+        /* 5 – hold */
+        await new Promise(function (r) { setTimeout(r, HOLD); });
+
+        /* 6 – act */
+        if (outcome === 'granted') {
+            window.location.href = DASHBOARD_URL;
         } else {
-          showStatus('error', data.error || 'Biometric authentication failed');
+            /* Fade header out again */
+            await fadeHeader(0, FADE);
+
+            /* Reset visuals + form */
+            setStateVisuals('Access Restricted', IMG.restricted);
+            resetForm();
+
+            /* Fade everything back in together */
+            await fadeAll(1, FADE);
+
+            unlockIcon();
         }
-      } catch (err) {
-        showStatus('error', 'Biometric unavailable. Please use password login.');
-      }
     }
 
-    // ── Auto-fill auth ────────────────────────────────────────
-    async function attemptAutoFill() {
-      if (document.getElementById('card-autofill').classList.contains('disabled')) return;
-      showStatus('info', '\uD83D\uDD11 Accessing keychain\u2026');
-      try {
-        const res = await fetch(API + '/auth/autofill', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ app: 'truai' })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showStatus('success', '\u2705 Authenticated via keychain! Redirecting\u2026');
-          setTimeout(() => { window.location.href = '/TruAi/'; }, 1000);
+    /* ─────────────────────────────────────────────────────────────
+       attemptLogin — DEV stub or real fetch, never throws
+    ───────────────────────────────────────────────────────────── */
+    async function attemptLogin(username, password) {
+        if (typeof DEV_MODE !== 'undefined' && DEV_MODE) {
+            await new Promise(function (r) { setTimeout(r, 800); });
+            return { success: (username === DEV_USER && password === DEV_PASS) };
+        }
+
+        try {
+            const response = await fetch('/TruAi/api/v1/auth/login', {
+                method      : 'POST',
+                credentials : 'include',
+                headers     : { 'Content-Type': 'application/json' },
+                body        : JSON.stringify({ username, password }),
+            });
+            if (!response.ok) return { success: false };
+            return await response.json();
+        } catch (err) {
+            console.warn('Network error during login:', err.message);
+            return { success: false };
+        }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       handleSubmit — shared by icon click AND Enter key
+    ───────────────────────────────────────────────────────────── */
+    async function handleSubmit() {
+        if (statusIcon.classList.contains('locked')) return;
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            showStatus('error', 'Please enter your username and password.');
+            return;
+        }
+
+        lockIcon();
+        showStatus('info', 'Verifying credentials…');
+
+        const result = await attemptLogin(username, password);
+        hideStatus();
+
+        if (result.success) {
+            await transition('granted');
         } else {
-          showStatus('error', data.error || 'Auto-fill authentication failed');
+            await transition('denied');
         }
-      } catch (err) {
-        showStatus('error', 'Auto-fill unavailable. Please use password login.');
-      }
     }
 
-    // ── Manual login ──────────────────────────────────────────
-    async function submitManualLogin(event) {
-      event.preventDefault();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      const btn = document.getElementById('btn-login');
+    /* ── Icon click triggers submit ── */
+    statusIcon.addEventListener('click', handleSubmit);
 
-      if (!username || !password) {
-        showStatus('error', 'Username and password are required.');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Signing in\u2026';
-      clearStatus();
-
-      try {
-        const csrfToken = await getCSRFToken();
-        const res = await fetch(API + '/auth/login', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
-          },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          showStatus('success', '\u2705 Login successful! Redirecting\u2026');
-          setTimeout(() => { window.location.href = '/TruAi/'; }, 800);
-        } else if (res.status === 429) {
-          showStatus('error', data.error || 'Too many attempts. Please wait before trying again.');
-        } else {
-          showStatus('error', data.error || 'Invalid username or password.');
-        }
-      } catch (err) {
-        showStatus('error', 'Connection error. Please try again.');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Sign In';
-      }
-    }
-
-    // ── Master key recovery ───────────────────────────────────
-    async function submitMasterKey(event) {
-      event.preventDefault();
-      const username  = document.getElementById('mk-username').value.trim();
-      const masterKey = document.getElementById('master-key').value;
-      const btn = document.getElementById('btn-masterkey');
-
-      if (!username || !masterKey) {
-        showStatus('error', 'Username and master key are required.');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Verifying\u2026';
-      clearStatus();
-      showStatus('info', '\uD83D\uDD10 Verifying master key with ROMA\u2026');
-
-      try {
-        const res = await fetch(API + '/auth/masterkey', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, master_key: masterKey })
-        });
-
-        const data = await res.json();
-
-        if (data.success && data.temporary_password) {
-          displayTempPassword(data.temporary_password, data.expires_at);
-        } else if (res.status === 429) {
-          showStatus('error', data.error || 'Too many recovery attempts. Wait 24 hours.');
-        } else {
-          showStatus('error', data.error || 'Invalid master key or username.');
-        }
-      } catch (err) {
-        showStatus('error', 'Connection error. Please try again.');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Recover Access';
-      }
-    }
-
-    function displayTempPassword(tempPass, expiresAt) {
-      document.getElementById('form-masterkey').classList.remove('active');
-      document.getElementById('form-temppass').classList.add('active');
-      document.getElementById('temp-password').value = tempPass;
-
-      const secondsLeft = expiresAt
-        ? Math.max(0, Math.floor((new Date(expiresAt) - Date.now()) / 1000))
-        : 600;
-      startCountdown(secondsLeft);
-    }
-
-    function startCountdown(seconds) {
-      if (countdownTimer) clearInterval(countdownTimer);
-      const display = document.getElementById('countdown');
-      let remaining = seconds;
-
-      const tick = () => {
-        const m = Math.floor(remaining / 60);
-        const s = remaining % 60;
-        display.textContent = m + ':' + String(s).padStart(2, '0');
-        if (remaining <= 0) {
-          clearInterval(countdownTimer);
-          showStatus('error', 'Temporary password expired. Please start recovery again.');
-          setTimeout(() => hideAllForms(), 3000);
-        }
-        remaining--;
-      };
-      tick();
-      countdownTimer = setInterval(tick, 1000);
-    }
-
-    function copyTempPassword() {
-      const input = document.getElementById('temp-password');
-      input.select();
-      navigator.clipboard.writeText(input.value).catch(() => {
-        document.execCommand('copy');
-      });
-      showStatus('info', '\uD83D\uDCCB Copied to clipboard!');
-    }
-
-    function redirectToLogin() {
-      if (countdownTimer) clearInterval(countdownTimer);
-      showManualForm();
-    }
-
-    // ── CSRF token helper ─────────────────────────────────────
-    let _csrfToken = null;
-    async function getCSRFToken() {
-      if (_csrfToken) return _csrfToken;
-      try {
-        const res = await fetch(API + '/auth/csrf-token', { credentials: 'include' });
-        const data = await res.json();
-        _csrfToken = data.csrf_token || '';
-      } catch (_) {
-        _csrfToken = '';
-      }
-      return _csrfToken;
-    }
-
-    // ── Keyboard accessibility ────────────────────────────────
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const target = e.target;
-        if (target.classList.contains('auth-card') && !target.classList.contains('disabled')) {
-          target.click();
-        }
-      }
+    /* ── Enter key in either field also triggers submit ── */
+    document.getElementById('verifyForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        handleSubmit();
     });
 
-    // ── Boot ──────────────────────────────────────────────────
-    init();
-  </script>
+    /* ─────────────────────────────────────────────────────────────
+       ROMA status check
+    ───────────────────────────────────────────────────────────── */
+    async function checkRomaStatus() {
+        try {
+            const response  = await fetch('/TruAi/api/v1/security/roma');
+            const data      = await response.json();
+            const indicator = document.getElementById('romaIndicator');
+
+            if (data.roma && data.portal_protected && data.monitor === 'active') {
+                indicator.textContent = 'ROMA • Portal Protected • Monitor Active';
+                indicator.classList.add('confirmed');
+            } else if (data.trust_state === 'UNVERIFIED') {
+                indicator.textContent = 'ROMA • Unverified';
+            }
+        } catch (_) { /* silent */ }
+    }
+
+    window.addEventListener('DOMContentLoaded', checkRomaStatus);
+
+})();
+</script>
+
 </body>
 </html>
