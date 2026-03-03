@@ -1267,17 +1267,36 @@
 
     /* ── Responsive ── */
     @media (max-width: 1024px) {
-      .panels-container { flex-direction: column; align-items: stretch; height: auto; }
+      .panels-container { flex-direction: column; align-items: stretch; height: auto; padding: 0 40px 16px; }
       .operations-panel, .center-panel, .chat-panel { flex: 1; width: 100%; max-width: 100%; max-height: none; height: auto; }
-      .main-area { padding: 0 16px 12px; }
+      .main-area { padding: 0 40px 12px; max-height: none; }
+      .center-panel { min-width: 0; }
     }
 
     @media (max-width: 900px) {
       .content-extended, .code-review-extended { display: none; }
     }
 
+    @media (max-width: 768px) {
+      .main-area { padding: 0 5% 12px; }
+      .panels-container { padding: 0 5% 16px; }
+      .header-actions { left: 5%; right: 5%; }
+      .chat-panel { width: 100%; height: auto; min-height: auto; max-height: none; }
+      .operations-panel { min-height: auto; max-height: none; }
+    }
+
     @media (max-width: 600px) {
       .header-actions { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .main-area { padding: 0 16px 12px; }
+      .panels-container { padding: 0 16px 16px; }
+      .ai-response-area { min-height: 30vh; }
+      .toolbar-btn { min-height: 44px; padding: 6px 10px; }
+      .chat-send-btn { min-height: 44px; min-width: 44px; }
+      .icon-row { flex-wrap: wrap; }
+      .text-entry { min-height: 60px; }
     }
   </style>
 </head>
