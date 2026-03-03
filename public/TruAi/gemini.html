@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gemini.ai — Login &amp; Dashboard</title>
@@ -411,34 +410,16 @@
     .insight-card { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 8px; padding: 14px; margin-bottom: 12px; }
     .insight-card .insight-icon { flex-shrink: 0; width: 92px; height: 92px; object-fit: contain; }
     .insight-card .insight-body { width: 100%; text-align: center; margin-top: 8px; }
-    .insight-card.priority-high {
-      border-left: 3px solid var(--blue);
-      border-right: 3px solid var(--blue);
-    }
-    .insight-card.priority-medium {
-      border-left: 3px solid var(--blue);
-      border-right: 3px solid var(--blue);
-    }
-    .insight-card.priority-low {
-      border-left: 3px solid var(--blue);
-      border-right: 3px solid var(--blue);
-    }
+    .insight-card.priority-high { border-left: 3px solid var(--blue); border-right: 3px solid var(--blue); }
+    .insight-card.priority-medium { border-left: 3px solid var(--blue); border-right: 3px solid var(--blue); }
+    .insight-card.priority-low { border-left: 3px solid var(--blue); border-right: 3px solid var(--blue); }
     .insight-card h3 { font-size: 14px; font-weight: 600; color: #e8e9eb; margin: 0 0 6px 0; }
     .insight-card p { font-size: 12px; color: #A0A0A0; margin: 0 0 10px 0; line-height: 1.5; }
     .alert-item { display: flex; flex-direction: column; align-items: center; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; cursor: pointer; transition: background 0.2s; }
     .alert-item:hover { background: rgba(255,255,255,0.06); }
-    .alert-item.severity-high {
-      border-left: 3px solid var(--blue);
-      border-right: 3px solid var(--blue);
-    }
-    .alert-item.severity-low {
-      border-left: 3px solid var(--blue);
-      border-right: 3px solid var(--blue);
-    }
-    .alert-item.severity-medium {
-      border-left: 3px solid var(--blue);
-      border-right: 3px solid var(--blue);
-    }
+    .alert-item.severity-high { border-left: 3px solid var(--blue); border-right: 3px solid var(--blue); }
+    .alert-item.severity-low { border-left: 3px solid var(--blue); border-right: 3px solid var(--blue); }
+    .alert-item.severity-medium { border-left: 3px solid var(--blue); border-right: 3px solid var(--blue); }
     .alert-item .alert-icon { flex-shrink: 0; width: 92px; height: 92px; object-fit: contain; }
     .alert-item .alert-body { width: 100%; text-align: center; margin-top: 8px; }
     .alert-item .alert-msg { font-size: 13px; color: #e8e9eb; }
@@ -522,7 +503,7 @@
   <div id="login-view">
     <div class="login-container">
       <div class="logo">
-        <img src="/TruAi/assets/Gemini.ai_Logo-e2c5fbfe-a528-4613-8631-3d094ab89f8e.png" alt="Gemini.ai">
+        <img src="/TruAi/assets/images/Gemini.ai_Logo-e2c5fbfe-a528-4613-8631-3d094ab89f8e.png" alt="Gemini.ai">
         <h1>Gemini.ai</h1>
         <p>AI-Powered Server Management Portal</p>
       </div>
@@ -536,11 +517,11 @@
       <form id="loginForm">
         <div class="form-group">
           <label for="username">Portal Username</label>
-          <input id="username" name="username" type="text" placeholder="Username" autocomplete="username" required>
+          <input id="username" name="username" type="text" placeholder="Username" autocomplete="username" required="">
         </div>
         <div class="form-group">
           <label for="password">Portal Password</label>
-          <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+          <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required="">
         </div>
 
         <div class="footer-row">
@@ -571,7 +552,7 @@
         acting within the scope of their duties.
       </p>
       <p>
-        By selecting <strong>“I Understand and Accept”</strong>, you acknowledge that this system is
+        By selecting <strong>"I Understand and Accept"</strong>, you acknowledge that this system is
         protected under <strong>Florida State Law</strong> and <strong>United States Federal Law</strong>,
         and that <strong>unauthorized access, use, or disclosure is strictly prohibited</strong> and may
         result in civil and criminal penalties.
@@ -725,9 +706,9 @@
               <div class="chat-msg-wrap">
                 <div class="chat-msg ai"><span>Hello. How can Gemini.ai assist you today?</span></div>
                 <div class="chat-feedback">
-                  <button type="button" class="chat-action-btn chat-copy" title="Copy" aria-label="Copy"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
-                  <button type="button" class="chat-action-btn chat-send" title="Send to input" aria-label="Send to input"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
-                  <button type="button" class="chat-action-btn chat-share" title="Share" aria-label="Share"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92 0-.22-.03-.44-.08-.65l7.12-4.16c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3z"/></svg></button>
+                  <button type="button" class="chat-action-btn chat-copy" title="Copy" aria-label="Copy"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg></button>
+                  <button type="button" class="chat-action-btn chat-send" title="Send to input" aria-label="Send to input"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></button>
+                  <button type="button" class="chat-action-btn chat-share" title="Share" aria-label="Share"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92 0-.22-.03-.44-.08-.65l7.12-4.16c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3z"></path></svg></button>
                 </div>
               </div>
             </div>
@@ -1025,8 +1006,35 @@
         return;
       }
       var action = btn.dataset.action || btn.textContent;
-      reportOutcome(action, 'success');
-      alert('[Demo] ' + action + ' would execute. Outcome reported to TruAi Core.');
+
+      // Disable button and show loading
+      btn.disabled = true;
+      var originalText = btn.textContent;
+      btn.textContent = 'Processing...';
+
+      // Execute the automation action
+      fetch(getApiBase() + '/automation/execute', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include',
+        body: JSON.stringify({action: action, parameters: {}})
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          reportOutcome(action, 'success');
+          alert('✓ ' + data.message);
+        } else {
+          alert('✗ Error: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(err => {
+        alert('✗ Network error: ' + err.message);
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      });
     });
 
     function openGeminiChangePasswordModal() {
@@ -1156,7 +1164,6 @@
       var msg = item.querySelector('.alert-msg')?.textContent || '';
       if (confirm('Alert: ' + msg + '\n\nRun "' + action + '" for remediation?')) {
         reportOutcome(action, 'success');
-        alert('[Demo] ' + action + ' would execute. Outcome reported to TruAi Core.');
       }
     });
 
@@ -1201,37 +1208,37 @@
       return s;
     }
     function appendAiMessage(reply, msgId) {
-        msgId = msgId || 'msg-' + Date.now();
-        var wrap = document.createElement('div');
-        wrap.className = 'chat-msg-wrap';
-        var d = document.createElement('div');
-        d.className = 'chat-msg ai';
-        d.innerHTML = '<span class="md-content">' + mdToHtml(reply) + '</span>';
-        var feedback = document.createElement('div');
-        feedback.className = 'chat-feedback';
-        var copyIcon = '<svg fill="currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
-        var sendIcon = '<svg fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
-        var shareIcon = '<svg fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92 0-.22-.03-.44-.08-.65l7.12-4.16c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3z"/></svg>';
-        feedback.innerHTML = '<button type="button" class="chat-action-btn chat-copy" title="Copy" aria-label="Copy">' + copyIcon + '</button><button type="button" class="chat-action-btn chat-send" title="Send to input" aria-label="Send to input">' + sendIcon + '</button><button type="button" class="chat-action-btn chat-share" title="Share" aria-label="Share">' + shareIcon + '</button><button type="button" class="feedback-up" data-msg-id="' + msgId + '" title="Helpful">👍</button><button type="button" class="feedback-down" data-msg-id="' + msgId + '" title="Not helpful">👎</button>';
-        wrap.appendChild(d);
-        wrap.appendChild(feedback);
-        chatHistory.appendChild(wrap);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-        feedback.querySelectorAll('.feedback-up, .feedback-down').forEach(function(b) {
-          b.addEventListener('click', function() {
-            if (this.classList.contains('feedback-done')) return;
-            var fid = this.dataset.msgId;
-            var fb = this.classList.contains('feedback-up') ? 'thumbs_up' : 'thumbs_down';
-            fetch(getApiBase() + '/gemini/chat/feedback', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ message_id: fid, feedback: fb })
-            }).catch(function() {});
-            feedback.querySelectorAll('.feedback-up, .feedback-down').forEach(function(x) { x.classList.add('feedback-done'); });
-          });
+      msgId = msgId || 'msg-' + Date.now();
+      var wrap = document.createElement('div');
+      wrap.className = 'chat-msg-wrap';
+      var d = document.createElement('div');
+      d.className = 'chat-msg ai';
+      d.innerHTML = '<span class="md-content">' + mdToHtml(reply) + '</span>';
+      var feedback = document.createElement('div');
+      feedback.className = 'chat-feedback';
+      var copyIcon = '<svg fill="currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+      var sendIcon = '<svg fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
+      var shareIcon = '<svg fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92 0-.22-.03-.44-.08-.65l7.12-4.16c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3z"/></svg>';
+      feedback.innerHTML = '<button type="button" class="chat-action-btn chat-copy" title="Copy" aria-label="Copy">' + copyIcon + '</button><button type="button" class="chat-action-btn chat-send" title="Send to input" aria-label="Send to input">' + sendIcon + '</button><button type="button" class="chat-action-btn chat-share" title="Share" aria-label="Share">' + shareIcon + '</button><button type="button" class="feedback-up" data-msg-id="' + msgId + '" title="Helpful">👍</button><button type="button" class="feedback-down" data-msg-id="' + msgId + '" title="Not helpful">👎</button>';
+      wrap.appendChild(d);
+      wrap.appendChild(feedback);
+      chatHistory.appendChild(wrap);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+      feedback.querySelectorAll('.feedback-up, .feedback-down').forEach(function(b) {
+        b.addEventListener('click', function() {
+          if (this.classList.contains('feedback-done')) return;
+          var fid = this.dataset.msgId;
+          var fb = this.classList.contains('feedback-up') ? 'thumbs_up' : 'thumbs_down';
+          fetch(getApiBase() + '/gemini/chat/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ message_id: fid, feedback: fb })
+          }).catch(function() {});
+          feedback.querySelectorAll('.feedback-up, .feedback-down').forEach(function(x) { x.classList.add('feedback-done'); });
         });
-      }
+      });
+    }
     function sendChat() {
       const text = (chatInput && chatInput.value.trim()) || '';
       if (!text) return;
@@ -1292,7 +1299,7 @@
         items.forEach(function(el) { el.remove(); });
         var msgs = conv.messages || [];
         if (msgs.length === 0) {
-          chatHistory.innerHTML = '<div class="chat-msg-wrap"><div class="chat-msg ai"><span>Hello. How can Gemini.ai assist you today?</span></div><div class="chat-feedback"><button type="button" class="chat-action-btn chat-copy" title="Copy"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button><button type="button" class="chat-action-btn chat-send" title="Send to input"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button><button type="button" class="chat-action-btn chat-share" title="Share"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92 0-.22-.03-.44-.08-.65l7.12-4.16c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3z"/></svg></button></div></div>';
+          chatHistory.innerHTML = '<div class="chat-msg-wrap"><div class="chat-msg ai"><span>Hello. How can Gemini.ai assist you today?</span></div></div>';
         } else {
           msgs.forEach(function(m) {
             renderChatMessage(m.role || 'assistant', m.content);
@@ -1330,7 +1337,7 @@
               if (String(id) === String(geminiCurrentConversationId)) {
                 geminiCurrentConversationId = null;
                 try { sessionStorage.removeItem(GEMINI_CONV_STORAGE_KEY); } catch(x) {}
-                chatHistory.innerHTML = '<div class="chat-msg-wrap"><div class="chat-msg ai"><span>Hello. How can Gemini.ai assist you today?</span></div><div class="chat-feedback"><button type="button" class="chat-action-btn chat-copy" title="Copy"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button><button type="button" class="chat-action-btn chat-send" title="Send to input"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button><button type="button" class="chat-action-btn chat-share" title="Share"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92 0-.22-.03-.44-.08-.65l7.12-4.16c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3z"/></svg></button></div></div>';
+                chatHistory.innerHTML = '<div class="chat-msg-wrap"><div class="chat-msg ai"><span>Hello. How can Gemini.ai assist you today?</span></div></div>';
               }
               row.remove();
               if (chatPastList.querySelectorAll('.chat-past-item').length === 0) {
@@ -1360,9 +1367,7 @@
     if (chatNewChat) chatNewChat.addEventListener('click', function() {
       geminiCurrentConversationId = null;
       try { sessionStorage.removeItem(GEMINI_CONV_STORAGE_KEY); } catch(e) {}
-      var items = chatHistory.querySelectorAll('.chat-msg-wrap, .chat-msg.user');
-      items.forEach(function(el) { el.remove(); });
-      chatHistory.innerHTML = '<div class="chat-msg-wrap"><div class="chat-msg ai"><span>Hello. How can Gemini.ai assist you today?</span></div><div class="chat-feedback"><button type="button" class="chat-action-btn chat-copy" title="Copy"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button><button type="button" class="chat-action-btn chat-send" title="Send to input"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button><button type="button" class="chat-action-btn chat-share" title="Share"><svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92 0-.22-.03-.44-.08-.65l7.12-4.16c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3z"/></svg></button></div></div>';
+      chatHistory.innerHTML = '<div class="chat-msg-wrap"><div class="chat-msg ai"><span>Hello. How can Gemini.ai assist you today?</span></div></div>';
       loadConversationsList();
     });
     if (chatPastToggle && chatPastList) chatPastToggle.addEventListener('click', function() {
@@ -1382,5 +1387,4 @@
       if (dashboardView.style.display !== 'none') initChatHistory();
     }
   </script>
-</body>
-</html>
+</body></html>
