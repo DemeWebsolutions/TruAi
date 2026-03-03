@@ -1,822 +1,651 @@
+
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Phantom.ai — Login &amp; Dashboard</title>
-  <script>
-    window.TRUAI_CONFIG = {
-      API_BASE: (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi'),
-      CSRF_TOKEN: '',
-      IS_AUTHENTICATED: false,
-      USERNAME: ''
-    };
-  </script>
-  <script src="/TruAi/assets/js/api.js"></script>
-  <style>
-    /* ========== LOGIN ========== */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      color: #B3B3B3;
-      min-height: 100vh;
-      margin: 0;
-    }
-
-    #login-view {
-      background: #292929;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .login-container {
-      background: rgba(42, 42, 42, 0.95);
-      border-radius: 12px;
-      padding: 40px;
-      max-width: 420px;
-      width: 100%;
-      border: 1px solid #4A4A4A;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .logo img {
-      max-width: 300px;
-      height: auto;
-    }
-
-    .logo h1 {
-      font-size: 24px;
-      font-weight: 600;
-      color: #A0A0A0;
-      letter-spacing: 0.02em;
-    }
-
-    .logo p {
-      color: #696969;
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    .legal-notice {
-      background: rgba(0, 0, 0, 0.3);
-      border-left: 2px solid #00A3FF;
-      border-right: 2px solid #00A3FF;
-      padding: 12px 14px;
-      margin-bottom: 22px;
-      border-radius: 8px;
-      font-size: 11px;
-      line-height: 1.5;
-      color: #A0A0A0;
-    }
-
-    .legal-notice strong { color: #FFFFFF; }
-
-    .form-group { margin-bottom: 18px; }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 600;
-      color: #A0A0A0;
-      font-size: 13px;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 11px 12px;
-      background: #1A1A1A;
-      border: 1px solid #4A4A4A;
-      border-radius: 8px;
-      color: #FFFFFF;
-      font-size: 14px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: #00A3FF;
-      box-shadow: 0 0 0 1px rgba(0, 163, 255, 0.4);
-    }
-
-    .form-group input::placeholder {
-      color: #696969;
-    }
-
-    .footer-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 18px;
-      font-size: 12px;
-      color: #696969;
-    }
-
-    .footer-row a {
-      color: #00A3FF;
-      text-decoration: none;
-    }
-
-    .footer-row a:hover { color: #FFFFFF; text-decoration: underline; }
-
-    .btn-primary {
-      width: 100%;
-      padding: 12px 0;
-      border-radius: 8px;
-      border: none;
-      background: #00A3FF;
-      color: #FFFFFF;
-      font-weight: 600;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .btn-primary:hover {
-      background: #0088DD;
-      transform: translateY(-1px);
-    }
-
-    .btn-primary:active { transform: translateY(0); }
-
-    .copyright {
-      margin-top: 20px;
-      font-size: 11px;
-      color: #696969;
-      text-align: center;
-    }
-
-    .copyright a {
-      color: #00A3FF;
-      text-decoration: none;
-    }
-
-    .copyright a:hover { color: #FFFFFF; }
-
-    .roma-indicator {
-      position: fixed;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 11px;
-      color: rgba(255,255,255,0.5);
-      letter-spacing: 0.05em;
-      z-index: 100;
-    }
-    .roma-indicator.confirmed { color: rgba(255,255,255,0.75); }
-
-    /* Disclaimer view */
-    #disclaimer-view {
-      background: #292929;
-      min-height: 100vh;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      color: #e5e7eb;
-    }
-
-    .disclaimer-card {
-      max-width: 640px;
-      width: 100%;
-      background: rgba(15, 17, 20, 0.96);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-      padding: 28px 28px 22px;
-    }
-
-    .disclaimer-card h2 {
-      margin: 0 0 12px 0;
-      font-size: 20px;
-      font-weight: 600;
-      color: #fbbf24;
-    }
-
-    .disclaimer-card p {
-      font-size: 13px;
-      line-height: 1.6;
-      margin: 6px 0;
-      color: #d1d5db;
-    }
-
-    .disclaimer-card p strong {
-      color: #f9fafb;
-    }
-
-    .disclaimer-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .disclaimer-actions button {
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-    }
-
-    .disclaimer-actions .btn-secondary {
-      background: #4b5563;
-      color: #e5e7eb;
-    }
-
-    .disclaimer-actions .btn-secondary:hover {
-      background: #374151;
-    }
-
-    .disclaimer-actions .btn-primary-continue {
-      background: #00A3FF;
-      color: #ffffff;
-    }
-
-    .disclaimer-actions .btn-primary-continue:hover {
-      background: #0088DD;
-    }
-
-    /* Dashboard */
-    #dashboard-view {
-      display: none;
-      min-height: 100vh;
-      color: #ffffff;
-      background:
-        radial-gradient(1200px 600px at 50% 100%, rgba(0,0,0,0.55), rgba(0,0,0,0.85)),
-        #1a1a1a;
-    }
-
-    #dashboard-view.active {
-      display: block;
-    }
-
-    :root {
-      --blue: #1ea7ff;
-      --white: #ffffff;
-      --glass-bg: rgba(15,17,20,0.6);
-      --glass-border: rgba(255,255,255,0.12);
-      --shadow: 0 10px 25px rgba(0,0,0,0.35);
-    }
-
-    .overlay {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(700px 350px at 50% 0%, rgba(30,167,255,0.08), transparent),
-        radial-gradient(1000px 500px at 10% 80%, rgba(255,255,255,0.05), transparent);
-      mix-blend-mode: screen;
-    }
-
-    #dashboard-view a { color: var(--blue); text-decoration: none; }
-    #dashboard-view a:hover { text-decoration: underline; }
-
-    #dashboard-view button, #dashboard-view .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 12px 18px;
-      border-radius: 8px;
-      border: 1px solid var(--blue);
-      background: linear-gradient(180deg, rgba(30,167,255,0.25), rgba(30,167,255,0.15));
-      color: var(--white);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: var(--shadow);
-      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
-    }
-
-    #dashboard-view button:hover, #dashboard-view .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 30px rgba(30,167,255,0.3);
-      background: linear-gradient(180deg, rgba(30,167,255,0.35), rgba(30,167,255,0.22));
-    }
-
-    #dashboard-view .btn-outline {
-      background: transparent;
-      border-color: var(--white);
-      color: var(--white);
-    }
-
-    .center {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }
-
-    .shell {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 40px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      backdrop-filter: saturate(125%) blur(10px);
-      -webkit-backdrop-filter: saturate(125%) blur(10px);
-      box-shadow: var(--shadow);
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      margin-bottom: 24px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand .logo-img {
-      height: 80px;
-      object-fit: contain;
-      padding-right: 5px;
-      padding-left: 5px;
-      width: 90px;
-    }
-
-    .brand .logo-text {
-      font-size: 28px;
-      font-weight: 600;
-      color: #A0A0A0;
-      letter-spacing: 0.02em;
-    }
-
-    .brand h1 { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: 0.02em; color: #A0A0A0; }
-
-    .muted { color: #696969; font-size: 12px; }
-
-    .nav a {
-      padding: 11px 14px;
-      border-radius: 8px;
-      border: 1px solid transparent;
-      font-size: 13px;
-    }
-
-    .nav a:hover {
-      border-color: var(--blue);
-      background: linear-gradient(180deg, rgba(30,167,255,0.18), rgba(30,167,255,0.06));
-    }
-    .nav-tab.active {
-      border-color: var(--blue);
-      background: linear-gradient(180deg, rgba(30,167,255,0.18), rgba(30,167,255,0.06));
-    }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-    .chat-history { max-height: 320px; overflow-y: auto; margin-bottom: 12px; }
-    .chat-msg { margin-bottom: 10px; font-size: 13px; line-height: 1.5; }
-    .chat-msg.user { text-align: right; }
-    .chat-msg.user span { display: inline-block; background: rgba(30,167,255,0.2); border-radius: 12px; padding: 8px 12px; }
-    .chat-msg.ai span { display: inline-block; background: rgba(255,255,255,0.06); border-radius: 12px; padding: 8px 12px; border: 1px solid var(--glass-border); }
-    .chat-input-row { display: flex; gap: 8px; margin-top: 8px; }
-    .chat-input-row textarea { flex: 1; min-height: 44px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.06); color: #fff; font-size: 13px; resize: none; }
-    .chat-input-row button { padding: 10px 18px; border-radius: 8px; border: 1px solid var(--blue); background: linear-gradient(180deg, rgba(30,167,255,0.3), rgba(30,167,255,0.15)); color: #fff; font-weight: 600; cursor: pointer; }
-
-    .grid {
-      display: grid;
-      gap: 18px;
-      grid-template-columns: repeat(12, 1fr);
-    }
-
-    .card-sm {
-      grid-column: span 3;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      padding: 18px;
-    }
-
-    .card-lg {
-      grid-column: span 12;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      padding: 22px;
-    }
-
-    .stat { font-size: 13px; font-weight: 600; color: #A0A0A0; margin-bottom: 6px; }
-
-    .value { font-size: 24px; font-weight: 600; color: var(--white); }
-
-    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
-
-    .footer {
-      margin-top: 20px;
-      color: #696969;
-      font-size: 11px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .footer .dw {
-      color: var(--blue);
-      font-weight: 700;
-      border-bottom: 1px solid var(--blue);
-    }
-
-    @media (max-width: 900px) {
-      .card-sm { grid-column: span 6; }
-    }
-
-    @media (max-width: 600px) {
-      .card-sm { grid-column: span 12; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * { transition: none !important; }
-    }
-  </style>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom.ai - Login Portal</title>
+    <script>
+      window.TRUAI_CONFIG = {
+        API_BASE: (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi'),
+        CSRF_TOKEN: '',
+        IS_AUTHENTICATED: false,
+        USERNAME: ''
+      };
+    </script>
+    <script src="/TruAi/assets/js/api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+                overflow: hidden;
+                position: relative;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+                overflow-x: auto;
+                background-color: #0b0d11;
+                background-repeat: no-repeat;
+                background-position: center;
+        }
+        
+        .background {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            pointer-events: none;
+        }
+        
+        .logo {
+            position: absolute;
+            height: 122px;
+            left: 18px;
+            top: 15px;
+            width: 152px;
+            z-index: 20;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .main-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 3rem;
+            width: 100%;
+            max-width: 28rem;
+            height: 892px;
+            padding-top: 0px;
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #676767;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .form-input {
+            width: 100%;
+            background-color: #f3f4f6;
+            border-radius: 9999px;
+            padding: 1rem 1rem 1rem 3rem;
+            font-size: 1rem;
+            color: #374151;
+            border: none;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            ring: 2px solid #d1d5db;
+            box-shadow: 0 0 0 2px #d1d5db;
+        }
+        
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .password-wrapper {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9ca3af;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+        
+        .password-toggle:hover {
+            color: #4b5563;
+        }
+        
+        .password-toggle svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            color: #4b5563;
+        }
+        
+        .remember-me input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        
+        .forgot-password {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+        
+        .forgot-password:hover {
+            color: #374151;
+        }
+        
+        .btn {
+            width: 100%;
+            border-radius: 9999px;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #676767;
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-primary:hover {
+            background-color: #616161;
+            transform: scale(1.02);
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .divider {
+            position: relative;
+            margin: 1.5rem 0;
+        }
+        
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #e5e7eb;
+        }
+        
+        .divider span {
+            position: relative;
+            display: inline-block;
+            padding: 0 1rem;
+            background: white;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+            transform: scale(1.02);
+        }
+        
+        .btn-secondary:active {
+            transform: scale(0.98);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: .85em;
+            color: #676767c7;
+        }
+        
+        .footer .copyright {
+            font-size: 1.1em;
+                font-weight: 500;
+                color: #676767;
+                margin-top: 8px;
+        }
+        
+        .legal-notice {
+            background: rgba(220, 38, 38, 0.1);
+            border-left: 4px solid #dc2626;
+            border-right: 4px solid #dc2626;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: .85em;
+            line-height: 1.5;
+            padding-bottom: 12px;
+            text-align: center;
+            color: #676767;
+            margin-bottom: 28px;
+            border-right-width: 4px;
+        }
+
+        /* Roma indicator — fixed bottom center, hidden on login card */
+        .roma-indicator {
+            position: fixed;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 0.05em;
+            z-index: 200;
+            pointer-events: none;
+        }
+        .roma-indicator.confirmed { color: rgba(255,255,255,0.85); }
+
+        /* Disclaimer overlay */
+        #disclaimer-view {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: rgba(11,13,17,0.92);
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            color: #e5e7eb;
+        }
+        #disclaimer-view.active { display: flex; }
+
+        .disclaimer-card {
+            max-width: 640px;
+            width: 100%;
+            background: rgba(15, 17, 20, 0.98);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            padding: 28px 28px 22px;
+        }
+
+        .disclaimer-card h2 {
+            margin: 0 0 12px 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #fbbf24;
+        }
+
+        .disclaimer-card p {
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 6px 0;
+            color: #d1d5db;
+        }
+
+        .disclaimer-card p strong { color: #f9fafb; }
+
+        .disclaimer-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .disclaimer-actions .disc-btn {
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            width: auto;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .disc-btn-secondary {
+            background: #4b5563;
+            color: #e5e7eb;
+            text-decoration: none;
+        }
+
+        .disc-btn-secondary:hover { background: #374151; }
+
+        .disc-btn-continue {
+            background: #676767;
+            color: #ffffff;
+        }
+
+        .disc-btn-continue:hover { background: #555555; }
+    </style>
 </head>
 <body>
-  <div id="login-view">
-    <div class="login-container">
-      <div class="logo">
-        <h1>Phantom.ai</h1>
-        <p>Web Project Management &amp; Execution Portal</p>
-      </div>
+    <!-- Background Image -->
+    <img src="/TruAi/assets/images/phantom-bg.png" alt="" class="background">
 
-      <div class="legal-notice">
-        <strong>PROPRIETARY SYSTEM</strong><br>
-        © 2013 – <script>document.write(new Date().getFullYear())</script> My Deme, LLC. All Rights Reserved.<br>
-        Unauthorized access or use is strictly prohibited and may result in civil and criminal penalties.
-      </div>
+    <!-- Logo -->
+    <div class="logo">
+        <img src="/TruAi/assets/images/phantom-logo.png" alt="Phantom.ai">
+    </div>
 
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="username">Portal Username</label>
-          <input id="username" name="username" type="text" placeholder="Username" autocomplete="username" required>
+    <!-- Roma Indicator -->
+    <div id="romaIndicator" class="roma-indicator">Roma • Checking…</div>
+
+    <!-- Main Login Container -->
+    <main class="main-container" id="login-view">
+        <div class="login-card">
+            <img src="/TruAi/assets/images/phantom-logo.png" alt="Phantom.ai" style="
+    width: 100%;
+    z-index: 20;
+    border-radius: 9999px;
+    padding: 1em 5em 1em 5em;
+"><br><h3 class="login-title" style="
+    margin-bottom: 28px;
+">Login Access Restricted</h3><form id="loginForm">
+                <!-- Username Input -->
+                <div class="form-group">
+                    <div class="legal-notice">
+            <strong>⚠️ PROPRIETARY SYSTEM</strong><br>
+            My Deme, LLC. © <script>document.write(new Date().getFullYear())</script> All Rights Reserved.<br>
+            Unauthorized access is strictly prohibited and may result in legal action.
+        </div><div class="input-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <input type="text" id="username" placeholder="Username" class="form-input" required="">
+                    </div>
+                </div>
+
+                <!-- Password Input -->
+                <div class="form-group">
+                    <div class="input-wrapper password-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        <input type="password" id="password" placeholder="Password" class="form-input" required="">
+                        <button type="button" class="password-toggle" id="togglePassword">
+                            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg id="eyeOffIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe">
+                        <span>Remember Me</span>
+                    </label>
+                    <button type="button" class="forgot-password" id="forgotPassword">
+                        Forgot Password?
+                    </button>
+                </div>
+
+                <!-- Log in Button -->
+                <button type="submit" class="btn btn-primary" style="
+    margin-bottom: unset;
+">
+                    Log in
+                </button>
+
+                <!-- Divider -->
+                <div class="divider">
+                    <span>Or</span>
+                </div>
+
+                <!-- Sign up Button -->
+                <button type="button" class="btn btn-secondary" id="signUpBtn">
+                    Sign up
+                </button>
+
+            <div class="footer">
+            <p>My Deme, LLC | Florida, United States</p>
+            <p class="copyright">My Deme, LLC. © <script>document.write(new Date().getFullYear())</script> All Rights Reserved.</p>
+            <p style="font-size: 10px; margin-top: 8px;">Protected under Florida State Law and United States Federal Law</p>
+        </div></form>
         </div>
-        <div class="form-group">
-          <label for="password">Portal Password</label>
-          <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+    </main>
+
+    <!-- Disclaimer (shown after successful login, before redirect/use) -->
+    <div id="disclaimer-view">
+      <div class="disclaimer-card" role="dialog" aria-labelledby="disclaimer-title" aria-modal="true">
+        <h2 id="disclaimer-title">⚠️ Proprietary System Notice</h2>
+        <p><strong>© 2013 – 2026 My Deme, LLC. All Rights Reserved.</strong></p>
+        <p>
+          This Phantom.ai system, including all software, data, configurations, and operational workflows,
+          is the exclusive property of My Deme, LLC. Access is permitted only for authorized personnel
+          acting within the scope of their duties.
+        </p>
+        <p>
+          By selecting <strong>"I Understand and Accept"</strong>, you acknowledge that this system is
+          protected under <strong>Florida State Law</strong> and <strong>United States Federal Law</strong>,
+          and that <strong>unauthorized access, use, or disclosure is strictly prohibited</strong> and may
+          result in civil and criminal penalties.
+        </p>
+        <p>
+          All access attempts may be monitored and logged for security and compliance purposes.
+        </p>
+        <div class="disclaimer-actions">
+          <a href="/TruAi" class="disc-btn disc-btn-secondary" style="text-decoration:none;">Return to TruAi</a>
+          <button type="button" id="disclaimerCancel" class="disc-btn disc-btn-secondary">Cancel / Return to Login</button>
+          <button type="button" id="disclaimerAccept" class="disc-btn disc-btn-continue">I Understand and Accept</button>
         </div>
-
-        <div class="footer-row">
-          <span>My Deme, LLC • Florida, USA</span>
-          <a href="#" onclick="alert('Password recovery would be implemented here.');return false;">Forgot password?</a>
-        </div>
-
-        <button type="submit" class="btn-primary">Sign in</button>
-      </form>
-
-      <div class="copyright">
-        <a href="/TruAi">Return to TruAi</a>
-        <span style="margin:0 8px">|</span>
-        <a href="https://demewebsolutions.com" target="_blank">DEMEWEBSOLUTIONS.COM</a> • WEB SOLUTIONS MADE SIMPLE
       </div>
     </div>
-    <div id="romaLogin" class="roma-indicator">Roma • Checking…</div>
-  </div>
 
-  <div id="disclaimer-view">
-    <div class="disclaimer-card" role="dialog" aria-labelledby="disclaimer-title" aria-modal="true">
-      <h2 id="disclaimer-title">⚠️ Proprietary System Notice</h2>
-      <p><strong>© 2013 – 2026 My Deme, LLC. All Rights Reserved.</strong></p>
-      <p>
-        This Phantom.ai system, including all software, data, configurations, and operational workflows,
-        is the exclusive property of My Deme, LLC. Access is permitted only for authorized personnel
-        acting within the scope of their duties.
-      </p>
-      <p>
-        By selecting <strong>"I Understand and Accept"</strong>, you acknowledge that this system is
-        protected under <strong>Florida State Law</strong> and <strong>United States Federal Law</strong>,
-        and that <strong>unauthorized access, use, or disclosure is strictly prohibited</strong> and may
-        result in civil and criminal penalties.
-      </p>
-      <p>
-        All access attempts may be monitored and logged for security and compliance purposes.
-      </p>
-      <div class="disclaimer-actions">
-        <a href="/TruAi" class="btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;padding:10px 16px;">Return to TruAi</a>
-        <button type="button" id="disclaimerCancel" class="btn-secondary">Cancel / Return to Login</button>
-        <button type="button" id="disclaimerAccept" class="btn-primary-continue">I Understand and Accept</button>
-      </div>
-    </div>
-  </div>
+    <script>
+        // ── TruAi Auth Wiring ──────────────────────────────────────────────
+        const api = typeof TruAiAPI !== 'undefined' ? new TruAiAPI() : null;
 
-  <div id="dashboard-view">
-    <div class="overlay" aria-hidden="true"></div>
-    <div class="center" style="padding-top: 3rem">
-      <div class="shell">
-        <div class="topbar">
-          <div class="brand">
-            <span class="logo-text">Phantom.ai</span>
-            <h1 style="margin:0">Dashboard</h1>
-          </div>
-          <nav class="nav" aria-label="Primary">
-            <a href="#" data-tab="overview" class="nav-tab active">Overview</a>
-            <a href="#" data-tab="provisioning" class="nav-tab">Provisioning</a>
-            <a href="#" data-tab="diagnostics" class="nav-tab">Diagnostics</a>
-            <a href="#" data-tab="security" class="nav-tab">Security</a>
-            <a href="#" data-tab="chat" class="nav-tab">AI Chat</a>
-            <a href="/TruAi" class="nav-tab">Return to TruAi</a>
-            <a href="#" id="signOut">Sign out</a>
-          </nav>
-        </div>
+        function getApiBase() {
+          return (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi');
+        }
 
-        <div id="tab-overview" class="tab-panel active">
-          <div class="grid">
-            <div class="card-sm">
-              <div class="stat">Active Projects</div>
-              <div class="value">18</div>
-            </div>
-            <div class="card-sm">
-              <div class="stat">Pending Tasks</div>
-              <div class="value" style="color:#ff6b6b">5</div>
-            </div>
-            <div class="card-sm">
-              <div class="stat">Deployments Today</div>
-              <div class="value">12</div>
-            </div>
-            <div class="card-sm">
-              <div class="stat">Success Rate</div>
-              <div class="value">99.2%</div>
-            </div>
-            <div class="card-lg">
-              <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Automation &amp; Actions</h2>
-              <p class="muted" style="margin-bottom:18px">Run common project management and execution tasks.</p>
-              <div class="actions">
-                <button class="action-btn" data-action="Deploy Project">Deploy Project</button>
-                <button class="action-btn" data-action="Run Build">Run Build</button>
-                <button class="action-btn" data-action="Execute Task">Execute Task</button>
-                <button class="btn btn-outline">View Logs</button>
-                <a class="btn" href="/TruAi">Open TruAi</a>
-              </div>
-            </div>
-            <div class="card-lg">
-              <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Recent Activity</h2>
-              <ul style="margin:0; padding:0; list-style:none">
-                <li style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.1); font-size:13px; color:#A0A0A0">Project web-app-v2 deployed successfully</li>
-                <li style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.1); font-size:13px; color:#A0A0A0">Build pipeline completed for api-service</li>
-                <li style="padding:10px 0; font-size:13px; color:#A0A0A0">Task sync completed with TruAi Core</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div id="tab-provisioning" class="tab-panel">
-          <div class="card-lg">
-            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Provisioning</h2>
-            <p class="muted" style="margin-bottom:18px">Provision projects, run builds, and manage deployments.</p>
-            <div class="actions">
-              <button class="action-btn" data-action="Provision Project">Provision Project</button>
-              <button class="action-btn" data-action="Deploy Project">Deploy Project</button>
-            </div>
-          </div>
-        </div>
-        <div id="tab-diagnostics" class="tab-panel">
-          <div class="card-lg">
-            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Diagnostics</h2>
-            <p class="muted" style="margin-bottom:18px">Run health checks, collect logs, and troubleshoot issues.</p>
-            <div class="actions">
-              <button class="action-btn" data-action="Run Diagnostics">Run Full Diagnostics</button>
-              <button class="action-btn" data-action="Collect Logs">Collect Logs</button>
-            </div>
-          </div>
-        </div>
-        <div id="tab-security" class="tab-panel">
-          <div class="card-lg">
-            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">Security Center</h2>
-            <p class="muted" style="margin-bottom:18px">Access policies, roles, and audit controls. Protected under Florida State Law and United States Federal Law.</p>
-            <div class="actions">
-              <button class="action-btn" data-action="Apply Security Hardening">Apply Security Hardening</button>
-              <button class="action-btn" data-action="Rotate Keys">Rotate API Keys</button>
-            </div>
-          </div>
-        </div>
-        <div id="tab-chat" class="tab-panel">
-          <div class="card-lg">
-            <h2 style="margin:0 0 12px 0; font-size:18px; font-weight:600; color:#A0A0A0">AI Chat</h2>
-            <p class="muted" style="margin-bottom:12px">Ask Phantom.ai to run tasks, deploy projects, or manage workflows. Powered by TruAi Core.</p>
-            <div class="chat-history" id="chatHistory">
-              <div class="chat-msg ai"><span>Hello. How can Phantom.ai assist you today?</span></div>
-            </div>
-            <div class="chat-input-row">
-              <textarea id="chatInput" placeholder="Ask Phantom.ai to deploy a project, run a build, or manage a task…" rows="2"></textarea>
-              <button type="button" id="chatSend">Send</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="footer">
-          <span>© 2025 - 2026 My Deme, LLC. All Rights Reserved. | Phantom.ai</span>
-          <span>| Protected under Florida State Law and United States Federal Law</span>
-          <span>| PROPRIETARY AND CONFIDENTIAL</span>
-        </div>
-        <div id="romaDashboard" class="roma-indicator" style="position:relative;bottom:auto;left:auto;transform:none;margin-top:12px">Roma • Checking…</div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const loginForm = document.getElementById('loginForm');
-    const loginView = document.getElementById('login-view');
-    const dashboardView = document.getElementById('dashboard-view');
-    const disclaimerView = document.getElementById('disclaimer-view');
-    const disclaimerAccept = document.getElementById('disclaimerAccept');
-    const disclaimerCancel = document.getElementById('disclaimerCancel');
-    const signOut = document.getElementById('signOut');
-    const api = typeof TruAiAPI !== 'undefined' ? new TruAiAPI() : null;
-
-    function getApiBase() {
-      return (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi');
-    }
-
-    function updateRoma(el, data) {
-      if (!el) return;
-      if (data && data.roma && data.portal_protected && data.monitor === 'active') {
-        el.textContent = 'Roma \u2022 Portal protected \u2022 Monitor active';
-        el.classList.add('confirmed');
-      } else if (data && data.trust_state === 'BLOCKED') {
-        el.textContent = 'Roma \u2022 Blocked (suspicion threshold)';
-        el.classList.remove('confirmed');
-      } else if (data && (data.trust_state === 'UNVERIFIED' || data.reason)) {
-        el.textContent = 'Roma \u2022 Unverified (' + (data.reason || 'security check failed') + ')';
-        el.classList.remove('confirmed');
-      } else {
-        el.textContent = 'Roma \u2022 Portal protected';
-        el.classList.add('confirmed');
-      }
-    }
-
-    function fetchRoma() {
-      fetch(getApiBase() + '/security/roma', { credentials: 'include' })
-        .then(r => r.json())
-        .then(data => {
-          updateRoma(document.getElementById('romaLogin'), data);
-          updateRoma(document.getElementById('romaDashboard'), data);
-        })
-        .catch(() => {
-          var el = document.getElementById('romaLogin');
-          if (el) el.textContent = 'Roma \u2022 Unreachable (start TruAi server)';
-          el = document.getElementById('romaDashboard');
-          if (el) el.textContent = 'Roma \u2022 Unreachable';
-        });
-    }
-
-    function reportOutcome(action, outcome) {
-      if (!api || !window.TRUAI_CONFIG || !window.TRUAI_CONFIG.IS_AUTHENTICATED) return;
-      const taskId = 'phantom-' + Date.now();
-      api.reportSubordinateOutcome({
-        system: 'phantom',
-        task_id: taskId,
-        outcome: outcome,
-        user_action: 'accepted',
-        latency_ms: 150,
-        target: action
-      }).catch(() => {});
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-      fetchRoma();
-      fetch(getApiBase() + '/auth/status', { credentials: 'include' })
-        .then(r => r.json())
-        .then(data => {
-          if (data.authenticated) {
-            if (window.TRUAI_CONFIG) {
-              window.TRUAI_CONFIG.IS_AUTHENTICATED = true;
-              window.TRUAI_CONFIG.USERNAME = data.username || '';
-              window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token || '';
-            }
-            loginView.style.display = 'none';
-            disclaimerView.style.display = 'flex';
-          }
-        })
-        .catch(() => {});
-    });
-
-    loginForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const u = document.getElementById('username').value.trim();
-      const p = document.getElementById('password').value;
-      if (!u || !p) return;
-      const base = getApiBase();
-      fetch(base + '/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ username: u, password: p })
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.success) {
-            if (window.TRUAI_CONFIG) {
-              window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token || '';
-              window.TRUAI_CONFIG.IS_AUTHENTICATED = true;
-              window.TRUAI_CONFIG.USERNAME = data.username || u;
-            }
-            loginView.style.display = 'none';
-            disclaimerView.style.display = 'flex';
+        function updateRoma(data) {
+          var el = document.getElementById('romaIndicator');
+          if (!el) return;
+          if (data && data.roma && data.portal_protected && data.monitor === 'active') {
+            el.textContent = 'Roma \u2022 Portal protected \u2022 Monitor active';
+            el.classList.add('confirmed');
+          } else if (data && data.trust_state === 'BLOCKED') {
+            el.textContent = 'Roma \u2022 Blocked (suspicion threshold)';
+            el.classList.remove('confirmed');
+          } else if (data && (data.trust_state === 'UNVERIFIED' || data.reason)) {
+            el.textContent = 'Roma \u2022 Unverified (' + (data.reason || 'security check failed') + ')';
+            el.classList.remove('confirmed');
           } else {
-            alert(data.error || 'Login failed');
+            el.textContent = 'Roma \u2022 Portal protected';
+            el.classList.add('confirmed');
           }
-        })
-        .catch(err => {
-          alert('Login failed: ' + (err.message || 'Network error'));
+        }
+
+        function fetchRoma() {
+          fetch(getApiBase() + '/security/roma', { credentials: 'include' })
+            .then(r => r.json())
+            .then(data => updateRoma(data))
+            .catch(() => {
+              var el = document.getElementById('romaIndicator');
+              if (el) el.textContent = 'Roma \u2022 Unreachable (start TruAi server)';
+            });
+        }
+
+        // Check existing session on page load
+        document.addEventListener('DOMContentLoaded', function () {
+          fetchRoma();
+          fetch(getApiBase() + '/auth/status', { credentials: 'include' })
+            .then(r => r.json())
+            .then(data => {
+              if (data.authenticated) {
+                if (window.TRUAI_CONFIG) {
+                  window.TRUAI_CONFIG.IS_AUTHENTICATED = true;
+                  window.TRUAI_CONFIG.USERNAME = data.username || '';
+                  window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token || '';
+                }
+                showDisclaimer();
+              }
+            })
+            .catch(() => {});
         });
-    });
 
-    disclaimerAccept.addEventListener('click', function () {
-      disclaimerView.style.display = 'none';
-      dashboardView.style.display = 'block';
-      dashboardView.classList.add('active');
-      fetchRoma();
-    });
+        function showDisclaimer() {
+          document.getElementById('login-view').style.display = 'none';
+          var dv = document.getElementById('disclaimer-view');
+          dv.style.display = 'flex';
+          dv.classList.add('active');
+        }
 
-    disclaimerCancel.addEventListener('click', function () {
-      disclaimerView.style.display = 'none';
-      loginView.style.display = 'flex';
-    });
+        function hideDisclaimer() {
+          var dv = document.getElementById('disclaimer-view');
+          dv.style.display = 'none';
+          dv.classList.remove('active');
+        }
 
-    signOut.addEventListener('click', function (e) {
-      e.preventDefault();
-      fetch(getApiBase() + '/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
-      if (window.TRUAI_CONFIG) window.TRUAI_CONFIG.IS_AUTHENTICATED = false;
-      dashboardView.style.display = 'none';
-      dashboardView.classList.remove('active');
-      loginView.style.display = 'flex';
-    });
+        // ── Login Form Submit ──────────────────────────────────────────────
+        const loginForm = document.getElementById('loginForm');
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            if (!username || !password) return;
 
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-      tab.addEventListener('click', function (e) {
-        if (this.id === 'signOut') return;
-        e.preventDefault();
-        const t = this.dataset.tab;
-        document.querySelectorAll('.nav-tab').forEach(x => x.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
-        this.classList.add('active');
-        var panel = document.getElementById('tab-' + t);
-        if (panel) panel.classList.add('active');
-      });
-    });
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Signing in…'; }
 
-    document.querySelectorAll('.action-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
-        const action = this.dataset.action || this.textContent;
-        reportOutcome(action, 'success');
-        alert('[Demo] ' + action + ' would execute. Outcome reported to TruAi Core.');
-      });
-    });
+            fetch(getApiBase() + '/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ username: username, password: password })
+            })
+            .then(r => r.json())
+            .then(data => {
+              if (data.success) {
+                if (window.TRUAI_CONFIG) {
+                  window.TRUAI_CONFIG.CSRF_TOKEN = data.csrf_token || '';
+                  window.TRUAI_CONFIG.IS_AUTHENTICATED = true;
+                  window.TRUAI_CONFIG.USERNAME = data.username || username;
+                }
+                showDisclaimer();
+              } else {
+                alert(data.error || 'Login failed. Please check your credentials.');
+              }
+            })
+            .catch(err => {
+              alert('Login failed: ' + (err.message || 'Network error. Ensure TruAi server is running.'));
+            })
+            .finally(() => {
+              if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Log in'; }
+            });
+        });
 
-    const chatInput = document.getElementById('chatInput');
-    const chatSend = document.getElementById('chatSend');
-    const chatHistory = document.getElementById('chatHistory');
-    if (chatSend && chatInput) {
-      chatSend.addEventListener('click', sendChat);
-      chatInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
-      });
-    }
-    function sendChat() {
-      const text = (chatInput && chatInput.value.trim()) || '';
-      if (!text) return;
-      var div = document.createElement('div');
-      div.className = 'chat-msg user';
-      div.innerHTML = '<span>' + text.replace(/</g, '&lt;') + '</span>';
-      chatHistory.appendChild(div);
-      chatInput.value = '';
-      if (api && window.TRUAI_CONFIG && window.TRUAI_CONFIG.IS_AUTHENTICATED) {
-        api.sendMessage(text, null, 'auto', { scope: 'phantom', intent: 'project_management' })
-          .then(res => {
-            var reply = (res && res.message && res.message.content) ? res.message.content : (res && res.reply) ? res.reply : '[Demo] Phantom.ai would respond here.';
-            var d = document.createElement('div');
-            d.className = 'chat-msg ai';
-            d.innerHTML = '<span>' + String(reply).replace(/</g, '&lt;') + '</span>';
-            chatHistory.appendChild(d);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-          })
-          .catch(() => {
-            var d = document.createElement('div');
-            d.className = 'chat-msg ai';
-            d.innerHTML = '<span>[Demo] Response would appear here. Ensure TruAi server is running for live AI.</span>';
-            chatHistory.appendChild(d);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-          });
-      } else {
-        var d = document.createElement('div');
-        d.className = 'chat-msg ai';
-        d.innerHTML = '<span>[Demo] AI Chat powered by TruAi Core. Sign in via TruAi for live responses.</span>';
-        chatHistory.appendChild(d);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-      }
-    }
-  </script>
-</body>
-</html>
+        // ── Disclaimer Actions ─────────────────────────────────────────────
+        document.getElementById('disclaimerAccept').addEventListener('click', function () {
+          hideDisclaimer();
+          // Phantom.ai redirects to TruAi portal dashboard after acceptance
+          window.location.href = '/TruAi';
+        });
+
+        document.getElementById('disclaimerCancel').addEventListener('click', function () {
+          hideDisclaimer();
+          // Sign out and return to login
+          fetch(getApiBase() + '/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+          if (window.TRUAI_CONFIG) window.TRUAI_CONFIG.IS_AUTHENTICATED = false;
+          document.getElementById('login-view').style.display = 'flex';
+          fetchRoma();
+        });
+
+        // ── Password Toggle ────────────────────────────────────────────────
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+        const eyeOffIcon = document.getElementById('eyeOffIcon');
+
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            eyeIcon.classList.toggle('hidden');
+            eyeOffIcon.classList.toggle('hidden');
+        });
+
+        // ── Forgot Password ────────────────────────────────────────────────
+        document.getElementById('forgotPassword').addEventListener('click', function() {
+            alert('Credentials are stored in database/.initial_credentials after first setup or reset.\n\nTo reset: run from project root:\n  php reset-admin-password.php admin\n\nThen check database/.initial_credentials for the new password.');
+        });
+
+        // ── Sign Up Button ─────────────────────────────────────────────────
+        document.getElementById('signUpBtn').addEventListener('click', function() {
+            alert('Account registration is managed by an authorized administrator.\nContact My Deme, LLC to request portal access.');
+        });
+    </script>
+
+</body></html>
