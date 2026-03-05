@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TruAi - Start New Project</title>
@@ -12,34 +11,31 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      min-height: 100vh;
-      background: url('/TruAi/tru-dashboard.jpg');
-      background-size: contain;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-color: #0b0d11;
-      color: #B3B3B3;
-      display: flex;
-      flex-direction: column;
-      overflow: auto;
-      transition: background-image 1s ease-in-out;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            width: 100vw;
+            min-height: 100vh;
+            background: url(/Users/mydemellc./Downloads/TruAi/assets/images/TruAi-Background.jpg);
+            background-size: cover;
+            background-position: bottom;
+            background-repeat: no-repeat;
+            background-color: #0b0d11;
+            color: #B3B3B3;
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+            transition: background-image 1s ease-in-out;
     }
 
     /* ── Header portal links ── */
     .header-actions {
         position: absolute;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            pointer-events: none;
-            top: 35px;
-            right: 80px;
-            left: 80px;
-            bottom: 0px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        pointer-events: none;
+        top: 35px;
+        right: 40px;
+        left: 40px;
     }
 
     .header-actions a {
@@ -53,9 +49,9 @@
         transition: color 0.2s, border-color 0.2s;
         text-align: center;
         min-width: 100px;
-        width: 17pc;
+        width: 16pc;
         padding-left: 16px;
-        padding-right: 16px;;
+        padding-right: 16px;
     }
 
     .header-actions a:hover {
@@ -72,6 +68,19 @@
       flex-shrink: 0;
     }
 
+    .header-section--top {
+      position: relative;
+      top: 0;
+    }
+
+    .header-section--icon {
+      padding-top: unset;
+      padding-right: unset;
+      padding-bottom: unset;
+      padding-left: unset;
+      height: 24px;
+    }
+
     .logo-container {
       display: flex;
       flex-direction: column;
@@ -79,10 +88,24 @@
       gap: 6px;
     }
 
+    .logo-container--offset {
+      position: relative;
+      top: 70px;
+    }
+
+    .logo-container--no-margin {
+      margin-bottom: unset;
+    }
+
     .logo-container img {
       width: 28px;
       height: auto;
       display: block;
+    }
+
+    .logo-image--large {
+      width: 100px;
+      margin-top: -70;
     }
 
     .project-title {
@@ -93,19 +116,19 @@
 
     /* ── Main 3-Column Area ── */
     .main-area {
-      display: flex;
-      flex: 1;
-      min-height: 0;
-      width: 100%;
-      margin: 0 auto;
-      gap: 16px;
-      padding: 0 80px 16px;
-      align-items: stretch;
+        display: flex;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            margin: 0 auto;
+            gap: 16px;
+            padding: 0 40px 16px;
+            align-items: stretch;
     }
 
     /* Extended side panels */
     .content-extended {
-        width: 17pc;
+        width: 16pc;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.06);
             background: rgba(0, 0, 0, 0.15);
@@ -113,7 +136,6 @@
             overflow-y: auto;
             font-size: 12px;
             color: #8b8d98;
-            overflow-y: auto;
             overflow-x: hidden;
             height: 34pc;
     }
@@ -121,7 +143,7 @@
     .content-extended .panel-label { margin-bottom: 10px; }
 
     .code-review-extended {
-        width: 17pc;
+        width: 16pc;
             height: 34pc;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -158,22 +180,28 @@
     }
 
     .ai-response-content {
-      flex: 1;
-      padding: 24px;
-      font-size: 14px;
-      line-height: 1.6;
-      color: rgba(255,255,255,0.72);
-      width: 100%;
+        flex: 1;
+            padding: 24px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.72);
+            width: 100%;
+            height: 34pc;
+    }
+
+    .ai-response-content--absolute {
+      position: absolute;
     }
 
     .ai-response-content.empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #555;
-      text-align: center;
-      padding: 60px 24px;
+        display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            text-align: center;
+            padding: 60px 24px;
+            height: 34pc;
     }
 
     .ai-response-content.empty p {
@@ -436,8 +464,8 @@
             width: 100%;
             margin: 0 auto;
             gap: 5pc;
-            padding: 0 80px 16px;
-            align-items: stretch
+            padding: 0 40px 16px;
+            align-items: stretch;
     }
 
     .panel {
@@ -449,8 +477,8 @@
 
     /* Operations panel */
     .operations-panel {
-        width: 17pc;
-        height: 17pc;
+        width: 16pc;
+        height: 16pc;
         overflow-y: auto;
         overflow-x: hidden;
     }
@@ -574,7 +602,7 @@
             transition: border-color 0.2s, box-shadow 0.2s;
             text-align: center;
             border: none;
-            align-content: center
+            align-content: center;
     }
 
     .text-entry:focus {
@@ -598,6 +626,13 @@
       margin: 8px auto;
       transition: all 0.2s;
       box-shadow: 0 2px 8px rgba(0, 142, 214, 0.3);
+    }
+
+    .submit-button-wrapper {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      position: relative;
+      bottom: 3px;
     }
 
     .submit-button:hover { transform: scale(1.05); box-shadow: 0 5px 12px rgba(0, 142, 214, 0.4); }
@@ -630,6 +665,17 @@
     }
 
     .icon-button img { width: 24px; height: auto; display: block; }
+
+    .settings-logo-wide {
+      padding-right: 150px;
+      padding-left: 150px;
+      width: 324px;
+    }
+
+    .code-editor-logo {
+      border-top-width: 5px;
+      margin-top: unset;
+    }
 
     /* ── Input Toolbar (from Cursor) ── */
     .input-toolbar {
@@ -692,8 +738,8 @@
         display: flex;
             flex-direction: column;
             padding: 8px;
-            width: 17pc;
-            height: 17pc;
+            width: 16pc;
+            height: 16pc;
             overflow-y: auto;
             overflow-x: hidden;
     }
@@ -1286,13 +1332,13 @@
 <body>
 
   <!-- ── Logo / Header ── -->
-  <div class="header-section" style="position: relative;">
+  <div class="header-section header-section--top">
     <div class="header-actions" style="bottom: 10px;">
       <a href="/TruAi/phantom" title="Phantom.ai Portal">Phantom.Ai</a>
       <a href="/TruAi/gemini" title="Gemini.ai Portal">Gemini.Ai</a>
     </div>
-    <div class="logo-container">
-      <img src="/TruAi/assets/images/TruAi-Logo.png" alt="TruAi">
+    <div class="logo-container logo-container--offset">
+      <img src="TruAi-dashboard-logo.png" alt="TruAi" class="logo-image--large">
       <div class="project-title" id="header-project-title">Start New Project</div>
     </div>
   </div>
@@ -1346,14 +1392,12 @@
     <!-- Center: AI Response Area -->
     <div class="ai-response-area" id="ai-response-area">
       <button type="button" class="copy-btn" data-copy-target="ai-response-content" aria-label="Copy AI response">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
         </svg>
       </button>
-      <div class="ai-response-content empty" id="ai-response-content" role="status" aria-live="polite" aria-atomic="true">
+      <div class="ai-response-content ai-response-content--absolute empty" id="ai-response-content" role="status" aria-live="polite" aria-atomic="true">
         <p>Ask TruAi anything…</p>
         <span>Start a conversation, run a task, or select a file to analyze</span>
       </div>
@@ -1374,8 +1418,7 @@
       </div>
       <div class="code-review-content" id="code-review-content">
         <div class="code-review-placeholder" id="codeReviewPlaceholder">
-          <pre style="color:#3a3d4a; font-size:11px; text-align:center; padding-top:40px;">
-Select a file or run
+          <pre style="color:#3a3d4a; font-size:11px; text-align:center; padding-top:40px;">Select a file or run
 a review to see
 analysis here.</pre>
         </div>
@@ -1511,7 +1554,7 @@ analysis here.</pre>
       <div id="settings-tab-operations" style="display:none;">
         <p style="font-size:12px; color:#6b6d78; margin-bottom:16px;">Monitor active tasks, queue new operations, and check UBSAS / ROMA status.</p>
         <div style="margin-bottom:16px;">
-          <button class="btn-primary" style="width:100%; margin-bottom:8px;" onclick="togglePopup('settings-popup'); setTimeout(()=>togglePopup('operations-popup'),150);">
+          <button class="btn-primary" style="width:100%; margin-bottom:8px;" onclick="togglePopup('settings-popup'); setTimeout(()=&gt;togglePopup('operations-popup'),150);">
             ⚡ Open Full Operations Panel
           </button>
         </div>
@@ -1672,7 +1715,7 @@ analysis here.</pre>
         <button type="button" class="panel-toggle-btn" data-panel-toggle="operations" aria-label="Expand Operations">⤢</button>
       </div>
       <div class="operations-content" id="operationsContent">
-        <div class="operations-loading" style="display:none;">Loading…</div>
+        <div class="operations-loading" style="display:none;">Operations unavailable</div>
         <ul class="status-list" id="operationsStatusList" style="display:none;"></ul>
         <div class="roma-line" id="operationsRoma" style="display:none;"></div>
       </div>
@@ -1682,20 +1725,16 @@ analysis here.</pre>
     <div class="panel center-panel" id="centerPanel">
 
       <!-- Submit button (GIF, Prototype layout) -->
-      <button class="submit-button" id="submitButton" type="button" title="Submit" aria-label="Submit prompt"
-              style="margin-top:10px; margin-bottom:10px; position:relative; bottom:3px;">
-        <div class="header-section" style="padding-top:unset; padding-bottom:unset; height:24px; padding-left:unset; padding-right:unset;">
-          <div class="logo-container" style="position:relative; bottom:auto;">
-            <img src="/TruAi/TruAi-Submit-button.gif" alt="TruAi Submit">
+      <button class="submit-button submit-button-wrapper" id="submitButton" type="button" title="Submit" aria-label="Submit prompt">
+        <div class="header-section header-section--icon">
+          <div class="logo-container">
+            <img src="/Users/mydemellc./Downloads/TruAi/assets/images/TruAi-Submit-button.gif" alt="TruAi Submit">
           </div>
         </div>
       </button>
 
       <!-- Text entry (Prototype placeholder, rows, dimensions) -->
-      <textarea class="text-entry" id="aiTextEntry"
-                placeholder="Standing by for instructions..."
-                rows="4"
-                onkeydown="handleInputKeydown(event)"></textarea>
+      <textarea class="text-entry" id="aiTextEntry" placeholder="Standing by for instructions..." rows="4" onkeydown="handleInputKeydown(event)"></textarea>
 
       <!-- Icon row (Prototype structure: header-section / logo-container wrappers) -->
       <div class="icon-row" style="position:relative; top:auto; bottom:5px;">
@@ -1704,25 +1743,25 @@ analysis here.</pre>
         <div class="icon-group">
           <!-- Add Photos -->
           <button class="icon-button" title="Add Photos" onclick="attachFile('image')">
-            <div class="header-section" style="padding-left:unset; padding-bottom:unset; padding-right:unset; padding-top:unset; height:24px;">
+            <div class="header-section header-section--icon">
               <div class="logo-container">
-                <img src="/TruAi/TruAi-dashboard-logos/TruAi-images.png" alt="TruAi Logo">
+                <img src="/Users/mydemellc./Downloads/TruAi/assets/images/TruAi-Images.png" alt="TruAi Logo">
               </div>
             </div>
           </button>
           <!-- Add URL -->
           <button class="icon-button" title="Add URL">
-            <div class="header-section" style="padding-bottom:unset; padding-right:unset; padding-top:unset; padding-left:unset; height:24px;">
+            <div class="header-section header-section--icon">
               <div class="logo-container">
-                <img src="/TruAi/TruAi-dashboard-logos/TruAi-URL.png">
+                <img src="/Users/mydemellc./Downloads/TruAi/assets/images/TruAi-URL.png">
               </div>
             </div>
           </button>
           <!-- Add File / Folder -->
           <button class="icon-button" title="Add File / Folder" style="height:24px;" onclick="attachFile()">
-            <div class="header-section" style="padding-left:unset; padding-bottom:unset; padding-right:unset; padding-top:unset; height:24px;">
+            <div class="header-section header-section--icon">
               <div class="logo-container">
-                <img src="/TruAi/TruAi-dashboard-logos/TruAi-File-folder.png" alt="TruAi Logo">
+                <img src="/Users/mydemellc./Downloads/TruAi/assets/images/TruAi-File-folder.png" alt="TruAi Logo">
               </div>
             </div>
           </button>
@@ -1731,10 +1770,9 @@ analysis here.</pre>
         <!-- Center group: Settings (wide image, Prototype sizing) -->
         <div class="icon-group">
           <button class="icon-button" title="Settings" id="settingsIconBtn" onclick="togglePopup('settings-popup')">
-            <div class="header-section" style="padding-left:unset; padding-bottom:unset; padding-right:unset; padding-top:unset; height:24px;">
+            <div class="header-section header-section--icon">
               <div class="logo-container">
-                <img src="/TruAi/TruAi-dashboard-logos/TruAi-Settings.png" alt="TruAi Logo"
-                     style="padding-right:150px; width:324px; padding-left:150px;">
+                <img src="/Users/mydemellc./Downloads/TruAi/assets/images/TruAi-Settings.png" alt="TruAi Logo" class="settings-logo-wide">
               </div>
             </div>
           </button>
@@ -1744,27 +1782,25 @@ analysis here.</pre>
         <div class="icon-group">
           <!-- Terminal -->
           <button class="icon-button" title="Terminal" style="height:24px;">
-            <div class="header-section" style="padding-bottom:unset; padding-left:unset; padding-right:unset; padding-top:unset;">
-              <div class="logo-container" style="margin-bottom:unset;">
-                <img src="/TruAi/TruAi-dashboard-logos/TruAi-Terminal.png" alt="TruAi Logo">
+            <div class="header-section header-section--icon">
+              <div class="logo-container logo-container--no-margin">
+                <img src="/Users/mydemellc./Downloads/TruAi/assets/images/TruAi-Terminal.png" alt="TruAi Logo">
               </div>
             </div>
           </button>
           <!-- GitHub -->
           <button class="icon-button" title="GitHub">
             <div class="icon-group">
-              <div class="logo-container" style="margin-bottom:unset;">
-                <img src="/TruAi/TruAi-dashboard-logos/TruAi-Github.png" alt="TruAi Logo"
-                     style="padding-bottom:unset;">
+              <div class="logo-container logo-container--no-margin">
+                <img src="/Users/mydemellc./Downloads/TruAi/assets/images/TruAi-Github.png" alt="TruAi Logo">
               </div>
             </div>
           </button>
           <!-- Code View -->
           <button class="icon-button" title="Code View">
-            <div class="header-section" style="padding-bottom:0px; padding-left:unset; padding-right:unset; padding-top:unset;">
-              <div class="logo-container" style="margin-bottom:unset;">
-                <img src="/TruAi/TruAi-dashboard-logos/TruAi-Code-Editor.png" alt="TruAi Logo"
-                     style="border-top-width:5px; margin-top:unset;">
+            <div class="header-section header-section--icon">
+              <div class="logo-container logo-container--no-margin">
+                <img src="/Users/mydemellc./Downloads/TruAi/assets/images/TruAi-Code-Editor.png" alt="TruAi Logo" class="code-editor-logo">
               </div>
             </div>
           </button>
@@ -1777,7 +1813,7 @@ analysis here.</pre>
         Current: <span id="exec-current-label">Idle</span>
         · <span id="exec-risk-label">SAFE</span>
         · <span id="exec-roi-label">AUTO-ROI</span>
-        · <span id="exec-roma-label" title="ROMA trust state">ROMA: —</span>
+        · <span id="exec-roma-label" title="ROMA trust state">ROMA: Offline</span>
         · <span id="sb-mode">Agent Mode</span>
       </div>
 
@@ -1788,9 +1824,7 @@ analysis here.</pre>
       <div class="panel-label panel-toggle-label">
         <span>Chat History</span>
         <button type="button" class="copy-btn" data-copy-target="chatMessages" aria-label="Copy Chat History">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="icon-sm"
-               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
           </svg>
@@ -1832,9 +1866,7 @@ analysis here.</pre>
     <div class="statusbar-item"><span>TruAi v1.0</span></div>
     <div class="statusbar-item"><span>UBSAS v2.0</span></div>
     <div class="statusbar-item">
-      <a href="/TruAi/login-portal.html"
-         style="color:#4B5563; font-size:11px; text-decoration:none; transition:color 0.2s;"
-         onmouseover="this.style.color='#008ed6'" onmouseout="this.style.color='#4B5563'">Login</a>
+      <a href="/TruAi/login-portal.html" style="color:#4B5563; font-size:11px; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#008ed6'" onmouseout="this.style.color='#4B5563'">Login</a>
     </div>
   </div>
 
@@ -2666,5 +2698,7 @@ analysis here.</pre>
     });
   </script>
 
-</body>
-</html>
+
+
+
+</body></html>
