@@ -4,7 +4,7 @@
  *
  * Main entry point for PHP built-in server.
  * Routes all requests (API and static files) correctly.
- * Flow: Login Portal (/) → Welcome → Start → Dashboard (/TruAi/).
+ * Flow: Login Portal (/) → Loading (entrance GIF) → Welcome (GIF) → Start → Dashboard (/TruAi/).
  *
  * @package TruAi
  * @version 1.0.0
