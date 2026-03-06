@@ -16,7 +16,7 @@
             padding: 0;
             width: 100vw;
             min-height: 100vh;
-            background-image: url('/Users/mydemellc./Desktop/TruAi+/assets/images/TruAiLoginPortalBackground.png');
+            background-image: url('/TruAi/assets/images/TruAiLoginPortalBackground.png');
             position: relative;
             display: flex;
             justify-content: center;
@@ -192,7 +192,7 @@
     <div class="logo-header">
         <img
             class="main-logo"
-            src="/TruAi/assets/images/TruAi-by-DemeWebsolutions.com.png"
+            src="TruAi-by-DemeWebsolutions.com.png"
             alt="TruAi Logo"
         >
     </div>
@@ -208,7 +208,7 @@
         <img
             id="statusIcon"
             class="clickable"
-            src="/Users/mydemellc./Desktop/TruAi+/assets/images/1.png"
+            src="/TruAi/assets/images/1.png"
             alt="Status Icon"
         >
     </div>
@@ -258,6 +258,9 @@
     const DEV_MODE      = true;
     const DEV_USER      = 'admin';
     const DEV_PASS      = 'password123';
+    /** After successful login: loading (entrance GIF) → welcome (GIF) → start → dashboard */
+    const LOADING_URL   = '/TruAi/loading.html';
+    const WELCOME_URL   = '/TruAi/welcome.html';
     const DASHBOARD_URL = '/TruAi/';
 </script>
 
@@ -267,9 +270,9 @@
 
     /* ── Asset paths ── */
     const IMG = {
-        restricted : '/Users/mydemellc./Desktop/TruAi+/assets/images/1.png',
-        granted    : '/Users/mydemellc./Desktop/TruAi+/assets/images/2.png',
-        denied     : '/Users/mydemellc./Desktop/TruAi+/assets/images/3.png',
+        restricted : '/TruAi/assets/images/1.png',
+        granted    : '/TruAi/assets/images/2.png',
+        denied     : '/TruAi/assets/images/3.png',
     };
 
     /* ── DOM refs ── */
@@ -407,9 +410,11 @@
         /* 5 – hold */
         await new Promise(function (r) { setTimeout(r, HOLD); });
 
-        /* 6 – act */
+        /* 6 – act: granted → loading.html (entrance GIF) → welcome → start → dashboard */
         if (outcome === 'granted') {
-            window.location.href = DASHBOARD_URL;
+            var username = document.getElementById('username').value.trim();
+            var qs = username ? '?username=' + encodeURIComponent(username) : '';
+            window.location.href = LOADING_URL + qs;
         } else {
             /* Fade header out again */
             await fadeHeader(0, FADE);
