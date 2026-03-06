@@ -1,10 +1,11 @@
 <?php
 /**
  * TruAi Server Router
- * 
- * Main entry point for PHP built-in server
- * Routes all requests (API and static files) correctly
- * 
+ *
+ * Main entry point for PHP built-in server.
+ * Routes all requests (API and static files) correctly.
+ * Flow: Login Portal (/) → Welcome → Start → Dashboard (/TruAi/).
+ *
  * @package TruAi
  * @version 1.0.0
  * @copyright My Deme, LLC © 2026
@@ -71,51 +72,14 @@ if (strpos($requestUri, '/TruAi/') === 0 && !preg_match('/\.\w+$/', $requestUri)
     }
 }
 
-// Check if this is a welcome page request
-if (strpos($requestUri, '/welcome') !== false || strpos($requestUri, '/welcome.html') !== false) {
-    if (file_exists(__DIR__ . '/welcome.html')) {
-        readfile(__DIR__ . '/welcome.html');
-        return true;
-    }
-}
-
-// Check if this is a start page request (after welcome.html, before /TruAi/ dashboard)
-if (strpos($requestUri, '/start') !== false || strpos($requestUri, '/start.html') !== false) {
-    if (file_exists(__DIR__ . '/start.html')) {
+// Welcome, start, loading, access, login-portal: serve from public/TruAi/ (fixed allowlist, no path traversal)
+$publicTruAi = __DIR__ . '/public/TruAi';
+if (preg_match('#^/(welcome|start|loading|access-granted|access-denied|login-portal)(\.html)?/?$#', $requestUri, $m)) {
+    $base = $m[1];
+    $path = $publicTruAi . '/' . $base . '.html';
+    if (file_exists($path) && is_file($path)) {
         header('Content-Type: text/html; charset=UTF-8');
-        readfile(__DIR__ . '/start.html');
-        return true;
-    }
-}
-
-// Check if this is a loading page request
-if (strpos($requestUri, '/loading') !== false || strpos($requestUri, '/loading.html') !== false) {
-    if (file_exists(__DIR__ . '/loading.html')) {
-        readfile(__DIR__ . '/loading.html');
-        return true;
-    }
-}
-
-// Check if this is an access page request
-if (strpos($requestUri, '/access-granted') !== false || strpos($requestUri, '/access-granted.html') !== false) {
-    if (file_exists(__DIR__ . '/access-granted.html')) {
-        readfile(__DIR__ . '/access-granted.html');
-        return true;
-    }
-}
-
-if (strpos($requestUri, '/access-denied') !== false || strpos($requestUri, '/access-denied.html') !== false) {
-    if (file_exists(__DIR__ . '/access-denied.html')) {
-        readfile(__DIR__ . '/access-denied.html');
-        return true;
-    }
-}
-
-// Check if this is a login portal request
-if (strpos($requestUri, '/login-portal') !== false || strpos($requestUri, '/login-portal.html') !== false) {
-    // Serve login portal page
-    if (file_exists(__DIR__ . '/login-portal.html')) {
-        readfile(__DIR__ . '/login-portal.html');
+        readfile($path);
         return true;
     }
 }
@@ -171,12 +135,22 @@ if (strpos($requestUri, '/api/') !== false) {
     return true;
 }
 
-// Serve TruAi Prototype as live dashboard at /TruAi/ or /TruAi
-if (preg_match('#^/TruAi/?$#', $requestUri)) {
-    $prototypePath = __DIR__ . '/TruAi Prototype.html';
-    if (file_exists($prototypePath)) {
+// Serve root URL (/) as TruAi login portal
+if ($requestUri === '/' || $requestUri === '') {
+    $rootLoginPath = __DIR__ . '/public/TruAi/login-portal.html';
+    if (file_exists($rootLoginPath) && is_file($rootLoginPath)) {
         header('Content-Type: text/html; charset=UTF-8');
-        readfile($prototypePath);
+        readfile($rootLoginPath);
+        return true;
+    }
+}
+
+// Serve TruAi dashboard at /TruAi/ or /TruAi
+if (preg_match('#^/TruAi/?$#', $requestUri)) {
+    $dashboardPath = __DIR__ . '/public/TruAi/dashboard.html';
+    if (file_exists($dashboardPath) && is_file($dashboardPath)) {
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile($dashboardPath);
         return true;
     }
 }
