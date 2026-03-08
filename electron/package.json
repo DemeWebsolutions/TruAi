@@ -16,8 +16,7 @@
     "pack": "npx electron-builder --mac",
     "pack:win": "npx electron-builder --win",
     "pack:linux": "npx electron-builder --linux",
-    "dist": "npx electron-builder",
-    "install:mac": "bash install-to-applications.sh"
+    "dist": "npx electron-builder"
   },
   "dependencies": {},
   "devDependencies": {
