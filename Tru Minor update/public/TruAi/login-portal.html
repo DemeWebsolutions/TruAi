@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi - Login Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            min-height: 100vh;
+            background-image: url('/TruAi/assets/images/TruAiLoginPortalBackground.png');
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                         'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            overflow-x: auto;
+            background-color: #0b0d11;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .enrollment-container {
+            background: rgb(42 42 42 / 0%);
+            border-radius: 12px;
+            padding-top: 10px;
+            width: 282px;
+            margin-bottom: 5px;
+            height: 562px;
+            border: 1px solid #c3c2c26b;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-header {
+            text-align: center;
+            margin-bottom: 0;
+        }
+
+        .logo-header img.main-logo {
+            width: 210px;
+            height: 210px;
+            display: block;
+            margin: auto;
+        }
+
+        .step-title {
+            text-align: center;
+        }
+
+        .step-title .label-spacer {
+            font-size: 21px;
+            color: transparent;
+            margin-bottom: 5px;
+            letter-spacing: 1.1px;
+            font-weight: 200;
+        }
+
+        .step-title .state-label {
+            font-size: 21px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 5px;
+            letter-spacing: 1.1px;
+            font-weight: 200;
+        }
+
+        /* ── Status icon — the submit button ── */
+        #statusIcon {
+            width: 90px;
+            display: block;
+            margin: auto;
+            cursor: pointer;
+            transition: opacity 600ms ease, transform 0.15s ease;
+            opacity: 1;
+        }
+
+        #statusIcon.clickable:hover  { transform: scale(1.06); }
+        #statusIcon.clickable:active { transform: scale(0.94); }
+
+        #statusIcon.locked {
+            cursor: default;
+            pointer-events: none;
+        }
+
+        /* ── Status message bar ── */
+        .status-message {
+            text-align: center;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin: 8px 16px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-message.show    { display: block; }
+        .status-message.info    { background: rgba(33,150,243,0.10); color: #1976d2; border: 1px solid rgba(33,150,243,0.3); }
+        .status-message.success { background: rgba(76,175,80,0.10);  color: #388e3c; border: 1px solid rgba(76,175,80,0.3); }
+        .status-message.error   { background: rgba(244,67,54,0.10);  color: #d32f2f; border: 1px solid rgba(244,67,54,0.3); }
+
+        /* ── Form fields ── */
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 200;
+            font-size: 16px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 2px;
+            letter-spacing: 1px;
+            margin-top: 14px;
+            transition: opacity 0.6s ease;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            padding: 13px 16px;
+            background: #ffffff00;
+            border: 1px solid #ffffffad;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 14px;
+            margin: auto;
+            text-align: center;
+            display: block;
+            width: calc(100% - 32px);
+            transition: opacity 0.6s ease;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.45);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00A3FF;
+            box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.15);
+        }
+
+        #formWrapper {
+            padding: 0 16px;
+        }
+
+        /* ── state-label fades independently ── */
+        #stateLabel {
+            transition: opacity 0.6s ease;
+        }
+
+        /* ── status icon fades independently ── */
+        #statusIcon {
+            transition: opacity 600ms ease, transform 0.15s ease;
+        }
+
+        .roma-indicator {
+            position: fixed;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.05em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .roma-indicator.confirmed {
+            color: rgba(255,255,255,0.9);
+        }
+
+        @media (max-width: 768px) {
+            .enrollment-container { width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="enrollment-container">
+
+    <!-- Main Logo -->
+    <div class="logo-header">
+        <img
+            class="main-logo"
+            src="/TruAi/assets/images/TruAi by DemeWebsolutions.com.png"
+            alt="TruAi Logo"
+        >
+    </div>
+
+    <!-- State label + status icon -->
+    <div class="logo-header">
+        <div class="step-title">
+            <p class="label-spacer">Login</p>
+            <p id="stateLabel" class="state-label">Access Restricted</p>
+        </div>
+
+        <!-- Status icon — doubles as the login submit button -->
+        <img
+            id="statusIcon"
+            class="clickable"
+            src="/TruAi/assets/images/1.png"
+            alt="Status Icon"
+        >
+    </div>
+
+    <!-- Status message bar -->
+    <div class="status-message" id="statusMessage"></div>
+
+    <!-- Credential form — no submit button -->
+    <div id="formWrapper">
+        <form id="verifyForm">
+            <div class="form-group" id="usernameGroup">
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username"
+                    required
+                    autocomplete="username"
+                >
+                <label for="username">User</label>
+            </div>
+
+            <div class="form-group" id="passwordGroup">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                    autocomplete="current-password"
+                >
+                <label for="password">Password</label>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<div id="romaIndicator" class="roma-indicator">ROMA • Portal Protected</div>
+
+<!-- ================================================================
+     DEV / OFFLINE TESTING FLAG
+     DEV_MODE = true  → no real API call; uses hardcoded credentials.
+     DEV_MODE = false → real fetch to /TruAi/api/v1/auth/login.
+     ================================================================ -->
+<script>
+    const DEV_MODE      = true;
+    const DEV_USER      = 'admin';
+    const DEV_PASS      = 'password123';
+    /** After successful login: go to welcome (GIF), then start, then dashboard */
+    const WELCOME_URL   = '/TruAi/welcome.html';
+    const DASHBOARD_URL = '/TruAi/';
+</script>
+
+<script src="/TruAi/assets/js/api.js"></script>
+<script>
+(function () {
+
+    /* ── Asset paths ── */
+    const IMG = {
+        restricted : '/TruAi/assets/images/1.png',
+        granted    : '/TruAi/assets/images/2.png',
+        denied     : '/TruAi/assets/images/3.png',
+    };
+
+    /* ── DOM refs ── */
+    const stateLabel    = document.getElementById('stateLabel');
+    const statusIcon    = document.getElementById('statusIcon');
+    const usernameGroup = document.getElementById('usernameGroup');
+    const passwordGroup = document.getElementById('passwordGroup');
+
+    /* ─────────────────────────────────────────────────────────────
+       Targeted fade helpers
+       Each accepts an opacity value and optional duration (ms).
+       They return a Promise that resolves after the transition.
+    ───────────────────────────────────────────────────────────── */
+
+    /* Fades ONLY the icon and state label */
+    function fadeHeader(val, duration) {
+        duration = duration || 600;
+        [statusIcon, stateLabel].forEach(function (el) {
+            el.style.transition = 'opacity ' + duration + 'ms ease';
+            el.style.opacity    = val;
+        });
+        return new Promise(function (r) { setTimeout(r, duration); });
+    }
+
+    /* Fades ONLY the two form-groups (inputs + labels inside them) */
+    function fadeForm(val, duration) {
+        duration = duration || 600;
+
+        [usernameGroup, passwordGroup].forEach(function (group) {
+            /* Fade the input */
+            var input = group.querySelector('input');
+            if (input) {
+                input.style.transition = 'opacity ' + duration + 'ms ease';
+                input.style.opacity    = val;
+            }
+            /* Fade the label */
+            var label = group.querySelector('label');
+            if (label) {
+                label.style.transition = 'opacity ' + duration + 'ms ease';
+                label.style.opacity    = val;
+            }
+        });
+
+        return new Promise(function (r) { setTimeout(r, duration); });
+    }
+
+    /* Fades EVERYTHING (header + form) together */
+    function fadeAll(val, duration) {
+        fadeHeader(val, duration);
+        fadeForm(val, duration);
+        return new Promise(function (r) { setTimeout(r, duration || 600); });
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       setStateVisuals — swap label + icon src while at opacity 0
+    ───────────────────────────────────────────────────────────── */
+    function setStateVisuals(labelText, iconSrc) {
+        stateLabel.textContent = labelText;
+        statusIcon.src         = iconSrc;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       lockIcon / unlockIcon
+    ───────────────────────────────────────────────────────────── */
+    function lockIcon() {
+        statusIcon.classList.remove('clickable');
+        statusIcon.classList.add('locked');
+    }
+
+    function unlockIcon() {
+        statusIcon.classList.remove('locked');
+        statusIcon.classList.add('clickable');
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       showStatus / hideStatus
+    ───────────────────────────────────────────────────────────── */
+    function showStatus(type, message) {
+        var el = document.getElementById('statusMessage');
+        el.className   = 'status-message show ' + type;
+        el.textContent = message;
+        if (type === 'success' || type === 'error') {
+            setTimeout(function () { el.classList.remove('show'); }, 5000);
+        }
+    }
+
+    function hideStatus() {
+        document.getElementById('statusMessage').classList.remove('show');
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       resetForm
+    ───────────────────────────────────────────────────────────── */
+    function resetForm() {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        hideStatus();
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       transition — the core animation sequence
+
+       GRANTED / DENIED shared flow:
+         1. Fade form-groups OUT          (0.6 s)  ← form disappears
+         2. Fade header OUT               (0.6 s)  ← icon+label disappear
+         3. Swap visuals while invisible
+         4. Fade header back IN           (0.6 s)  ← new icon+label appear
+            form-groups stay at opacity 0
+         5. Hold result screen            (5 s)
+         6a. Granted → redirect
+         6b. Denied  → fade header out, reset everything, fade all back in
+    ───────────────────────────────────────────────────────────── */
+    async function transition(outcome) {
+        const FADE = 600;
+        const HOLD = 5000;
+
+        lockIcon();
+
+        /* 1 – form fades out */
+        await fadeForm(0, FADE);
+
+        /* 2 – header fades out */
+        await fadeHeader(0, FADE);
+
+        /* 3 – swap visuals while everything is invisible */
+        if (outcome === 'granted') {
+            setStateVisuals('Access Granted', IMG.granted);
+        } else {
+            setStateVisuals('Access Denied', IMG.denied);
+        }
+
+        /* 4 – only the header fades back in; form stays hidden */
+        await fadeHeader(1, FADE);
+
+        /* 5 – hold */
+        await new Promise(function (r) { setTimeout(r, HOLD); });
+
+        /* 6 – act: granted → welcome.html (animation sequence) → start → dashboard */
+        if (outcome === 'granted') {
+            var username = document.getElementById('username').value.trim();
+            var qs = username ? '?username=' + encodeURIComponent(username) : '';
+            window.location.href = WELCOME_URL + qs;
+        } else {
+            /* Fade header out again */
+            await fadeHeader(0, FADE);
+
+            /* Reset visuals + form */
+            setStateVisuals('Access Restricted', IMG.restricted);
+            resetForm();
+
+            /* Fade everything back in together */
+            await fadeAll(1, FADE);
+
+            unlockIcon();
+        }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       attemptLogin — DEV stub or real fetch, never throws
+    ───────────────────────────────────────────────────────────── */
+    async function attemptLogin(username, password) {
+        if (typeof DEV_MODE !== 'undefined' && DEV_MODE) {
+            await new Promise(function (r) { setTimeout(r, 800); });
+            return { success: (username === DEV_USER && password === DEV_PASS) };
+        }
+
+        try {
+            const response = await fetch('/TruAi/api/v1/auth/login', {
+                method      : 'POST',
+                credentials : 'include',
+                headers     : { 'Content-Type': 'application/json' },
+                body        : JSON.stringify({ username, password }),
+            });
+            if (!response.ok) return { success: false };
+            return await response.json();
+        } catch (err) {
+            console.warn('Network error during login:', err.message);
+            return { success: false };
+        }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       handleSubmit — shared by icon click AND Enter key
+    ───────────────────────────────────────────────────────────── */
+    async function handleSubmit() {
+        if (statusIcon.classList.contains('locked')) return;
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            showStatus('error', 'Please enter your username and password.');
+            return;
+        }
+
+        lockIcon();
+        showStatus('info', 'Verifying credentials…');
+
+        const result = await attemptLogin(username, password);
+        hideStatus();
+
+        if (result.success) {
+            await transition('granted');
+        } else {
+            await transition('denied');
+        }
+    }
+
+    /* ── Icon click triggers submit ── */
+    statusIcon.addEventListener('click', handleSubmit);
+
+    /* ── Enter key in either field also triggers submit ── */
+    document.getElementById('verifyForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        handleSubmit();
+    });
+
+    /* ─────────────────────────────────────────────────────────────
+       ROMA status check
+    ───────────────────────────────────────────────────────────── */
+    async function checkRomaStatus() {
+        try {
+            const response  = await fetch('/TruAi/api/v1/security/roma');
+            const data      = await response.json();
+            const indicator = document.getElementById('romaIndicator');
+
+            if (data.roma && data.portal_protected && data.monitor === 'active') {
+                indicator.textContent = 'ROMA • Portal Protected • Monitor Active';
+                indicator.classList.add('confirmed');
+            } else if (data.trust_state === 'UNVERIFIED') {
+                indicator.textContent = 'ROMA • Unverified';
+            }
+        } catch (_) { /* silent */ }
+    }
+
+    window.addEventListener('DOMContentLoaded', checkRomaStatus);
+
+})();
+</script>
+
+</body>
+</html>

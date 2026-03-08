@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DemeWebsolutions Biometric Auth</title>
+    <style>
+        body { width: 280px; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0b0d11; color: white; }
+        h2 { font-size: 14px; margin: 0 0 12px; color: #667eea; }
+        p { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+        .status { font-size: 11px; margin-top: 12px; padding: 8px 12px; background: rgba(255,255,255,0.06); border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <h2>🔐 DemeWebsolutions Biometric Auth</h2>
+    <p>Unified biometric authentication for TruAi, Gemini.ai, and Phantom.ai.</p>
+    <div class="status" id="status">Checking native host…</div>
+    <script>
+        chrome.runtime.sendMessage({ action: 'ping' }, response => {
+            document.getElementById('status').textContent = chrome.runtime.lastError
+                ? '⚠ Native host not connected'
+                : '✅ Native host connected';
+        });
+    </script>
+</body>
+</html>

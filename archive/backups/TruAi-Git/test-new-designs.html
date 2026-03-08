@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test New Designs - Tru.ai</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/ide.css">
+    <link rel="stylesheet" href="/assets/css/welcome.css">
+    <link rel="stylesheet" href="/assets/css/settings.css">
+    <link rel="stylesheet" href="/assets/css/data-sharing.css">
+    <link rel="stylesheet" href="/assets/css/theme-preview.css">
+    <style>
+        body {
+            overflow-y: auto;
+            height: auto;
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .test-section {
+            margin-bottom: 60px;
+            padding: 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        .test-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .clear-cache-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .clear-cache-btn:hover {
+            background: var(--accent-blue-hover);
+        }
+    </style>
+</head>
+<body>
+    <button class="clear-cache-btn" onclick="clearAllStorage()">Clear Cache & Reset</button>
+    
+    <div class="test-container">
+        <h1 style="text-align: center; font-size: 32px; margin-bottom: 40px; color: var(--text-primary);">
+            Tru.ai - New Design Test Page
+        </h1>
+
+        <div class="test-section">
+            <h2 class="test-title">1. Test Sign-In Page</h2>
+            <button onclick="showSignIn()" style="padding: 12px 24px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 20px;">
+                Show Sign-In Page
+            </button>
+            <div id="signInPreview"></div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">2. Test Welcome Screen</h2>
+            <button onclick="showWelcome()" style="padding: 12px 24px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 20px;">
+                Show Welcome Screen
+            </button>
+            <div id="welcomePreview"></div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">3. Test Data Sharing Consent</h2>
+            <button onclick="showDataSharing()" style="padding: 12px 24px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 20px;">
+                Show Data Sharing Modal
+            </button>
+            <div id="dataSharingPreview"></div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">4. Test Settings Page</h2>
+            <button onclick="showSettings()" style="padding: 12px 24px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 20px;">
+                Show Settings Panel
+            </button>
+            <div id="settingsPreview"></div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">5. Test AI Chat with @ Context Menu</h2>
+            <button onclick="showAIChat()" style="padding: 12px 24px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 20px;">
+                Show AI Chat Panel
+            </button>
+            <div id="aiChatPreview"></div>
+        </div>
+    </div>
+
+    <script src="/assets/js/crypto.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/data-sharing-consent.js"></script>
+    <script src="/assets/js/welcome.js"></script>
+    <script src="/assets/js/dashboard.js"></script>
+
+    <script>
+        function clearAllStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('Cache cleared! Reload the page to see all new screens.');
+            location.reload();
+        }
+
+        function showSignIn() {
+            const container = document.getElementById('signInPreview');
+            container.innerHTML = `
+                <div class="login-container" style="min-height: 500px;">
+                    <div class="login-box">
+                        <div class="login-header">
+                            <div class="login-logo-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                </svg>
+                            </div>
+                            <h1 class="login-title">Sign in</h1>
+                        </div>
+                        <form>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" placeholder="Your email address">
+                            </div>
+                            <button type="button" class="btn-primary">Continue</button>
+                            <div class="login-divider"><span>OR</span></div>
+                            <div class="social-login">
+                                <button type="button" class="btn-social">
+                                    <svg width="18" height="18" viewBox="0 0 18 18">
+                                        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+                                        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                                        <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+                                        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.158 6.656 3.58 9 3.58z"/>
+                                    </svg>
+                                    Continue with Google
+                                </button>
+                                <button type="button" class="btn-social">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                    </svg>
+                                    Continue with GitHub
+                                </button>
+                                <button type="button" class="btn-social">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                                    </svg>
+                                    Continue with Apple
+                                </button>
+                            </div>
+                            <div class="login-footer">
+                                <span>Don't have an account?</span>
+                                <a href="#" class="sign-up-link">Sign up</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showWelcome() {
+            const container = document.getElementById('welcomePreview');
+            if (typeof showWelcomeScreen === 'function') {
+                const app = document.createElement('div');
+                app.id = 'app';
+                container.appendChild(app);
+                showWelcomeScreen();
+            } else {
+                container.innerHTML = '<p style="color: var(--error-red);">Welcome script not loaded</p>';
+            }
+        }
+
+        function showDataSharing() {
+            const container = document.getElementById('dataSharingPreview');
+            if (typeof showDataSharingConsent === 'function') {
+                const app = document.createElement('div');
+                app.id = 'app';
+                container.appendChild(app);
+                showDataSharingConsent();
+            } else {
+                container.innerHTML = '<p style="color: var(--error-red);">Data sharing script not loaded</p>';
+            }
+        }
+
+        function showSettings() {
+            const container = document.getElementById('settingsPreview');
+            if (typeof renderSettingsPanel === 'function') {
+                activePanel = 'settings';
+                activeSettingsTab = 'general';
+                container.innerHTML = renderSettingsPanel();
+                setupSettingsNavigation();
+            } else {
+                container.innerHTML = '<p style="color: var(--error-red);">Settings script not loaded</p>';
+            }
+        }
+
+        function showAIChat() {
+            const container = document.getElementById('aiChatPreview');
+            if (typeof renderAIPanel === 'function') {
+                activePanel = 'ai';
+                container.innerHTML = `
+                    <div style="max-width: 600px; margin: 0 auto;">
+                        ${renderAIPanel()}
+                    </div>
+                `;
+            } else {
+                container.innerHTML = '<p style="color: var(--error-red);">AI Chat script not loaded</p>';
+            }
+        }
+
+        function setupSettingsNavigation() {
+            document.querySelectorAll('.settings-nav-item').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    activeSettingsTab = this.dataset.tab;
+                    const preview = document.getElementById('settingsPreview');
+                    if (typeof renderSettingsPanel === 'function') {
+                        preview.innerHTML = renderSettingsPanel();
+                        setupSettingsNavigation();
+                    }
+                });
+            });
+        }
+
+        // Initialize config for scripts
+        window.TRUAI_CONFIG = {
+            APP_NAME: 'Tru.ai',
+            APP_VERSION: '1.0.0',
+            API_BASE: window.location.origin + '/api/v1',
+            CSRF_TOKEN: 'test-token',
+            IS_AUTHENTICATED: true,
+            USERNAME: 'admin'
+        };
+    </script>
+</body>
+</html>

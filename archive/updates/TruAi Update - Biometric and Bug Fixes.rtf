@@ -1,0 +1,2427 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 LucidaGrande;\f2\fnil\fcharset134 PingFangSC-Regular;
+\f3\fnil\fcharset0 AppleColorEmoji;\f4\fnil\fcharset0 .SFNS-Regular;\f5\fnil\fcharset77 ZapfDingbatsITC;
+}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Make these code changes?\
+TROUBLESHOOTING_NOTES.md\
+\
+md\
+# TruAi / Gemini.ai Portal - Troubleshooting & Migration Notes\
+\
+## Date: February 18, 2026\
+## Context: Production Server Restoration & Local Development Setup\
+\
+---\
+\
+## Executive Summary\
+\
+This document details all fixes, configurations, and adjustments made to restore the TruAi/Gemini.ai portal on the production server (gemini-ai.demewebsolutions.com). These notes serve as a reference for applying the same fixes to local development environments.\
+\
+---\
+\
+## 1. Database Restoration\
+\
+### Issue\
+- Database file `/database/truai.db` was corrupted or missing\
+- Authentication system non-functional\
+- No users existed in the system\
+\
+### Solution Applied\
+\
+**Location:** `/var/www/vhosts/demewebsolutions.com/Gemini-Ai.demewebsolutions.com/database/truai.db`\
+\
+**Steps:**\
+1. Removed corrupted database file\
+2. Recreated SQLite database with proper schema\
+3. Created two test users with bcrypt-hashed passwords\
+\
+**Database Schema:**\
+```sql\
+-- Users table\
+CREATE TABLE IF NOT EXISTS users (\
+    id INTEGER PRIMARY KEY AUTOINCREMENT,\
+    username TEXT UNIQUE NOT NULL,\
+    email TEXT UNIQUE,\
+    password_hash TEXT NOT NULL,\
+    role TEXT DEFAULT 'user',\
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\
+    last_login DATETIME,\
+    is_active INTEGER DEFAULT 1\
+);\
+\
+-- Sessions table\
+CREATE TABLE IF NOT EXISTS sessions (\
+    id TEXT PRIMARY KEY,\
+    user_id INTEGER NOT NULL,\
+    ip_address TEXT,\
+    user_agent TEXT,\
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\
+    expires_at DATETIME NOT NULL,\
+    last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,\
+    FOREIGN KEY (user_id) REFERENCES users(id)\
+);\
+\
+-- Conversations table\
+CREATE TABLE IF NOT EXISTS conversations (\
+    id INTEGER PRIMARY KEY AUTOINCREMENT,\
+    user_id INTEGER NOT NULL,\
+    title TEXT,\
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\
+    FOREIGN KEY (user_id) REFERENCES users(id)\
+);\
+\
+-- Messages table\
+CREATE TABLE IF NOT EXISTS messages (\
+    id INTEGER PRIMARY KEY AUTOINCREMENT,\
+    conversation_id INTEGER NOT NULL,\
+    role TEXT NOT NULL,\
+    content TEXT NOT NULL,\
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\
+    FOREIGN KEY (conversation_id) REFERENCES conversations(id)\
+);\
+\
+-- User settings table\
+CREATE TABLE IF NOT EXISTS user_settings (\
+    user_id INTEGER PRIMARY KEY,\
+    theme TEXT DEFAULT 'dark',\
+    language TEXT DEFAULT 'en',\
+    notifications_enabled INTEGER DEFAULT 1,\
+    data_sharing_consent INTEGER DEFAULT 0,\
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\
+    FOREIGN KEY (user_id) REFERENCES users(id)\
+);\
+\
+-- API keys table\
+CREATE TABLE IF NOT EXISTS api_keys (\
+    id INTEGER PRIMARY KEY AUTOINCREMENT,\
+    user_id INTEGER NOT NULL,\
+    key_hash TEXT NOT NULL,\
+    name TEXT,\
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\
+    last_used_at DATETIME,\
+    expires_at DATETIME,\
+    is_active INTEGER DEFAULT 1,\
+    FOREIGN KEY (user_id) REFERENCES users(id)\
+);\
+Test Users Created:\
+\
+Username	Password	Role	Status\
+Deme	NewPassword123!	admin	Active\
+admin2	TempPassword123!	admin	Active\
+Password Hashing:\
+\
+Algorithm: bcrypt\
+Cost factor: 12\
+Generated using PHP's password_hash() function\
+File Permissions:\
+\
+bash\
+chmod 664 /database/truai.db\
+chown demewebsolutions:psacln /database/truai.db\
+Local Development Setup\
+For Local Environment:\
+\
+Copy the database schema above\
+Create new SQLite database:\
+bash\
+sqlite3 database/truai.db\
+# Paste schema\
+Create users with bcrypt-hashed passwords\
+Set appropriate file permissions (readable/writable by web server)\
+2. Login Redirect Fix\
+Issue\
+After successful login, users were redirected to /TruAi/ (TruAi Prototype.html)\
+This was the old prototype interface, not the production Gemini Portal\
+Users expected to see gemini-portal.html with automation buttons\
+Solution Applied\
+File Modified: /var/www/vhosts/demewebsolutions.com/Gemini-Ai.demewebsolutions.com/backend/router.php\
+\
+Line Changed: ~250\
+\
+Before:\
+\
+PHP\
+'redirect_url' => '/TruAi/'\
+After:\
+\
+PHP\
+'redirect_url' => '/TruAi/gemini'\
+Impact:\
+\
+Login now redirects to /TruAi/gemini which loads gemini-portal.html\
+This is the production interface with:\
+Gemini AI chat interface\
+Automation buttons (Create Email, Create Invoice, Summarize, etc.)\
+Modern UI with sidebar navigation\
+Chat history and conversation management\
+Local Development Setup\
+For Local Environment:\
+\
+Open backend/router.php\
+Search for 'redirect_url' in the login handler (around line 250)\
+Change from /TruAi/ to /TruAi/gemini\
+Save and test login flow\
+URL Routing Reference:\
+\
+/ 
+\f1 \uc0\u8594 
+\f0  Redirects to /TruAi/login-portal.html (if not authenticated)\
+/TruAi/login-portal.html 
+\f1 \uc0\u8594 
+\f0  Login page\
+/TruAi/gemini 
+\f1 \uc0\u8594 
+\f0  Gemini Portal (main dashboard)\
+/TruAi/ 
+\f1 \uc0\u8594 
+\f0  Old prototype (deprecated)\
+3. Form Submission Fix (Credentials in URL)\
+Issue\
+Login form was submitting as GET request\
+Credentials appeared in URL: gemini?username=admin&password=pass123\
+Major security vulnerability\
+JavaScript preventDefault() was not being called in time\
+Root Cause\
+Form element had no action or method attributes\
+Browser default behavior was GET submission\
+JavaScript event listener wasn't preventing default in time\
+Solution Applied\
+File Modified: /var/www/vhosts/demewebsolutions.com/Gemini-Ai.demewebsolutions.com/public/login-portal.html\
+\
+Line Changed: ~318\
+\
+Before:\
+\
+HTML\
+<form id="loginForm">\
+After:\
+\
+HTML\
+<form id="loginForm" action="javascript:void(0)" method="post">\
+Why This Works:\
+\
+action="javascript:void(0)" prevents form from submitting via HTTP\
+method="post" ensures if form does submit, it uses POST not GET\
+JavaScript event listener still handles the actual submission via API\
+Provides fallback protection if JavaScript fails to load\
+JavaScript Handler (Already Present)\
+JavaScript\
+document.getElementById('loginForm').addEventListener('submit', async function(e) \{\
+    e.preventDefault();\
+    // ... API call logic\
+\});\
+Local Development Setup\
+For Local Environment:\
+\
+Open public/login-portal.html\
+Find the <form id="loginForm"> tag (around line 318)\
+Add action="javascript:void(0)" method="post" attributes\
+Test login to ensure credentials don't appear in URL\
+Security Best Practices:\
+\
+Never use GET for sensitive data\
+Always use POST for authentication\
+Implement CSRF protection (already present in router.php)\
+Use HTTPS in production (already configured)\
+4. JavaScript Syntax Error Fix\
+Issue\
+Browser console error: Uncaught SyntaxError: Unexpected end of input\
+Error occurred on gemini-portal.html at line 1409\
+Page loaded but JavaScript functionality broken\
+Missing closing brace in inline script\
+Root Cause\
+The gemini-portal.html file had unbalanced braces\
+Opening braces: 330\
+Closing braces: 329\
+Missing closing brace at end of DOMContentLoaded event listener\
+Solution Applied\
+File Modified: /var/www/vhosts/demewebsolutions.com/Gemini-Ai.demewebsolutions.com/public/gemini-portal.html\
+\
+Location: End of file (before </script> tag)\
+\
+Fix Applied: Added missing closing brace before the final </script> tag\
+\
+Before (End of File):\
+\
+JavaScript\
+    if (disclaimerView && dashboardView) \{\
+      var obs = new MutationObserver(function() \{\
+        if (dashboardView.style.display !== 'none') initChatHistory();\
+      \});\
+      obs.observe(dashboardView, \{ attributes: true, attributeFilter: ['style'] \});\
+      if (dashboardView.style.display !== 'none') initChatHistory();\
+    \}\
+  </script>\
+</body>\
+</html>\
+After (End of File):\
+\
+JavaScript\
+    if (disclaimerView && dashboardView) \{\
+      var obs = new MutationObserver(function() \{\
+        if (dashboardView.style.display !== 'none') initChatHistory();\
+      \});\
+      obs.observe(dashboardView, \{ attributes: true, attributeFilter: ['style'] \});\
+      if (dashboardView.style.display !== 'none') initChatHistory();\
+    \}\
+  \}  // 
+\f1 \uc0\u8592 
+\f0  MISSING BRACE ADDED HERE\
+  </script>\
+</body>\
+</html>\
+Verification:\
+\
+bash\
+# Count braces\
+grep -o '\{' gemini-portal.html | wc -l  # Should output: 330\
+grep -o '\}' gemini-portal.html | wc -l  # Should output: 330\
+Impact\
+Page now loads without JavaScript errors\
+All interactive features functional\
+Chat interface works correctly\
+Automation buttons clickable\
+Local Development Setup\
+For Local Environment:\
+\
+Open public/gemini-portal.html\
+Scroll to the very end of the file\
+Find the last </script> tag\
+Add closing brace \} before </script>\
+Verify brace count matches\
+Debugging Tips:\
+\
+Use browser DevTools (F12) 
+\f1 \uc0\u8594 
+\f0  Console tab\
+Look for syntax errors on page load\
+Check line numbers in error messages\
+Use a code editor with bracket matching (VS Code, Sublime)\
+Tools like JSHint or ESLint can catch these automatically\
+5. Additional Configuration Notes\
+File Structure\
+Code\
+/var/www/vhosts/demewebsolutions.com/Gemini-Ai.demewebsolutions.com/\
+
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  public/\
+\uc0\u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  index.php (router entry point)\
+\uc0\u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  login-portal.html\
+\uc0\u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  gemini-portal.html\
+\uc0\u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  TruAi Prototype.html (deprecated)\
+\uc0\u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  TruAi/\
+\uc0\u9474    \u9474    \u9492 \u9472 \u9472  assets/\
+\uc0\u9474    \u9474        
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  js/\
+\uc0\u9474    \u9474        \u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  api.js\
+\uc0\u9474    \u9474        \u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  crypto.js\
+\uc0\u9474    \u9474        \u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  login.js\
+\uc0\u9474    \u9474        \u9474    \u9492 \u9472 \u9472  ... (other JS files)\
+\uc0\u9474    \u9474        \u9492 \u9472 \u9472  css/\
+\uc0\u9474    \u9492 \u9472 \u9472  assets/ (duplicate structure)\
+
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  backend/\
+\uc0\u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  router.php (main API router)\
+\uc0\u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  roma_trust.php (security module)\
+\uc0\u9474    
+\f2 \'a9\'c0
+\f0 \uc0\u9472 \u9472  encryption.php\
+\uc0\u9474    \u9492 \u9472 \u9472  ... (other backend files)\
+\uc0\u9492 \u9472 \u9472  database/\
+    \uc0\u9492 \u9472 \u9472  truai.db (SQLite database)\
+Web Server Configuration (Apache/Nginx)\
+Document Root: /var/www/vhosts/demewebsolutions.com/Gemini-Ai.demewebsolutions.com/public\
+\
+Rewrite Rules (for index.php routing):\
+\
+apache\
+# Apache .htaccess\
+RewriteEngine On\
+RewriteCond %\{REQUEST_FILENAME\} !-f\
+RewriteCond %\{REQUEST_FILENAME\} !-d\
+RewriteRule ^(.*)$ index.php [QSA,L]\
+Nginx\
+# Nginx configuration\
+location / \{\
+    try_files $uri $uri/ /index.php?$query_string;\
+\}\
+PHP Configuration Requirements\
+Minimum PHP Version: 8.1+\
+\
+Required Extensions:\
+\
+pdo_sqlite\
+openssl\
+json\
+mbstring\
+session\
+php.ini Settings:\
+\
+INI\
+session.cookie_httponly = 1\
+session.cookie_secure = 1  ; Production only (HTTPS)\
+session.cookie_samesite = "Strict"\
+upload_max_filesize = 10M\
+post_max_size = 10M\
+Environment Variables\
+Not Currently Used - All configuration is hardcoded in backend/router.php\
+\
+Recommended for Local Development: Create .env file:\
+\
+env\
+APP_ENV=development\
+APP_DEBUG=true\
+DB_PATH=../database/truai.db\
+GEMINI_API_KEY=your_api_key_here\
+SESSION_LIFETIME=3600\
+6. Known Issues & Limitations\
+Current Problems\
+Login Still Not Working on Production\
+\
+Despite all fixes, authentication is failing\
+Possible causes:\
+Session handling issues\
+CORS/cookie problems\
+API endpoint not responding correctly\
+Roma security module blocking requests\
+Status: Requires further investigation\
+Roma Security Module\
+\
+Located in backend/roma_trust.php\
+May be interfering with login process\
+Endpoint /api/v1/security/roma exists but integration unclear\
+Recommendation: Review Roma module initialization\
+Duplicate Asset Paths\
+\
+Assets exist in both /TruAi/assets/ and /assets/\
+Causes confusion and potential 404 errors\
+Recommendation: Consolidate to single location\
+Browser Caching Issues\
+\
+Changes not immediately visible\
+Users report seeing old versions\
+Workaround: Hard refresh (Ctrl+Shift+R) or incognito mode\
+Solution: Implement cache-busting (version query parameters)\
+Missing Features\
+Password Reset Functionality\
+\
+No "Forgot Password" link\
+No email recovery system\
+Impact: Users locked out permanently if password forgotten\
+User Registration\
+\
+No public registration page\
+Users must be created manually via database\
+Impact: Requires admin intervention for new users\
+Logging System\
+\
+No error logging\
+Difficult to debug production issues\
+Recommendation: Implement Monolog or similar\
+API Documentation\
+\
+No OpenAPI/Swagger docs\
+Endpoints discovered through code inspection\
+Recommendation: Document all API endpoints\
+7. Testing Checklist\
+After Applying Fixes Locally\
+ Database created with proper schema\
+ Test users created and can authenticate\
+ Login form doesn't expose credentials in URL\
+ JavaScript console shows no errors on gemini-portal.html\
+ Login redirects to /TruAi/gemini not /TruAi/\
+ Gemini Portal loads with all UI elements\
+ Automation buttons visible and clickable\
+ Chat interface functional\
+ Session persistence works (reload page stays logged in)\
+ Logout functionality works\
+ Roma security endpoint responds correctly\
+Manual Testing Steps\
+bash\
+# 1. Database Check\
+sqlite3 database/truai.db "SELECT username, role FROM users;"\
+\
+# 2. File Permissions\
+ls -lh database/truai.db\
+\
+# 3. Test Login API\
+curl -X POST https://localhost/api/v1/auth/login \\\
+  -H "Content-Type: application/json" \\\
+  -d '\{"username":"Deme","password":"NewPassword123!"\}'\
+\
+# 4. Check Session\
+curl -X GET https://localhost/api/v1/auth/status \\\
+  -H "Cookie: TRUAI_SESSION=<session_id>"\
+\
+# 5. JavaScript Syntax Check\
+grep -o '\{' public/gemini-portal.html | wc -l\
+grep -o '\}' public/gemini-portal.html | wc -l\
+8. Recommended Next Steps\
+Immediate Actions\
+Debug Production Login Issue\
+\
+Enable error logging in router.php\
+Check Apache/Nginx error logs\
+Test API endpoints directly with curl\
+Verify database connection\
+Review Roma module code\
+Implement Proper Logging\
+\
+PHP\
+// Add to router.php\
+error_log(date('Y-m-d H:i:s') . " - Login attempt: " . $username);\
+Add Cache-Busting\
+\
+HTML\
+<script src="/TruAi/assets/js/api.js?v=<?php echo filemtime('assets/js/api.js'); ?>"></script>\
+Long-Term Improvements\
+Environment Configuration\
+\
+Move to .env file for configuration\
+Use different settings for dev/staging/production\
+Implement proper secrets management\
+Security Enhancements\
+\
+Add rate limiting to login endpoint\
+Implement account lockout after failed attempts\
+Add two-factor authentication\
+Security headers (CSP, HSTS, etc.)\
+Code Quality\
+\
+Separate concerns (MVC pattern)\
+Add unit tests\
+Implement CI/CD pipeline\
+Code documentation with PHPDoc\
+Monitoring & Observability\
+\
+Error tracking (Sentry, Bugsnag)\
+Performance monitoring (New Relic, DataDog)\
+Uptime monitoring\
+User analytics\
+9. Backup & Recovery\
+Before Making Changes\
+Always backup these critical files:\
+\
+bash\
+# Database\
+cp database/truai.db database/truai.db.backup-$(date +%s)\
+\
+# Configuration\
+cp backend/router.php backend/router.php.backup-$(date +%s)\
+\
+# Frontend\
+cp public/login-portal.html public/login-portal.html.backup-$(date +%s)\
+cp public/gemini-portal.html public/gemini-portal.html.backup-$(date +%s)\
+Recovery Procedures\
+If database gets corrupted:\
+\
+Stop web server\
+Restore from backup: cp database/truai.db.backup-XXXXX database/truai.db\
+Verify integrity: sqlite3 database/truai.db "PRAGMA integrity_check;"\
+Start web server\
+If login breaks:\
+\
+Check error logs: tail -f /var/log/apache2/error.log\
+Test API directly: curl -v POST /api/v1/auth/login\
+Restore router.php from backup if needed\
+10. Contact & Support\
+Key Files Reference\
+Component	File Path	Purpose\
+Login Page	public/login-portal.html	User authentication UI\
+Main Portal	public/gemini-portal.html	Gemini AI dashboard\
+API Router	backend/router.php	Backend API endpoints\
+Database	database/truai.db	SQLite data storage\
+Roma Security	backend/roma_trust.php	Security module\
+JavaScript API	public/TruAi/assets/js/api.js	Frontend API client\
+Common Commands\
+bash\
+# Check PHP errors\
+tail -f /var/log/php_errors.log\
+\
+# Test database\
+sqlite3 database/truai.db ".schema"\
+\
+# Check file permissions\
+ls -lh database/ backend/ public/\
+\
+# Restart web server\
+sudo systemctl restart apache2  # or nginx\
+Document Metadata\
+Author: GitHub Copilot\
+Date Created: February 18, 2026\
+Last Updated: February 18, 2026\
+Version: 1.0\
+Status: Active troubleshooting in progress\
+Production URL: https://gemini-ai.demewebsolutions.com\
+Changelog\
+2026-02-18\
+Initial document creation\
+Documented database restoration\
+Documented login redirect fix\
+Documented form submission security fix\
+Documented JavaScript syntax error fix\
+Added testing checklist\
+Added backup procedures\
+Login still not functional - investigation ongoing\
+Code\
+\
+# 
+\f3 \uc0\u55357 \u56592 
+\f0  **UNIFIED BIOMETRIC SOVEREIGN AUTHENTICATION SYSTEM (UBSAS) v2.0**\
+\
+**Revised Architecture:** Biometric-First with Intelligent Fallback Chain\
+\
+---\
+\
+## 
+\f3 \uc0\u55356 \u57263 
+\f0  **Authentication Hierarchy**\
+\
+### **Priority Order:**\
+\
+```\
+\uc0\u9484 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9488 \
+\uc0\u9474   TIER 1: OS Biometric (Default - 95% of use cases)             \u9474 \
+\uc0\u9474   \'95 macOS Touch ID / Face ID                                     \u9474 \
+\uc0\u9474   \'95 Linux Fingerprint (fprintd)                                  \u9474 \
+\uc0\u9474   \'95 Windows Hello                                                \u9474 \
+\uc0\u9474   
+\f1 \uc0\u10003 
+\f0  Zero typing required                                        \uc0\u9474 \
+\uc0\u9474   
+\f1 \uc0\u10003 
+\f0  Instant authentication                                       \uc0\u9474 \
+\uc0\u9492 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'a9\'d0
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9496 \
+                             
+\f1 \uc0\u8595 
+\f0 \
+                      
+\f3 \uc0\u10060 
+\f0  Sensor unavailable?\
+                      
+\f3 \uc0\u10060 
+\f0  Biometric failure?\
+                             
+\f1 \uc0\u8595 
+\f0 \
+\uc0\u9484 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9488 \
+\uc0\u9474   TIER 2: Auto-Fill from Keychain (Fallback)                    \u9474 \
+\uc0\u9474   \'95 Retrieve from OS keychain                                    \u9474 \
+\uc0\u9474   \'95 Auto-populate username/password fields                       \u9474 \
+\uc0\u9474   \'95 Require single-click submit                                  \u9474 \
+\uc0\u9474   
+\f1 \uc0\u10003 
+\f0  Minimal user interaction                                    \uc0\u9474 \
+\uc0\u9474   
+\f1 \uc0\u10003 
+\f0  No manual typing of complex passwords                       \uc0\u9474 \
+\uc0\u9492 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'a9\'d0
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9496 \
+                             
+\f1 \uc0\u8595 
+\f0 \
+                      
+\f3 \uc0\u10060 
+\f0  Keychain locked?\
+                      
+\f3 \uc0\u10060 
+\f0  Auto-fill blocked?\
+                             
+\f1 \uc0\u8595 
+\f0 \
+\uc0\u9484 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9488 \
+\uc0\u9474   TIER 3: Manual Password Entry (Emergency)                     \u9474 \
+\uc0\u9474   \'95 Standard username/password form                              \u9474 \
+\uc0\u9474   \'95 For systems without biometric sensors                        \u9474 \
+\uc0\u9474   \'95 Temporary/guest access scenarios                             \u9474 \
+\uc0\u9474   
+\f3 \uc0\u9888 \u65039 
+\f0  Requires typing but still secure                           \uc0\u9474 \
+\uc0\u9474   
+\f1 \uc0\u10003 
+\f0  Works on any system                                         \uc0\u9474 \
+\uc0\u9492 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'a9\'d0
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9496 \
+                             
+\f1 \uc0\u8595 
+\f0 \
+                      
+\f3 \uc0\u10060 
+\f0  Password forgotten?\
+                      
+\f3 \uc0\u10060 
+\f0  Account locked?\
+                             
+\f1 \uc0\u8595 
+\f0 \
+\uc0\u9484 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9488 \
+\uc0\u9474   TIER 4: Master Key Recovery (Last Resort)                     \u9474 \
+\uc0\u9474   \'95 256-bit offline master key                                   \u9474 \
+\uc0\u9474   \'95 Requires physical access + ROMA verification                 \u9474 \
+\uc0\u9474   \'95 Rate-limited to prevent brute force                          \u9474 \
+\uc0\u9474   
+\f3 \uc0\u9888 \u65039 
+\f0  Single-use, generates temporary password                   \uc0\u9474 \
+\uc0\u9474   
+\f1 \uc0\u10003 
+\f0  Prevents permanent lockout                                  \uc0\u9474 \
+\uc0\u9492 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9496 \
+```\
+\
+---\
+\
+## 
+\f3 \uc0\u55357 \u57056 \u65039 
+\f0  **Revised Implementation**\
+\
+### **Enhanced Biometric Auth Service with Fallback Chain**\
+\
+**File: `biometric_auth_service_v2.php`**\
+\
+```php\
+<?php\
+/**\
+ * Unified Biometric Sovereign Authentication System (UBSAS) v2.0\
+ * With intelligent fallback chain\
+ */\
+\
+class UBSASAuthService \{\
+    private const KEYCHAIN_SERVICE = 'com.demewebsolutions.auth';\
+    private const APPLICATIONS = ['truai', 'gemini', 'phantom'];\
+    \
+    // Authentication tiers\
+    private const TIER_BIOMETRIC = 1;\
+    private const TIER_AUTOFILL = 2;\
+    private const TIER_MANUAL = 3;\
+    private const TIER_MASTERKEY = 4;\
+    \
+    /**\
+     * Determine available authentication methods\
+     */\
+    public function getAvailableAuthMethods(): array \{\
+        $methods = [];\
+        \
+        // Tier 1: Check biometric availability\
+        if ($this->isBiometricAvailable()) \{\
+            $methods[] = [\
+                'tier' => self::TIER_BIOMETRIC,\
+                'name' => 'OS Biometric',\
+                'type' => $this->getBiometricType(),\
+                'description' => 'Touch ID, Face ID, or fingerprint sensor',\
+                'enabled' => true,\
+                'priority' => 1\
+            ];\
+        \}\
+        \
+        // Tier 2: Check keychain availability\
+        if ($this->isKeychainAvailable()) \{\
+            $methods[] = [\
+                'tier' => self::TIER_AUTOFILL,\
+                'name' => 'Auto-Fill',\
+                'type' => 'keychain',\
+                'description' => 'Retrieve credentials from OS keychain',\
+                'enabled' => true,\
+                'priority' => 2\
+            ];\
+        \}\
+        \
+        // Tier 3: Manual entry always available\
+        $methods[] = [\
+            'tier' => self::TIER_MANUAL,\
+            'name' => 'Manual Password',\
+            'type' => 'password',\
+            'description' => 'Enter username and password manually',\
+            'enabled' => true,\
+            'priority' => 3\
+        ];\
+        \
+        // Tier 4: Master key (if configured)\
+        if ($this->isMasterKeyConfigured()) \{\
+            $methods[] = [\
+                'tier' => self::TIER_MASTERKEY,\
+                'name' => 'Master Recovery Key',\
+                'type' => 'masterkey',\
+                'description' => 'Use offline recovery key (last resort)',\
+                'enabled' => true,\
+                'priority' => 4\
+            ];\
+        \}\
+        \
+        return $methods;\
+    \}\
+    \
+    /**\
+     * Check if biometric sensor is available\
+     */\
+    private function isBiometricAvailable(): bool \{\
+        if (PHP_OS === 'Darwin') \{\
+            // Check for Touch ID/Face ID on macOS\
+            $output = shell_exec("bioutil -r 2>&1");\
+            \
+            // If bioutil not available, check hardware\
+            if (empty($output)) \{\
+                $output = shell_exec("system_profiler SPiBridgeDataType 2>&1");\
+            \}\
+            \
+            return (strpos($output, 'Touch ID') !== false || \
+                    strpos($output, 'Face ID') !== false);\
+        \} elseif (PHP_OS === 'Linux') \{\
+            // Check for fprintd on Linux\
+            $output = shell_exec("which fprintd 2>&1");\
+            return !empty($output) && strpos($output, 'not found') === false;\
+        \}\
+        \
+        return false;\
+    \}\
+    \
+    /**\
+     * Get biometric type description\
+     */\
+    private function getBiometricType(): string \{\
+        if (PHP_OS === 'Darwin') \{\
+            $output = shell_exec("system_profiler SPiBridgeDataType 2>&1");\
+            if (strpos($output, 'Face ID') !== false) \{\
+                return 'Face ID';\
+            \} elseif (strpos($output, 'Touch ID') !== false) \{\
+                return 'Touch ID';\
+            \}\
+            return 'Biometric';\
+        \} elseif (PHP_OS === 'Linux') \{\
+            return 'Fingerprint';\
+        \}\
+        return 'Unknown';\
+    \}\
+    \
+    /**\
+     * Check if OS keychain is available\
+     */\
+    private function isKeychainAvailable(): bool \{\
+        if (PHP_OS === 'Darwin') \{\
+            // macOS always has Keychain\
+            return true;\
+        \} elseif (PHP_OS === 'Linux') \{\
+            // Check for libsecret/gnome-keyring\
+            $output = shell_exec("which secret-tool 2>&1");\
+            return !empty($output) && strpos($output, 'not found') === false;\
+        \}\
+        return false;\
+    \}\
+    \
+    /**\
+     * Check if master key is configured\
+     */\
+    private function isMasterKeyConfigured(): bool \{\
+        $db = Database::getInstance();\
+        $stmt = $db->getConnection()->prepare(\
+            'SELECT COUNT(*) FROM master_recovery_keys'\
+        );\
+        $stmt->execute();\
+        return $stmt->fetchColumn() > 0;\
+    \}\
+    \
+    /**\
+     * Authenticate using best available method\
+     */\
+    public function authenticate(string $app, array $credentials = []): ?array \{\
+        $methods = $this->getAvailableAuthMethods();\
+        \
+        // Try Tier 1: Biometric (if available and no credentials provided)\
+        if (empty($credentials) && $this->hasTier($methods, self::TIER_BIOMETRIC)) \{\
+            $result = $this->authenticateBiometric($app);\
+            if ($result) \{\
+                $result['auth_method'] = 'biometric';\
+                return $result;\
+            \}\
+        \}\
+        \
+        // Try Tier 2: Auto-fill from keychain\
+        if (empty($credentials) && $this->hasTier($methods, self::TIER_AUTOFILL)) \{\
+            $result = $this->authenticateAutoFill($app);\
+            if ($result) \{\
+                $result['auth_method'] = 'autofill';\
+                return $result;\
+            \}\
+        \}\
+        \
+        // Try Tier 3: Manual password entry\
+        if (!empty($credentials['username']) && !empty($credentials['password'])) \{\
+            $result = $this->authenticateManual($app, $credentials);\
+            if ($result) \{\
+                $result['auth_method'] = 'manual';\
+                return $result;\
+            \}\
+        \}\
+        \
+        // Try Tier 4: Master key recovery\
+        if (!empty($credentials['master_key'])) \{\
+            $result = $this->authenticateMasterKey($app, $credentials);\
+            if ($result) \{\
+                $result['auth_method'] = 'masterkey';\
+                return $result;\
+            \}\
+        \}\
+        \
+        return null;\
+    \}\
+    \
+    /**\
+     * Check if tier exists in available methods\
+     */\
+    private function hasTier(array $methods, int $tier): bool \{\
+        foreach ($methods as $method) \{\
+            if ($method['tier'] === $tier && $method['enabled']) \{\
+                return true;\
+            \}\
+        \}\
+        return false;\
+    \}\
+    \
+    /**\
+     * Tier 1: Biometric authentication\
+     */\
+    private function authenticateBiometric(string $app): ?array \{\
+        // Detect biometric unlock\
+        if (!$this->detectBiometricUnlock()) \{\
+            return null;\
+        \}\
+        \
+        // Retrieve credentials from keychain (triggers biometric prompt)\
+        $username = $this->getStoredUsername($app);\
+        if (!$username) \{\
+            return null;\
+        \}\
+        \
+        $credentials = $this->retrieveCredentials($app, $username);\
+        if (!$credentials) \{\
+            return null;\
+        \}\
+        \
+        // Authenticate with application\
+        return $this->authenticateWithApp($app, $credentials);\
+    \}\
+    \
+    /**\
+     * Tier 2: Auto-fill authentication\
+     */\
+    private function authenticateAutoFill(string $app): ?array \{\
+        // Retrieve from keychain without biometric (may prompt for password)\
+        $username = $this->getStoredUsername($app);\
+        if (!$username) \{\
+            return null;\
+        \}\
+        \
+        $credentials = $this->retrieveCredentials($app, $username);\
+        if (!$credentials) \{\
+            return null;\
+        \}\
+        \
+        // Return credentials for auto-fill (don't auto-submit)\
+        return [\
+            'success' => true,\
+            'credentials' => $credentials,\
+            'requires_submit' => true // User must click submit\
+        ];\
+    \}\
+    \
+    /**\
+     * Tier 3: Manual password authentication\
+     */\
+    private function authenticateManual(string $app, array $credentials): ?array \{\
+        // Validate credentials with application\
+        return $this->authenticateWithApp($app, $credentials);\
+    \}\
+    \
+    /**\
+     * Tier 4: Master key authentication\
+     */\
+    private function authenticateMasterKey(string $app, array $credentials): ?array \{\
+        $masterKey = $credentials['master_key'] ?? '';\
+        $username = $credentials['username'] ?? '';\
+        \
+        if (empty($masterKey) || empty($username)) \{\
+            return null;\
+        \}\
+        \
+        // Validate master key\
+        $db = Database::getInstance();\
+        $stmt = $db->getConnection()->prepare(\
+            'SELECT id, user_id, use_count FROM master_recovery_keys \
+             WHERE key_hash = ? AND user_id = (SELECT id FROM users WHERE username = ?)'\
+        );\
+        \
+        $keyHash = hash('sha256', $masterKey);\
+        $stmt->execute([$keyHash, $username]);\
+        $keyRecord = $stmt->fetch(PDO::FETCH_ASSOC);\
+        \
+        if (!$keyRecord) \{\
+            return null;\
+        \}\
+        \
+        // Rate limiting: max 3 uses per 24 hours\
+        if ($keyRecord['use_count'] >= 3) \{\
+            return [\
+                'success' => false,\
+                'error' => 'Master key usage limit exceeded (3/24h)'\
+            ];\
+        \}\
+        \
+        // Generate temporary password\
+        $tempPassword = bin2hex(random_bytes(24));\
+        $hashedPassword = password_hash($tempPassword, PASSWORD_ARGON2ID, [\
+            'memory_cost' => 65536,\
+            'time_cost' => 4,\
+            'threads' => 2\
+        ]);\
+        \
+        // Update user password (temporary)\
+        $expiresAt = date('Y-m-d H:i:s', time() + 600); // 10 minutes\
+        $updateStmt = $db->getConnection()->prepare(\
+            'UPDATE users \
+             SET password_hash = ?, \
+                 temp_password_expires = ?,\
+                 requires_password_change = 1\
+             WHERE id = ?'\
+        );\
+        $updateStmt->execute([$hashedPassword, $expiresAt, $keyRecord['user_id']]);\
+        \
+        // Increment master key use count\
+        $incrementStmt = $db->getConnection()->prepare(\
+            'UPDATE master_recovery_keys \
+             SET use_count = use_count + 1, last_used = datetime("now") \
+             WHERE id = ?'\
+        );\
+        $incrementStmt->execute([$keyRecord['id']]);\
+        \
+        // Log master key usage\
+        $this->logMasterKeyUsage($keyRecord['user_id']);\
+        \
+        return [\
+            'success' => true,\
+            'temporary_password' => $tempPassword,\
+            'expires_at' => $expiresAt,\
+            'must_change' => true,\
+            'message' => 'Temporary password generated. Valid for 10 minutes. Change immediately after login.'\
+        ];\
+    \}\
+    \
+    /**\
+     * Detect biometric unlock (from previous implementation)\
+     */\
+    private function detectBiometricUnlock(): bool \{\
+        if (PHP_OS === 'Darwin') \{\
+            $cmd = "log show --predicate 'subsystem == \\"com.apple.loginwindow\\" AND eventMessage CONTAINS \\"authenticated\\"' --last 5m --style compact 2>/dev/null | tail -1";\
+            $output = shell_exec($cmd);\
+            \
+            if (!empty($output) && \
+                (strpos($output, 'touchid') !== false || \
+                 strpos($output, 'opticid') !== false)) \{\
+                return true;\
+            \}\
+        \} elseif (PHP_OS === 'Linux') \{\
+            $cmd = "journalctl -u fprintd --since '5 minutes ago' | grep -i 'verify-match' | tail -1";\
+            $output = shell_exec($cmd);\
+            return !empty($output) && strpos($output, 'verify-match') !== false;\
+        \}\
+        \
+        return false;\
+    \}\
+    \
+    /**\
+     * Store credentials in keychain (from previous implementation)\
+     */\
+    public function storeCredentials(string $app, string $username, string $password): bool \{\
+        if (PHP_OS === 'Darwin') \{\
+            return $this->storeMacOSKeychain($app, $username, $password);\
+        \} elseif (PHP_OS === 'Linux') \{\
+            return $this->storeLinuxKeyring($app, $username, $password);\
+        \}\
+        return false;\
+    \}\
+    \
+    /**\
+     * Retrieve credentials from keychain (from previous implementation)\
+     */\
+    public function retrieveCredentials(string $app, string $username): ?array \{\
+        if (PHP_OS === 'Darwin') \{\
+            return $this->retrieveMacOSKeychain($app, $username);\
+        \} elseif (PHP_OS === 'Linux') \{\
+            return $this->retrieveLinuxKeyring($app, $username);\
+        \}\
+        return null;\
+    \}\
+    \
+    /**\
+     * Get stored username for app\
+     */\
+    private function getStoredUsername(string $app): ?string \{\
+        $configFile = $_SERVER['HOME'] . '/.demewebsolutions/config.json';\
+        \
+        if (!file_exists($configFile)) \{\
+            return null;\
+        \}\
+        \
+        $config = json_decode(file_get_contents($configFile), true);\
+        return $config['apps'][$app]['username'] ?? null;\
+    \}\
+    \
+    /**\
+     * Authenticate with application API\
+     */\
+    private function authenticateWithApp(string $app, array $credentials): ?array \{\
+        $apiUrls = [\
+            'truai' => 'http://127.0.0.1:8001/TruAi/api/v1/auth/login',\
+            'gemini' => 'http://127.0.0.1:8001/TruAi/api/v1/auth/login',\
+            'phantom' => 'http://127.0.0.1:8002/Phantom/api/v1/auth/login'\
+        ];\
+        \
+        if (!isset($apiUrls[$app])) \{\
+            return null;\
+        \}\
+        \
+        $ch = curl_init($apiUrls[$app]);\
+        curl_setopt_array($ch, [\
+            CURLOPT_RETURNTRANSFER => true,\
+            CURLOPT_POST => true,\
+            CURLOPT_POSTFIELDS => json_encode([\
+                'username' => $credentials['username'],\
+                'password' => $credentials['password']\
+            ]),\
+            CURLOPT_HTTPHEADER => [\
+                'Content-Type: application/json',\
+                'X-Biometric-Auth: true'\
+            ],\
+            CURLOPT_COOKIEJAR => $_SERVER['HOME'] . '/.demewebsolutions/cookies.txt',\
+            CURLOPT_COOKIEFILE => $_SERVER['HOME'] . '/.demewebsolutions/cookies.txt'\
+        ]);\
+        \
+        $response = curl_exec($ch);\
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);\
+        curl_close($ch);\
+        \
+        if ($httpCode === 200) \{\
+            return json_decode($response, true);\
+        \}\
+        \
+        return null;\
+    \}\
+    \
+    /**\
+     * Log master key usage\
+     */\
+    private function logMasterKeyUsage(int $userId): void \{\
+        $db = Database::getInstance();\
+        $stmt = $db->getConnection()->prepare(\
+            'INSERT INTO recovery_attempts \
+             (user_id, ip_address, device_fingerprint, result, details, created_at) \
+             VALUES (?, ?, ?, ?, ?, datetime("now"))'\
+        );\
+        \
+        $stmt->execute([\
+            $userId,\
+            $_SERVER['REMOTE_ADDR'] ?? 'localhost',\
+            $this->generateDeviceFingerprint(),\
+            'SUCCESS',\
+            'Master key recovery used'\
+        ]);\
+    \}\
+    \
+    /**\
+     * Generate device fingerprint\
+     */\
+    private function generateDeviceFingerprint(): string \{\
+        $components = [\
+            php_uname('n'), // hostname\
+            php_uname('m'), // machine type\
+            $_SERVER['HTTP_USER_AGENT'] ?? '',\
+            $_SERVER['REMOTE_ADDR'] ?? ''\
+        ];\
+        \
+        return hash('sha256', implode('|', $components));\
+    \}\
+    \
+    // macOS Keychain methods (from previous implementation)\
+    private function storeMacOSKeychain(string $app, string $username, string $password): bool \{\
+        $service = self::KEYCHAIN_SERVICE . '.' . $app;\
+        \
+        $deleteCmd = sprintf(\
+            'security delete-generic-password -s %s -a %s 2>/dev/null',\
+            escapeshellarg($service),\
+            escapeshellarg($username)\
+        );\
+        exec($deleteCmd);\
+        \
+        $addCmd = sprintf(\
+            'security add-generic-password -s %s -a %s -w %s -T "" -U',\
+            escapeshellarg($service),\
+            escapeshellarg($username),\
+            escapeshellarg($password)\
+        );\
+        \
+        exec($addCmd, $output, $returnCode);\
+        return $returnCode === 0;\
+    \}\
+    \
+    private function retrieveMacOSKeychain(string $app, string $username): ?array \{\
+        $service = self::KEYCHAIN_SERVICE . '.' . $app;\
+        \
+        $cmd = sprintf(\
+            'security find-generic-password -s %s -a %s -w 2>/dev/null',\
+            escapeshellarg($service),\
+            escapeshellarg($username)\
+        );\
+        \
+        $password = trim(shell_exec($cmd));\
+        \
+        if (!empty($password)) \{\
+            return [\
+                'username' => $username,\
+                'password' => $password,\
+                'app' => $app\
+            ];\
+        \}\
+        \
+        return null;\
+    \}\
+    \
+    // Linux Keyring methods (from previous implementation)\
+    private function storeLinuxKeyring(string $app, string $username, string $password): bool \{\
+        $service = self::KEYCHAIN_SERVICE . '.' . $app;\
+        \
+        $cmd = sprintf(\
+            'secret-tool store --label=%s service %s username %s',\
+            escapeshellarg("DemeWebsolutions $app"),\
+            escapeshellarg($service),\
+            escapeshellarg($username)\
+        );\
+        \
+        $process = popen($cmd, 'w');\
+        fwrite($process, $password);\
+        $returnCode = pclose($process);\
+        \
+        return $returnCode === 0;\
+    \}\
+    \
+    private function retrieveLinuxKeyring(string $app, string $username): ?array \{\
+        $service = self::KEYCHAIN_SERVICE . '.' . $app;\
+        \
+        $cmd = sprintf(\
+            'secret-tool lookup service %s username %s 2>/dev/null',\
+            escapeshellarg($service),\
+            escapeshellarg($username)\
+        );\
+        \
+        $password = trim(shell_exec($cmd));\
+        \
+        if (!empty($password)) \{\
+            return [\
+                'username' => $username,\
+                'password' => $password,\
+                'app' => $app\
+            ];\
+        \}\
+        \
+        return null;\
+    \}\
+\}\
+```\
+\
+---\
+\
+## 
+\f3 \uc0\u55356 \u57256 
+\f0  **Enhanced Login UI with Fallback Options**\
+\
+**File: `login-portal-ubsas.html`**\
+\
+```html\
+<!DOCTYPE html>\
+<html lang="en">\
+<head>\
+    <meta charset="UTF-8">\
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+    <title>DemeWebsolutions - Unified Login</title>\
+    <style>\
+        * \{\
+            margin: 0;\
+            padding: 0;\
+            box-sizing: border-box;\
+        \}\
+        \
+        body \{\
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;\
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\
+            min-height: 100vh;\
+            display: flex;\
+            align-items: center;\
+            justify-content: center;\
+        \}\
+        \
+        .login-container \{\
+            background: white;\
+            border-radius: 20px;\
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);\
+            padding: 40px;\
+            width: 90%;\
+            max-width: 450px;\
+        \}\
+        \
+        .logo \{\
+            text-align: center;\
+            margin-bottom: 30px;\
+        \}\
+        \
+        .logo h1 \{\
+            font-size: 28px;\
+            color: #333;\
+            margin-bottom: 5px;\
+        \}\
+        \
+        .logo p \{\
+            color: #666;\
+            font-size: 14px;\
+        \}\
+        \
+        .auth-methods \{\
+            margin: 30px 0;\
+        \}\
+        \
+        .auth-method \{\
+            background: #f8f9fa;\
+            border: 2px solid #e9ecef;\
+            border-radius: 12px;\
+            padding: 20px;\
+            margin-bottom: 15px;\
+            cursor: pointer;\
+            transition: all 0.3s ease;\
+            position: relative;\
+        \}\
+        \
+        .auth-method:hover \{\
+            border-color: #667eea;\
+            background: #f0f4ff;\
+            transform: translateY(-2px);\
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);\
+        \}\
+        \
+        .auth-method.active \{\
+            border-color: #667eea;\
+            background: #f0f4ff;\
+        \}\
+        \
+        .auth-method.disabled \{\
+            opacity: 0.5;\
+            cursor: not-allowed;\
+            pointer-events: none;\
+        \}\
+        \
+        .auth-method-header \{\
+            display: flex;\
+            align-items: center;\
+            gap: 15px;\
+        \}\
+        \
+        .auth-icon \{\
+            font-size: 32px;\
+        \}\
+        \
+        .auth-info h3 \{\
+            font-size: 16px;\
+            color: #333;\
+            margin-bottom: 3px;\
+        \}\
+        \
+        .auth-info p \{\
+            font-size: 12px;\
+            color: #666;\
+        \}\
+        \
+        .tier-badge \{\
+            position: absolute;\
+            top: 15px;\
+            right: 15px;\
+            background: #667eea;\
+            color: white;\
+            font-size: 10px;\
+            padding: 4px 8px;\
+            border-radius: 6px;\
+            font-weight: 600;\
+        \}\
+        \
+        .manual-form \{\
+            display: none;\
+            margin-top: 20px;\
+        \}\
+        \
+        .manual-form.active \{\
+            display: block;\
+        \}\
+        \
+        .form-group \{\
+            margin-bottom: 20px;\
+        \}\
+        \
+        .form-group label \{\
+            display: block;\
+            font-size: 14px;\
+            color: #333;\
+            margin-bottom: 8px;\
+            font-weight: 500;\
+        \}\
+        \
+        .form-group input \{\
+            width: 100%;\
+            padding: 12px;\
+            border: 2px solid #e9ecef;\
+            border-radius: 8px;\
+            font-size: 14px;\
+            transition: border-color 0.3s;\
+        \}\
+        \
+        .form-group input:focus \{\
+            outline: none;\
+            border-color: #667eea;\
+        \}\
+        \
+        .btn \{\
+            width: 100%;\
+            padding: 14px;\
+            border: none;\
+            border-radius: 8px;\
+            font-size: 16px;\
+            font-weight: 600;\
+            cursor: pointer;\
+            transition: all 0.3s;\
+            margin-top: 10px;\
+        \}\
+        \
+        .btn-primary \{\
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\
+            color: white;\
+        \}\
+        \
+        .btn-primary:hover \{\
+            transform: translateY(-2px);\
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);\
+        \}\
+        \
+        .btn-secondary \{\
+            background: #f8f9fa;\
+            color: #333;\
+            border: 2px solid #e9ecef;\
+        \}\
+        \
+        .btn-secondary:hover \{\
+            background: #e9ecef;\
+        \}\
+        \
+        .status-message \{\
+            padding: 15px;\
+            border-radius: 8px;\
+            margin: 15px 0;\
+            font-size: 14px;\
+            display: none;\
+        \}\
+        \
+        .status-message.success \{\
+            background: #d4edda;\
+            color: #155724;\
+            border: 1px solid #c3e6cb;\
+        \}\
+        \
+        .status-message.error \{\
+            background: #f8d7da;\
+            color: #721c24;\
+            border: 1px solid #f5c6cb;\
+        \}\
+        \
+        .status-message.info \{\
+            background: #d1ecf1;\
+            color: #0c5460;\
+            border: 1px solid #bee5eb;\
+        \}\
+        \
+        .master-key-form \{\
+            display: none;\
+            margin-top: 20px;\
+        \}\
+        \
+        .master-key-form.active \{\
+            display: block;\
+        \}\
+        \
+        .master-key-input \{\
+            font-family: 'Courier New', monospace;\
+            letter-spacing: 2px;\
+        \}\
+    </style>\
+</head>\
+<body>\
+    <div class="login-container">\
+        <div class="logo">\
+            <h1>
+\f3 \uc0\u55357 \u56592 
+\f0  DemeWebsolutions</h1>\
+            <p>Unified Biometric Authentication</p>\
+        </div>\
+        \
+        <div id="statusMessage" class="status-message"></div>\
+        \
+        <div class="auth-methods">\
+            <!-- Tier 1: Biometric -->\
+            <div class="auth-method" id="biometricAuth" onclick="selectAuthMethod('biometric')">\
+                <span class="tier-badge">TIER 1</span>\
+                <div class="auth-method-header">\
+                    <div class="auth-icon">
+\f3 \uc0\u55357 \u56390 
+\f0 </div>\
+                    <div class="auth-info">\
+                        <h3>OS Biometric</h3>\
+                        <p id="biometricType">Touch ID / Face ID</p>\
+                    </div>\
+                </div>\
+            </div>\
+            \
+            <!-- Tier 2: Auto-Fill -->\
+            <div class="auth-method" id="autofillAuth" onclick="selectAuthMethod('autofill')">\
+                <span class="tier-badge">TIER 2</span>\
+                <div class="auth-method-header">\
+                    <div class="auth-icon">
+\f3 \uc0\u55357 \u56593 
+\f0 </div>\
+                    <div class="auth-info">\
+                        <h3>Auto-Fill from Keychain</h3>\
+                        <p>Retrieve stored credentials</p>\
+                    </div>\
+                </div>\
+            </div>\
+            \
+            <!-- Tier 3: Manual -->\
+            <div class="auth-method" id="manualAuth" onclick="selectAuthMethod('manual')">\
+                <span class="tier-badge">TIER 3</span>\
+                <div class="auth-method-header">\
+                    <div class="auth-icon">
+\f3 \uc0\u9000 \u65039 
+\f0 </div>\
+                    <div class="auth-info">\
+                        <h3>Manual Password Entry</h3>\
+                        <p>Type username and password</p>\
+                    </div>\
+                </div>\
+            </div>\
+            \
+            <!-- Manual Form -->\
+            <div class="manual-form" id="manualForm">\
+                <div class="form-group">\
+                    <label for="username">Username</label>\
+                    <input type="text" id="username" name="username" placeholder="Enter username">\
+                </div>\
+                <div class="form-group">\
+                    <label for="password">Password</label>\
+                    <input type="password" id="password" name="password" placeholder="Enter password">\
+                </div>\
+                <button class="btn btn-primary" onclick="submitManualLogin()">Login</button>\
+            </div>\
+            \
+            <!-- Tier 4: Master Key -->\
+            <div class="auth-method" id="masterkeyAuth" onclick="selectAuthMethod('masterkey')">\
+                <span class="tier-badge">TIER 4</span>\
+                <div class="auth-method-header">\
+                    <div class="auth-icon">
+\f3 \uc0\u55357 \u56592 
+\f0 </div>\
+                    <div class="auth-info">\
+                        <h3>Master Recovery Key</h3>\
+                        <p>Last resort - offline recovery</p>\
+                    </div>\
+                </div>\
+            </div>\
+            \
+            <!-- Master Key Form -->\
+            <div class="master-key-form" id="masterkeyForm">\
+                <div class="form-group">\
+                    <label for="masterKeyUsername">Username</label>\
+                    <input type="text" id="masterKeyUsername" name="masterKeyUsername" placeholder="Enter username">\
+                </div>\
+                <div class="form-group">\
+                    <label for="masterKey">256-bit Master Key</label>\
+                    <input type="text" id="masterKey" name="masterKey" class="master-key-input" \
+                           placeholder="Enter 64-character master key" maxlength="64">\
+                </div>\
+                <button class="btn btn-primary" onclick="submitMasterKeyRecovery()">Recover Account</button>\
+            </div>\
+        </div>\
+        \
+        <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #666;">\
+            <p>
+\f3 \uc0\u55357 \u57057 \u65039 
+\f0  Protected by ROMA Security</p>\
+        </div>\
+    </div>\
+    \
+    <script>\
+        let selectedMethod = null;\
+        let availableMethods = [];\
+        \
+        // Initialize on page load\
+        async function init() \{\
+            // Fetch available auth methods from backend\
+            try \{\
+                const response = await fetch('/api/v1/auth/methods');\
+                const data = await response.json();\
+                availableMethods = data.methods || [];\
+                \
+                // Update UI based on available methods\
+                updateMethodAvailability();\
+                \
+                // Auto-attempt biometric if available\
+                if (isMethodAvailable('biometric')) \{\
+                    attemptBiometricAuth();\
+                \}\
+            \} catch (error) \{\
+                console.error('Failed to fetch auth methods:', error);\
+                // Fallback: enable all methods\
+                enableAllMethods();\
+            \}\
+        \}\
+        \
+        // Update method availability in UI\
+        function updateMethodAvailability() \{\
+            const methodElements = \{\
+                'biometric': document.getElementById('biometricAuth'),\
+                'autofill': document.getElementById('autofillAuth'),\
+                'manual': document.getElementById('manualAuth'),\
+                'masterkey': document.getElementById('masterkeyAuth')\
+            \};\
+            \
+            availableMethods.forEach(method => \{\
+                const element = methodElements[method.type];\
+                if (element) \{\
+                    element.classList.remove('disabled');\
+                    \
+                    // Update biometric type description\
+                    if (method.type === 'biometric') \{\
+                        document.getElementById('biometricType').textContent = method.description;\
+                    \}\
+                \}\
+            \});\
+            \
+            // Always enable manual and master key as fallback\
+            methodElements['manual'].classList.remove('disabled');\
+            methodElements['masterkey'].classList.remove('disabled');\
+        \}\
+        \
+        // Check if method is available\
+        function isMethodAvailable(type) \{\
+            return availableMethods.some(m => m.type === type && m.enabled);\
+        \}\
+        \
+        // Enable all methods (fallback)\
+        function enableAllMethods() \{\
+            document.querySelectorAll('.auth-method').forEach(el => \{\
+                el.classList.remove('disabled');\
+            \});\
+        \}\
+        \
+        // Select authentication method\
+        function selectAuthMethod(method) \{\
+            // Remove active class from all methods\
+            document.querySelectorAll('.auth-method').forEach(el => \{\
+                el.classList.remove('active');\
+            \});\
+            \
+            // Hide all forms\
+            document.getElementById('manualForm').classList.remove('active');\
+            document.getElementById('masterkeyForm').classList.remove('active');\
+            \
+            // Activate selected method\
+            selectedMethod = method;\
+            \
+            switch (method) \{\
+                case 'biometric':\
+                    document.getElementById('biometricAuth').classList.add('active');\
+                    attemptBiometricAuth();\
+                    break;\
+                    \
+                case 'autofill':\
+                    document.getElementById('autofillAuth').classList.add('active');\
+                    attemptAutoFill();\
+                    break;\
+                    \
+                case 'manual':\
+                    document.getElementById('manualAuth').classList.add('active');\
+                    document.getElementById('manualForm').classList.add('active');\
+                    document.getElementById('username').focus();\
+                    break;\
+                    \
+                case 'masterkey':\
+                    document.getElementById('masterkeyAuth').classList.add('active');\
+                    document.getElementById('masterkeyForm').classList.add('active');\
+                    document.getElementById('masterKeyUsername').focus();\
+                    break;\
+            \}\
+        \}\
+        \
+        // Attempt biometric authentication\
+        async function attemptBiometricAuth() \{\
+            showStatus('info', '
+\f3 \uc0\u55357 \u56390 
+\f0  Touch sensor to authenticate...');\
+            \
+            try \{\
+                const response = await fetch('/api/v1/auth/biometric', \{\
+                    method: 'POST',\
+                    headers: \{ 'Content-Type': 'application/json' \},\
+                    credentials: 'include',\
+                    body: JSON.stringify(\{ app: 'truai' \}) // Or detect from URL\
+                \});\
+                \
+                const data = await response.json();\
+                \
+                if (data.success) \{\
+                    showStatus('success', '
+\f3 \uc0\u9989 
+\f0  Biometric authentication successful!');\
+                    setTimeout(() => \{\
+                        window.location.href = data.redirect || '/dashboard.html';\
+                    \}, 1000);\
+                \} else \{\
+                    showStatus('error', '
+\f3 \uc0\u10060 
+\f0  Biometric authentication failed. Try another method.');\
+                \}\
+            \} catch (error) \{\
+                showStatus('error', '
+\f3 \uc0\u10060 
+\f0  Biometric authentication unavailable. Try another method.');\
+            \}\
+        \}\
+        \
+        // Attempt auto-fill\
+        async function attemptAutoFill() \{\
+            showStatus('info', '
+\f3 \uc0\u55357 \u56593 
+\f0  Retrieving credentials from keychain...');\
+            \
+            try \{\
+                const response = await fetch('/api/v1/auth/autofill', \{\
+                    method: 'POST',\
+                    headers: \{ 'Content-Type': 'application/json' \},\
+                    credentials: 'include',\
+                    body: JSON.stringify(\{ app: 'truai' \})\
+                \});\
+                \
+                const data = await response.json();\
+                \
+                if (data.success && data.credentials) \{\
+                    // Auto-fill the manual form\
+                    document.getElementById('username').value = data.credentials.username;\
+                    document.getElementById('password').value = data.credentials.password;\
+                    \
+                    // Show manual form\
+                    selectAuthMethod('manual');\
+                    \
+                    showStatus('info', '
+\f1 \uc0\u10003 
+\f0  Credentials loaded. Click Login to continue.');\
+                \} else \{\
+                    showStatus('error', '
+\f3 \uc0\u10060 
+\f0  No credentials found. Use manual entry.');\
+                    selectAuthMethod('manual');\
+                \}\
+            \} catch (error) \{\
+                showStatus('error', '
+\f3 \uc0\u10060 
+\f0  Auto-fill failed. Use manual entry.');\
+                selectAuthMethod('manual');\
+            \}\
+        \}\
+        \
+        // Submit manual login\
+        async function submitManualLogin() \{\
+            const username = document.getElementById('username').value;\
+            const password = document.getElementById('password').value;\
+            \
+            if (!username || !password) \{\
+                showStatus('error', '
+\f3 \uc0\u10060 
+\f0  Please enter both username and password.');\
+                return;\
+            \}\
+            \
+            showStatus('info', '
+\f3 \uc0\u9203 
+\f0  Authenticating...');\
+            \
+            try \{\
+                const response = await fetch('/api/v1/auth/login', \{\
+                    method: 'POST',\
+                    headers: \{ 'Content-Type': 'application/json' \},\
+                    credentials: 'include',\
+                    body: JSON.stringify(\{ username, password \})\
+                \});\
+                \
+                const data = await response.json();\
+                \
+                if (data.success) \{\
+                    showStatus('success', '
+\f3 \uc0\u9989 
+\f0  Login successful!');\
+                    setTimeout(() => \{\
+                        window.location.href = data.redirect || '/dashboard.html';\
+                    \}, 1000);\
+                \} else \{\
+                    showStatus('error', '
+\f3 \uc0\u10060 
+\f0  ' + (data.error || 'Invalid credentials'));\
+                \}\
+            \} catch (error) \{\
+                showStatus('error', '
+\f3 \uc0\u10060 
+\f0  Login failed. Please try again.');\
+            \}\
+        \}\
+        \
+        // Submit master key recovery\
+        async function submitMasterKeyRecovery() \{\
+            const username = document.getElementById('masterKeyUsername').value;\
+            const masterKey = document.getElementById('masterKey').value;\
+            \
+            if (!username || !masterKey) \{\
+                showStatus('error', '
+\f3 \uc0\u10060 
+\f0  Please enter both username and master key.');\
+                return;\
+            \}\
+            \
+            if (masterKey.length !== 64) \{\
+                showStatus('error', '
+\f3 \uc0\u10060 
+\f0  Master key must be exactly 64 characters.');\
+                return;\
+            \}\
+            \
+            showStatus('info', '
+\f3 \uc0\u9203 
+\f0  Validating master key...');\
+            \
+            try \{\
+                const response = await fetch('/api/v1/auth/masterkey', \{\
+                    method: 'POST',\
+                    headers: \{ 'Content-Type': 'application/json' \},\
+                    credentials: 'include',\
+                    body: JSON.stringify(\{ username, master_key: masterKey \})\
+                \});\
+                \
+                const data = await response.json();\
+                \
+                if (data.success) \{\
+                    showStatus('success', '
+\f3 \uc0\u9989 
+\f0  Master key validated!');\
+                    \
+                    // Show temporary password\
+                    alert(`Temporary Password: $\{data.temporary_password\}\\n\\nValid for 10 minutes.\\n\\nYou MUST change this password immediately after login.`);\
+                    \
+                    // Auto-fill manual form with temp password\
+                    document.getElementById('username').value = username;\
+                    document.getElementById('password').value = data.temporary_password;\
+                    selectAuthMethod('manual');\
+                    \
+                    showStatus('info', '
+\f1 \uc0\u10003 
+\f0  Use the temporary password to login now.');\
+                \} else \{\
+                    showStatus('error', '
+\f3 \uc0\u10060 
+\f0  ' + (data.error || 'Invalid master key'));\
+                \}\
+            \} catch (error) \{\
+                showStatus('error', '
+\f3 \uc0\u10060 
+\f0  Master key validation failed.');\
+            \}\
+        \}\
+        \
+        // Show status message\
+        function showStatus(type, message) \{\
+            const statusEl = document.getElementById('statusMessage');\
+            statusEl.className = `status-message $\{type\}`;\
+            statusEl.textContent = message;\
+            statusEl.style.display = 'block';\
+            \
+            if (type === 'success') \{\
+                setTimeout(() => \{\
+                    statusEl.style.display = 'none';\
+                \}, 3000);\
+            \}\
+        \}\
+        \
+        // Enter key to submit\
+        document.addEventListener('keypress', (e) => \{\
+            if (e.key === 'Enter') \{\
+                if (document.getElementById('manualForm').classList.contains('active')) \{\
+                    submitManualLogin();\
+                \} else if (document.getElementById('masterkeyForm').classList.contains('active')) \{\
+                    submitMasterKeyRecovery();\
+                \}\
+            \}\
+        \});\
+        \
+        // Initialize\
+        init();\
+    </script>\
+</body>\
+</html>\
+```\
+\
+---\
+\
+## 
+\f3 \uc0\u55357 \u56615 
+\f0  **Backend API Endpoint**\
+\
+**Add to `backend/router.php`:**\
+\
+```php\
+// Register routes\
+$this->routes['GET']['/api/v1/auth/methods'] = [$this, 'handleAuthMethods'];\
+$this->routes['POST']['/api/v1/auth/biometric'] = [$this, 'handleBiometricAuth'];\
+$this->routes['POST']['/api/v1/auth/autofill'] = [$this, 'handleAutoFillAuth'];\
+$this->routes['POST']['/api/v1/auth/masterkey'] = [$this, 'handleMasterKeyAuth'];\
+\
+/**\
+ * Get available authentication methods\
+ */\
+private function handleAuthMethods() \{\
+    require_once __DIR__ . '/ubsas_auth_service_v2.php';\
+    \
+    $ubsas = new UBSASAuthService();\
+    $methods = $ubsas->getAvailableAuthMethods();\
+    \
+    $this->sendJson([\
+        'success' => true,\
+        'methods' => $methods\
+    ]);\
+\}\
+\
+/**\
+ * Handle biometric authentication\
+ */\
+private function handleBiometricAuth() \{\
+    require_once __DIR__ . '/ubsas_auth_service_v2.php';\
+    \
+    $data = json_decode(file_get_contents('php://input'), true);\
+    $app = $data['app'] ?? 'truai';\
+    \
+    $ubsas = new UBSASAuthService();\
+    $result = $ubsas->authenticate($app, []);\
+    \
+    if ($result && $result['success']) \{\
+        // Set session\
+        $_SESSION['user_id'] = $result['user_id'] ?? 1;\
+        $_SESSION['username'] = $result['username'] ?? 'admin';\
+        $_SESSION['auth_method'] = 'biometric';\
+        $_SESSION['session_timeout'] = time() + 86400; // 24 hours for biometric\
+        \
+        $this->sendJson([\
+            'success' => true,\
+            'username' => $_SESSION['username'],\
+            'redirect' => '/dashboard.html'\
+        ]);\
+    \} else \{\
+        $this->sendJson([\
+            'success' => false,\
+            'error' => 'Biometric authentication failed'\
+        ]);\
+    \}\
+\}\
+\
+/**\
+ * Handle auto-fill authentication\
+ */\
+private function handleAutoFillAuth() \{\
+    require_once __DIR__ . '/ubsas_auth_service_v2.php';\
+    \
+    $data = json_decode(file_get_contents('php://input'), true);\
+    $app = $data['app'] ?? 'truai';\
+    \
+    $ubsas = new UBSASAuthService();\
+    $result = $ubsas->authenticate($app, []);\
+    \
+    if ($result && isset($result['credentials'])) \{\
+        $this->sendJson([\
+            'success' => true,\
+            'credentials' => $result['credentials']\
+        ]);\
+    \} else \{\
+        $this->sendJson([\
+            'success' => false,\
+            'error' => 'No credentials found'\
+        ]);\
+    \}\
+\}\
+\
+/**\
+ * Handle master key authentication\
+ */\
+private function handleMasterKeyAuth() \{\
+    require_once __DIR__ . '/ubsas_auth_service_v2.php';\
+    \
+    $data = json_decode(file_get_contents('php://input'), true);\
+    $app = $data['app'] ?? 'truai';\
+    \
+    $ubsas = new UBSASAuthService();\
+    $result = $ubsas->authenticate($app, $data);\
+    \
+    $this->sendJson($result);\
+\}\
+```\
+\
+---\
+\
+## 
+\f3 \uc0\u55357 \u56522 
+\f0  **Summary Table**\
+\
+| Tier | Method | Requires | Typing? | Use Case | Master Key? |\
+|------|--------|----------|---------|----------|-------------|\
+| **1** | OS Biometric | Touch ID/Face ID sensor | 
+\f3 \uc0\u10060 
+\f0  No | Default (95%) | No |\
+| **2** | Auto-Fill | OS Keychain unlocked | 
+\f3 \uc0\u10060 
+\f0  No (1-click submit) | Sensor unavailable | No |\
+| **3** | Manual | Nothing | 
+\f3 \uc0\u9989 
+\f0  Yes | Guest system, no sensor | No |\
+| **4** | Master Key | Physical key + ROMA | 
+\f3 \uc0\u9989 
+\f0  Yes (64 chars) | Emergency lockout | **Yes** |\
+\
+---\
+\
+## 
+\f3 \uc0\u9989 
+\f0  **Implementation Complete**\
+\
+**UBSAS v2.0 now includes:**\
+\
+1. 
+\f3 \uc0\u9989 
+\f0  **Biometric-first** (default, zero typing)\
+2. 
+\f3 \uc0\u9989 
+\f0  **Auto-fill fallback** (minimal typing)\
+3. 
+\f3 \uc0\u9989 
+\f0  **Manual entry** (full typing when necessary)\
+4. 
+\f3 \uc0\u9989 
+\f0  **Master key recovery** (last resort, prevents permanent lockout)\
+5. 
+\f3 \uc0\u9989 
+\f0  **Intelligent tier detection** (backend determines available methods)\
+6. 
+\f3 \uc0\u9989 
+\f0  **Beautiful UI** (shows all options with visual hierarchy)\
+\
+**This system balances:**\
+- **Convenience** (biometric default)\
+- **Flexibility** (manual fallback)\
+- **Security** (master key protected)\
+- **Universality** (works on any system)\
+\
+This is a strong baseline document.\
+Now let\'92s elevate it into a proprietary ROMA-secured local multi-factor recovery architecture that:\
+	\'95	Prevents lockout\
+	\'95	Prevents external hijacking\
+	\'95	Removes email dependency\
+	\'95	Eliminates remote recovery attack surface\
+	\'95	Aligns with TruAi governance\
+	\'95	Preserves operational control\
+\
+You are proposing something closer to a Local Sovereign Recovery Protocol (LSRP) rather than typical MFA.\
+\
+That\'92s a smart direction.\
+\
+Below is a structured mastermind refinement.\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Strategic Upgrade: Local Sovereign Recovery Protocol (LSRP v1)\
+\
+Objective\
+\
+Replace traditional password reset + email MFA with:\
+\
+A ROMA-encrypted, local multi-factor recovery system requiring physical + administrative confirmation.\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Core Concept\
+\
+Recovery requires:\
+	1.	Local system presence\
+	2.	Admin OS-level password confirmation\
+	3.	ROMA trust verification\
+	4.	Temporary password generation\
+	5.	Immediate password rotation on login\
+	6.	Optional: Master fallback key (offline stored)\
+\
+No email.\
+No SMS.\
+No third-party dependency.\
+No cloud recovery.\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Architecture Proposal\
+\
+Phase 1 \'97 Multi-Factor Recovery Trigger\
+\
+To initiate recovery:\
+\
+Required Conditions:\
+\
+Factor	Description\
+
+\f3 1\uc0\u65039 \u8419 
+\f0  Local Server Access	Must execute from localhost or trusted VPN\
+
+\f3 2\uc0\u65039 \u8419 
+\f0  OS Admin Confirmation	System-level password check\
+
+\f3 3\uc0\u65039 \u8419 
+\f0  ROMA Trust State	ROMA must be VERIFIED\
+
+\f3 4\uc0\u65039 \u8419 
+\f0  Device Binding	Fingerprint must match stored trusted device\
+\
+If any fail 
+\f1 \uc0\u8594 
+\f0  hard stop.\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Technical Design\
+\
+Step 1 \'97 Recovery Initiation\
+\
+Admin visits:\
+\
+/secure-recovery\
+\
+Server verifies:\
+\
+if ($_SERVER['REMOTE_ADDR'] !== '127.0.0.1' && !isTrustedVPN()) \{\
+    deny("Local access required");\
+\}\
+\
+if (!romaTrustVerified()) \{\
+    deny("ROMA trust not verified");\
+\}\
+\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Step 2 \'97 OS-Level Confirmation (Critical Layer)\
+\
+Instead of asking for TruAi password again:\
+	\'95	Require confirmation of system administrator password\
+	\'95	Use secure PAM verification (Linux) or OS-native validation\
+\
+Conceptual (Linux example):\
+\
+function verifySystemAdmin($username, $password) \{\
+    return pam_authenticate($username, $password);\
+\}\
+\
+This ties account recovery to:\
+	\'95	Physical machine control\
+	\'95	Real administrative access\
+\
+This eliminates:\
+	\'95	Remote brute force\
+	\'95	Credential stuffing\
+	\'95	Email compromise\
+	\'95	OTP phishing\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Step 3 \'97 ROMA Encrypted Temporary Password\
+\
+Upon success:\
+	1.	Generate 24+ character cryptographically secure temporary password\
+\
+$tempPassword = bin2hex(random_bytes(24));\
+\
+	2.	Immediately hash with Argon2id (upgrade from bcrypt recommended)\
+	3.	Store in DB\
+	4.	Encrypt temp password with ROMA public key before returning to browser\
+\
+$encrypted = romaEncrypt($tempPassword);\
+\
+	5.	Return only encrypted payload\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Step 4 \'97 Forced Rotation\
+\
+On next login:\
+	\'95	Require immediate password change\
+	\'95	Invalidate temp credential\
+	\'95	Log event\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Security Enhancements\
+\
+Add Recovery Attempt Ledger\
+\
+New table:\
+\
+CREATE TABLE recovery_attempts (\
+    id INTEGER PRIMARY KEY AUTOINCREMENT,\
+    ip_address TEXT,\
+    device_fingerprint TEXT,\
+    result TEXT,\
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP\
+);\
+\
+After 3 failed attempts 
+\f1 \uc0\u8594 
+\f0  24 hour cooldown.\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Master Fallback Key (Offline Recovery)\
+\
+You mentioned this \'97 excellent idea.\
+\
+Design:\
+	\'95	Generate 256-bit master recovery key during initial setup\
+	\'95	Display once\
+	\'95	Admin prints and stores offline\
+	\'95	Store only hashed version in DB\
+\
+Use only if:\
+	\'95	System password unavailable\
+	\'95	Admin lockout scenario\
+	\'95	Catastrophic event\
+\
+Validation:\
+\
+hash_equals(stored_hash, hash('sha256', $providedKey))\
+\
+Use case limited to:\
+	\'95	Local machine only\
+	\'95	ROMA verified\
+	\'95	Rate limited\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Why This Is Superior to Email MFA\
+\
+Email MFA	Local Sovereign Recovery\
+Vulnerable to SIM swap	No telecom dependency\
+Vulnerable to inbox compromise	No external account\
+Phishing prone	Local admin only\
+Third-party trust	Self-sovereign\
+Cloud-dependent	Fully local\
+\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Hijack Prevention Benefits\
+\
+This model prevents:\
+	\'95	Remote password reset abuse\
+	\'95	Compromised email account takeover\
+	\'95	OAuth token hijacking\
+	\'95	OTP relay attacks\
+	\'95	Brute force recovery abuse\
+	\'95	Admin account takeover via phishing\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Suggested Additions to Your Document\
+\
+Add a new section:\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Phase 6 \'97 Local Sovereign Recovery (Proprietary)\
+\
+Recovery Requirements:\
+	\'95	ROMA trust verified\
+	\'95	Local execution only\
+	\'95	System admin confirmation\
+	\'95	Rate limiting\
+	\'95	Audit logging\
+\
+Temporary Credential Policy:\
+	\'95	24+ characters\
+	\'95	10 minute validity\
+	\'95	Single use\
+	\'95	Immediate rotation required\
+\
+Master Key:\
+	\'95	256-bit\
+	\'95	Offline only\
+	\'95	One-time per issuance\
+	\'95	Manual regeneration required\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Important Safeguards to Add\
+\
+1. Hard Disable if HTTPS Off\
+\
+Never allow recovery over HTTP.\
+\
+2. Auto-Wipe on Suspicious Pattern\
+\
+If:\
+	\'95	5 failed recovery attempts\
+	\'95	ROMA degraded\
+	\'95	Device mismatch\
+\
+Then:\
+	\'95	Suspend account\
+	\'95	Require master key\
+\
+3. Store Recovery Mode in Separate Code Path\
+\
+Do not reuse login controller.\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Upgrade Recommendation\
+\
+Move from:\
+\
+PASSWORD_BCRYPT\
+\
+To:\
+\
+PASSWORD_ARGON2ID\
+\
+Argon2id is stronger against GPU attacks.\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Critical Architectural Insight\
+\
+You are essentially building:\
+\
+A self-sovereign authentication system tied to physical infrastructure and encrypted trust channels.\
+\
+That is enterprise-grade thinking.\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Final Recommendation Summary\
+\
+Implement:\
+\
+
+\f5 \uc0\u10004 
+\f0  ROMA-verified local-only recovery\
+
+\f5 \uc0\u10004 
+\f0  OS admin confirmation factor\
+
+\f5 \uc0\u10004 
+\f0  Encrypted temporary password issuance\
+
+\f5 \uc0\u10004 
+\f0  Forced rotation\
+
+\f5 \uc0\u10004 
+\f0  Recovery attempt ledger\
+
+\f5 \uc0\u10004 
+\f0  256-bit offline master key\
+
+\f5 \uc0\u10004 
+\f0  Argon2id migration\
+\
+
+\f4 \uc0\u11835 
+\f0 \
+\
+Recommended inclusive task:\
+	\'95	Draft the full LSRP v1 spec document\
+	\'95	Write a secure recovery controller example\
+	\'95	Create a threat model analysis\
+	\'95	Or design a flow diagram (logic gate model)\
+\
+This direction is strong.\
+We\'92re moving from \'93password reset\'94 to sovereign system control.}

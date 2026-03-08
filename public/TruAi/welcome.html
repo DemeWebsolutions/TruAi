@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi - Welcome</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('/TruAi/assets/images/Welcome.gif');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #0b0d11;
+            position: relative;
+            overflow: auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username') || 'Deme';
+        // Flow: welcome.html (welcome.gif) -> start.html (animation) -> /TruAi/ (dashboard)
+        const nextPage = urlParams.get('next') || '/TruAi/start.html';
+
+        // Wait for GIF to play, then redirect to start.html
+        const welcomeDuration = 25000; // 25 seconds - adjust based on your GIF length
+        let redirectTimer;
+
+        redirectTimer = setTimeout(() => {
+            window.location.href = nextPage;
+        }, welcomeDuration);
+
+        // If user clicks anywhere, redirect to start.html immediately
+        document.addEventListener('click', () => {
+            clearTimeout(redirectTimer);
+            window.location.href = nextPage;
+        });
+
+        // Also redirect on any keypress
+        document.addEventListener('keydown', () => {
+            clearTimeout(redirectTimer);
+            window.location.href = nextPage;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+Required files for full handoff (ensure each is present in Milestone package)
+
+1) Backend (PHP)
+- backend/auth.php
+- backend/config.php
+- backend/router.php
+- backend/database.php
+- backend/encryption.php
+- backend/ai_client.php
+
+2) Deploy & Plesk
+- deploy/DEPLOY_PLESK_GEMINI_AI.sh
+- deploy/BUILD_PLESK_PACKAGE.sh
+- deploy/FIX_NGINX_404.sh
+- deploy/ROMA_ITC_TEST_CHECKLIST.md
+- deploy/WIREGUARD_HQ_CONTABO.md
+
+3) Web/public
+- public/index.php
+- public/router.php
+- public/assets/* (css, js, images)
+- public/.htaccess
+
+4) Database & creds
+- database/truai.db (schema)
+- database/.initial_credentials (one‑time admin)
+
+5) Electron/local
+- electron/main.js
+- electron/preload.js
+- start.sh or instructions to start PHP router
+
+6) Model & adapter (if AI model included)
+- model.tar.gz
+- model.tar.gz.sha256
+- model.sig
+- ai-adapter.php or python adapter
+

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi - Login Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            min-height: 100vh;
+            background-image: url('/TruAi/assets/images/TruAiLoginPortalBackground.png');
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                         'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            overflow-x: auto;
+            background-color: #0b0d11;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .enrollment-container {
+            background: rgb(42 42 42 / 0%);
+            border-radius: 12px;
+            padding-top: 10px;
+            width: 282px;
+            margin-bottom: 5px;
+            height: 562px;
+            border: 1px solid #c3c2c26b;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-header {
+            text-align: center;
+            margin-bottom: 0;
+        }
+
+        .logo-header img.main-logo {
+            width: 210px;
+            height: 210px;
+            display: block;
+            margin: auto;
+        }
+
+        .step-title {
+            text-align: center;
+        }
+
+        .step-title .label-spacer {
+            font-size: 21px;
+            color: transparent;
+            margin-bottom: 5px;
+            letter-spacing: 1.1px;
+            font-weight: 200;
+        }
+
+        .step-title .state-label {
+            font-size: 21px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 5px;
+            letter-spacing: 1.1px;
+            font-weight: 200;
+        }
+
+        /* ── Status icon — the submit button ── */
+        #statusIcon {
+            width: 90px;
+            display: block;
+            margin: auto;
+            cursor: pointer;
+            transition: opacity 600ms ease, transform 0.15s ease;
+            opacity: 1;
+        }
+
+        #statusIcon.clickable:hover  { transform: scale(1.06); }
+        #statusIcon.clickable:active { transform: scale(0.94); }
+
+        #statusIcon.locked {
+            cursor: default;
+            pointer-events: none;
+        }
+
+        /* ── Status message bar ── */
+        .status-message {
+            text-align: center;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin: 8px 16px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-message.show    { display: block; }
+        .status-message.info    { background: rgba(33,150,243,0.10); color: #1976d2; border: 1px solid rgba(33,150,243,0.3); }
+        .status-message.success { background: rgba(76,175,80,0.10);  color: #388e3c; border: 1px solid rgba(76,175,80,0.3); }
+        .status-message.error   { background: rgba(244,67,54,0.10);  color: #d32f2f; border: 1px solid rgba(244,67,54,0.3); }
+
+        /* ── Form fields ── */
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 200;
+            font-size: 16px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 2px;
+            letter-spacing: 1px;
+            margin-top: 14px;
+            transition: opacity 0.6s ease;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            padding: 13px 16px;
+            background: #ffffff00;
+            border: 1px solid #ffffffad;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 14px;
+            margin: auto;
+            text-align: center;
+            display: block;
+            width: calc(100% - 32px);
+            transition: opacity 0.6s ease;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.45);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00A3FF;
+            box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.15);
+        }
+
+        #formWrapper {
+            padding: 0 16px;
+        }
+
+        /* ── state-label fades independently ── */
+        #stateLabel {
+            transition: opacity 0.6s ease;
+        }
+
+        /* ── status icon fades independently ── */
+        #statusIcon {
+            transition: opacity 600ms ease, transform 0.15s ease;
+        }
+
+        .roma-indicator {
+            position: fixed;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.05em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .roma-indicator.confirmed {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .roma-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #008ed6;
+            animation: romaPulse 2s infinite;
+            flex-shrink: 0;
+        }
+
+        .roma-dot.unverified { background: #f6ad55; animation: none; }
+        .roma-dot.offline    { background: #a0aec0; animation: none; }
+
+        @keyframes romaPulse {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.4; }
+        }
+
+        @media (max-width: 768px) {
+            .enrollment-container { width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="enrollment-container">
+
+    <!-- Main Logo -->
+    <div class="logo-header">
+        <img
+            class="main-logo"
+            src="/TruAi/assets/images/TruAi-by-DemeWebsolutions.com.png"
+            alt="TruAi Logo"
+        >
+    </div>
+
+    <!-- State label + status icon -->
+    <div class="logo-header">
+        <div class="step-title">
+            <p class="label-spacer">Login</p>
+            <p id="stateLabel" class="state-label">Access Restricted</p>
+        </div>
+
+        <!-- Status icon — doubles as the login submit button -->
+        <img
+            id="statusIcon"
+            class="clickable"
+            src="/TruAi/assets/images/1.png"
+            alt="Status Icon"
+        >
+    </div>
+
+    <!-- Status message bar -->
+    <div class="status-message" id="statusMessage"></div>
+
+    <!-- Credential form — no submit button -->
+    <div id="formWrapper">
+        <form id="verifyForm">
+            <div class="form-group" id="usernameGroup">
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username"
+                    required
+                    autocomplete="username"
+                >
+                <label for="username">User</label>
+            </div>
+
+            <div class="form-group" id="passwordGroup">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                    autocomplete="current-password"
+                >
+                <label for="password">Password</label>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<div id="romaIndicator" class="roma-indicator">
+    <span class="roma-dot" id="romaDot"></span>
+    <span id="romaIndicatorText">ROMA • Portal Protected</span>
+</div>
+
+<!-- ================================================================
+     REAL SESSION: All logins go through backend API. No test/default
+     password. Use credentials from database/.initial_credentials
+     (from setup_database.php or reset_admin_password.php) or your
+     existing account. First-time: change password then optionally
+     enroll biometric at /TruAi/ubsas-enroll.html.
+     ================================================================ -->
+<script>
+    /** After successful login: loading (entrance GIF) → welcome → start → dashboard (or first-time setup if required) */
+    const LOADING_URL   = '/TruAi/loading.html';
+    const WELCOME_URL   = '/TruAi/welcome.html';
+    const DASHBOARD_URL = '/TruAi/';
+    const FIRST_TIME_SETUP_URL = '/TruAi/first-time-setup.html';
+</script>
+
+<script src="/TruAi/assets/js/api.js"></script>
+<script src="/TruAi/assets/js/roma-security.js"></script>
+<script>
+(function () {
+
+    /* ── Asset paths ── */
+    const IMG = {
+        restricted : '/TruAi/assets/images/1.png',
+        granted    : '/TruAi/assets/images/2.png',
+        denied     : '/TruAi/assets/images/3.png',
+        biometric  : '/TruAi/assets/images/4.png',
+    };
+
+    /* ── DOM refs ── */
+    const stateLabel    = document.getElementById('stateLabel');
+    const statusIcon    = document.getElementById('statusIcon');
+    const usernameGroup = document.getElementById('usernameGroup');
+    const passwordGroup = document.getElementById('passwordGroup');
+
+    /* ─────────────────────────────────────────────────────────────
+       Targeted fade helpers
+       Each accepts an opacity value and optional duration (ms).
+       They return a Promise that resolves after the transition.
+    ───────────────────────────────────────────────────────────── */
+
+    /* Fades ONLY the icon and state label */
+    function fadeHeader(val, duration) {
+        duration = duration || 600;
+        [statusIcon, stateLabel].forEach(function (el) {
+            el.style.transition = 'opacity ' + duration + 'ms ease';
+            el.style.opacity    = val;
+        });
+        return new Promise(function (r) { setTimeout(r, duration); });
+    }
+
+    /* Fades ONLY the two form-groups (inputs + labels inside them) */
+    function fadeForm(val, duration) {
+        duration = duration || 600;
+
+        [usernameGroup, passwordGroup].forEach(function (group) {
+            /* Fade the input */
+            var input = group.querySelector('input');
+            if (input) {
+                input.style.transition = 'opacity ' + duration + 'ms ease';
+                input.style.opacity    = val;
+            }
+            /* Fade the label */
+            var label = group.querySelector('label');
+            if (label) {
+                label.style.transition = 'opacity ' + duration + 'ms ease';
+                label.style.opacity    = val;
+            }
+        });
+
+        return new Promise(function (r) { setTimeout(r, duration); });
+    }
+
+    /* Fades EVERYTHING (header + form) together */
+    function fadeAll(val, duration) {
+        fadeHeader(val, duration);
+        fadeForm(val, duration);
+        return new Promise(function (r) { setTimeout(r, duration || 600); });
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       setStateVisuals — swap label + icon src while at opacity 0
+    ───────────────────────────────────────────────────────────── */
+    function setStateVisuals(labelText, iconSrc) {
+        stateLabel.textContent = labelText;
+        statusIcon.src         = iconSrc;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       lockIcon / unlockIcon
+    ───────────────────────────────────────────────────────────── */
+    function lockIcon() {
+        statusIcon.classList.remove('clickable');
+        statusIcon.classList.add('locked');
+    }
+
+    function unlockIcon() {
+        statusIcon.classList.remove('locked');
+        statusIcon.classList.add('clickable');
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       showStatus / hideStatus
+    ───────────────────────────────────────────────────────────── */
+    function showStatus(type, message) {
+        var el = document.getElementById('statusMessage');
+        el.className   = 'status-message show ' + type;
+        el.textContent = message;
+        if (type === 'success' || type === 'error') {
+            setTimeout(function () { el.classList.remove('show'); }, 5000);
+        }
+    }
+
+    function hideStatus() {
+        document.getElementById('statusMessage').classList.remove('show');
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       resetForm
+    ───────────────────────────────────────────────────────────── */
+    function resetForm() {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        hideStatus();
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       transition — the core animation sequence
+
+       GRANTED / DENIED shared flow:
+         1. Fade form-groups OUT          (0.6 s)  ← form disappears
+         2. Fade header OUT               (0.6 s)  ← icon+label disappear
+         3. Swap visuals while invisible
+         4. Fade header back IN           (0.6 s)  ← new icon+label appear
+            form-groups stay at opacity 0
+         5. Hold result screen            (5 s)
+         6a. Granted → redirect
+         6b. Denied  → fade header out, reset everything, fade all back in
+    ───────────────────────────────────────────────────────────── */
+    async function transition(outcome) {
+        const FADE = 600;
+        const HOLD = 5000;
+
+        lockIcon();
+
+        /* 1 – form fades out */
+        await fadeForm(0, FADE);
+
+        /* 2 – header fades out */
+        await fadeHeader(0, FADE);
+
+        /* 3 – swap visuals while everything is invisible */
+        if (outcome === 'granted') {
+            setStateVisuals('Access Granted', IMG.granted);
+        } else {
+            setStateVisuals('Access Denied', IMG.denied);
+        }
+
+        /* 4 – only the header fades back in; form stays hidden */
+        await fadeHeader(1, FADE);
+
+        /* 5 – hold */
+        await new Promise(function (r) { setTimeout(r, HOLD); });
+
+        /* 6 – act: granted → loading.html (entrance GIF) → welcome → start → dashboard */
+        if (outcome === 'granted') {
+            var username = document.getElementById('username').value.trim();
+            var qs = username ? '?username=' + encodeURIComponent(username) : '';
+            window.location.href = LOADING_URL + qs;
+        } else {
+            /* Fade header out again */
+            await fadeHeader(0, FADE);
+
+            /* Reset visuals + form */
+            setStateVisuals('Access Restricted', IMG.restricted);
+            resetForm();
+
+            /* Fade everything back in together */
+            await fadeAll(1, FADE);
+
+            unlockIcon();
+        }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       attemptLogin — real backend auth only. No test/default password.
+       Returns { success, requires_password_change } so we can redirect
+       to first-time setup when needed.
+    ───────────────────────────────────────────────────────────── */
+    async function attemptLogin(username, password) {
+        try {
+            const response = await fetch('/TruAi/api/v1/auth/login', {
+                method      : 'POST',
+                credentials : 'include',
+                headers     : { 'Content-Type': 'application/json' },
+                body        : JSON.stringify({ username, password }),
+            });
+            if (!response.ok) return { success: false };
+            return await response.json();
+        } catch (err) {
+            console.warn('Network error during login:', err.message);
+            return { success: false };
+        }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       handleSubmit — shared by icon click AND Enter key
+    ───────────────────────────────────────────────────────────── */
+    async function handleSubmit() {
+        if (statusIcon.classList.contains('locked')) return;
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            showStatus('error', 'Please enter your username and password.');
+            return;
+        }
+
+        lockIcon();
+        showStatus('info', 'Verifying credentials…');
+
+        const result = await attemptLogin(username, password);
+        hideStatus();
+
+        if (result.success) {
+            if (result.requires_password_change) {
+                window.location.href = FIRST_TIME_SETUP_URL + (username ? '?username=' + encodeURIComponent(username) : '');
+                return;
+            }
+            await transition('granted');
+        } else {
+            await transition('denied');
+        }
+    }
+
+    /* ── Biometric flow: trigger when status icon is clicked in biometric mode ── */
+    async function handleBiometricSubmit() {
+        if (statusIcon.classList.contains('locked')) return;
+        if (typeof RomaSecurity === 'undefined') {
+            showStatus('error', 'Biometric not available.');
+            return;
+        }
+        lockIcon();
+        showStatus('info', 'Verifying biometric…');
+        var result = await RomaSecurity.biometricLogin('truai');
+        hideStatus();
+        if (result.success) {
+            var u = document.getElementById('username');
+            if (u && result.username) u.value = result.username;
+            transition('granted');
+        } else {
+            var fill = await RomaSecurity.autofillCredentials('truai');
+            if (fill.success && fill.credentials) {
+                var u = document.getElementById('username');
+                var p = document.getElementById('password');
+                if (u) u.value = fill.credentials.username;
+                if (p) p.value = fill.credentials.password;
+                showStatus('info', 'Credentials filled — submit to continue.');
+                unlockIcon();
+            } else {
+                showStatus('error', 'Biometric: ' + (result.error || 'verification failed'));
+                unlockIcon();
+            }
+        }
+    }
+
+    /* ── Status icon click: credential submit only ── */
+    statusIcon.addEventListener('click', handleSubmit);
+
+    /* ── Logo: hover shows biometric status icon; click runs biometric flow ── */
+    (function () {
+        var logo = document.querySelector('.main-logo');
+        if (!logo) return;
+        logo.addEventListener('mouseenter', function () {
+            if (statusIcon && !statusIcon.classList.contains('locked')) {
+                statusIcon.src = IMG.biometric;
+            }
+        });
+        logo.addEventListener('mouseleave', function () {
+            if (statusIcon && !statusIcon.classList.contains('locked')) {
+                statusIcon.src = IMG.restricted;
+            }
+        });
+        logo.addEventListener('click', function (e) {
+            e.preventDefault();
+            handleBiometricSubmit();
+        });
+        logo.style.cursor = 'pointer';
+    })();
+
+    /* ── Enter key in either field also triggers submit ── */
+    document.getElementById('verifyForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        handleSubmit();
+    });
+
+    /* ─────────────────────────────────────────────────────────────
+       ROMA status check
+    ───────────────────────────────────────────────────────────── */
+    async function checkRomaStatus() {
+        try {
+            const response  = await fetch('/TruAi/api/v1/security/roma');
+            const data      = await response.json();
+            const indicator = document.getElementById('romaIndicator');
+            const textEl    = document.getElementById('romaIndicatorText');
+            const dotEl     = document.getElementById('romaDot');
+
+            if (data.roma && data.portal_protected && data.monitor === 'active') {
+                if (textEl) textEl.textContent = 'ROMA • Portal Protected • Monitor Active';
+                indicator.classList.add('confirmed');
+                if (dotEl) { dotEl.className = 'roma-dot'; }
+            } else if (data.trust_state === 'UNVERIFIED') {
+                if (textEl) textEl.textContent = 'ROMA • Unverified';
+                indicator.classList.remove('confirmed');
+                if (dotEl) { dotEl.className = 'roma-dot unverified'; }
+            } else {
+                if (dotEl) { dotEl.className = 'roma-dot offline'; }
+            }
+        } catch (_) {
+            var dotEl = document.getElementById('romaDot');
+            if (dotEl) dotEl.className = 'roma-dot offline';
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', checkRomaStatus);
+
+    /* Biometric is triggered by logo hover + status icon click (handleBiometricSubmit). */
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "com.demewebsolutions.biometric",
+  "description": "DemeWebsolutions Biometric Auth Native Host",
+  "path": "/usr/local/DemeWebsolutions/auth/demewebsolutions_biometric_host.php",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://EXTENSION_ID_PLACEHOLDER/"
+  ]
+}

@@ -1,0 +1,2007 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi - Start New Project</title>
+    <style>
+        * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            min-height: 100vh;
+            background: url('/TruAi/assets/images/tru-dashboard.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #0b0d11;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            overflow: auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            transition: background-image 1s ease-in-out;
+        }
+
+                .header-section {
+                    display: block;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 40px 20px 20px;
+                    flex: auto;
+                }
+                .header-actions {
+                    position: absolute;
+                    top: 16px;
+                    left: 24px;
+                    right: 24px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .header-actions a {
+                    padding: 6px 12px;
+                    font-size: 13px;
+                    color: #8b8d98;
+                    text-decoration: none;
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    border-radius: 6px;
+                    transition: color 0.2s, border-color 0.2s;
+                    text-align: center;
+                    width: 200px;
+                }
+                .header-actions a:hover {
+                    color: #008ed6;
+                    border-color: rgba(0,142,214,0.4);
+                }
+
+                .logo-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    margin-bottom: 16px;
+                }
+
+                .logo-container img {
+                    width: 24px;
+                    height: auto;
+                    display: block;
+                }
+
+                .project-title {
+                    font-size: 18px;
+                    font-weight: 500;
+                    color: #e8e9eb;
+                }
+
+                /* Main area: Content (left) | ai-response (center) | Code Review (right) */
+                .main-area {
+                    display: flex;
+                    flex: 1;
+                    min-height: 0;
+                    width: 100%;
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    gap: 16px;
+                    padding: 0 80px 16px;
+                    align-items: stretch;
+                }
+                .content-extended {
+                    flex: 0 0 200px;
+                    min-width: 200px;
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    background: rgba(0, 0, 0, 0.15);
+                    padding: 16px;
+                    overflow-y: auto;
+                    font-size: 12px;
+                    color: #8b8d98;
+                }
+                .content-extended .panel-label { margin-bottom: 10px; }
+                .code-review-extended {
+                    flex: 0 0 200px;
+                    min-width: 200px;
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    background: rgba(0, 0, 0, 0.15);
+                    padding: 16px;
+                    overflow-y: auto;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .code-review-extended .code-review-toolbar { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 0 8px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; }
+                .code-review-extended .code-review-content { flex: 1; min-height: 0; overflow: auto; }
+
+                /* AI response area (center of main area) */
+                .ai-response-area {
+                    flex: 1;
+                    margin: 0;
+                    min-width: 0;
+                    min-height: 40vh;
+                    background-size: contain;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    position: relative;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    overflow: auto;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+                    transition: background-image 1s ease-in-out;
+                }
+
+        .ai-response-content {
+            max-width: 1400px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ffffffb8;
+            text-align: center;
+        }
+
+                .ai-response-content.empty {
+                    color: #8b8d98;
+                    text-align: center;
+                    padding: 60px 20px;
+                    width: 1360px;
+                    padding-left: 40px;
+                    margin-left: 50px;
+                    margin-right: 50px;
+                    padding-top: 270px;
+                    padding-bottom: 50px;
+                    padding-right: 40px;
+                    margin-top: 200px;
+                    margin-bottom: 100px;
+                }
+                
+                /* Bottom panels container - 100% width */
+                .panels-container {
+                    display: inline-flex;
+                    gap: 24px;
+                    padding: 20px 40px 40px;
+                    align-items: flex-start;
+                    margin-right: 160px;
+                    margin-left: 120px;
+                    width: 1100px;
+                    padding-right: unset;
+                    padding-left: unset;
+                    height: 290px;
+                }
+                
+                .panel {
+                    background: none;
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    border-radius: 12px;
+                    padding: 20px;
+                }
+
+                .panel-label {
+                    font-size: 12px;
+                    color: #8b8d98;
+                    margin-bottom: 12px;
+                    font-weight: 500;
+                }
+
+                /* Left panel - Content (same size as Code Review for symmetry) */
+                .content-panel {
+                    flex: 0 0 200px;
+                    min-height: 200px;
+                    max-height: 200px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                }
+
+                .file-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+
+                .file-item {
+                    padding: 8px 0;
+                    font-size: 13px;
+                    color: #e8e9eb;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .file-item:last-child {
+                    border-bottom: none;
+                }
+
+                .file-icon {
+                    width: 16px;
+                    height: 16px;
+                    color: #6b6d78;
+                }
+
+                /* Center panel - Task section + text entry + icons */
+                .center-panel {
+                    flex: 1;
+                    min-width: 400px;
+                    display: flex;
+                    flex-direction: column;
+                    transition: all 0.3s ease;
+                    position: relative;
+                }
+
+                /* Settings popup — full-screen overlay */
+                .settings-popup {
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    z-index: 9999;
+                    margin: 0;
+                    padding: 0;
+                    background: rgba(6, 9, 15, 0.95);
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    font-family: inherit;
+                    box-sizing: border-box;
+                }
+
+                .settings-popup.visible {
+                    display: block;
+                }
+
+                .settings-popup .settings-panel {
+                    display: block;
+                    width: 100%;
+                    max-width: 800px;
+                    margin: 40px auto 60px;
+                    padding: 24px;
+                    background: rgba(0, 0, 0, 0.25);
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                }
+
+                /* Operations & Chat History popups — same as Settings (icon popup style) */
+                .operations-popup,
+                .chat-popup {
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    z-index: 9999;
+                    margin: 0;
+                    padding: 0;
+                    background: rgba(6, 9, 15, 0.95);
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    font-family: inherit;
+                    box-sizing: border-box;
+                }
+                .operations-popup.visible,
+                .chat-popup.visible {
+                    display: block;
+                }
+                .operations-popup .popup-panel,
+                .chat-popup .popup-panel {
+                    display: block;
+                    width: 100%;
+                    max-width: 500px;
+                    margin: 40px auto 60px;
+                    padding: 24px;
+                    background: rgba(0, 0, 0, 0.25);
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                }
+                .chat-popup .popup-panel { max-width: 600px; }
+                .popup-content {
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }
+                .chat-popup .popup-content {
+                    min-height: 400px;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .chat-popup .popup-content .chat-panel-body {
+                    flex: 1;
+                    min-height: 350px;
+                }
+                .popup-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 16px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #e8e9eb;
+                }
+                .popup-header span:last-child { display: flex; align-items: center; gap: 8px; }
+                .popup-close {
+                    background: none;
+                    border: none;
+                    color: #8b8d98;
+                    font-size: 20px;
+                    cursor: pointer;
+                    padding: 0 4px;
+                    line-height: 1;
+                }
+                .popup-close:hover { color: #e8e9eb; }
+
+                /* Selected settings button — match truai-settings.svg selected state */
+                .icon-button[title="Settings"].active {
+                    outline: 2px solid #008ed6;
+                    outline-offset: 2px;
+                    border-radius: 4px;
+                }
+
+                .icon-button[title="Settings"].active .logo-container img {
+                    opacity: 1;
+                }
+
+                .status-info {
+                    color: #8b8d98;
+                }
+
+                .status-success {
+                    color: #4ade80;
+                }
+
+                .status-error {
+                    color: #f87171;
+                }
+
+                #saveSettings:hover {
+                    background: #0077b3;
+                }
+
+                #resetSettings:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: rgba(255, 255, 255, 0.2);
+                }
+
+                #revealApiKey:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: rgba(255, 255, 255, 0.2);
+                }
+
+
+                .text-entry {
+                    width: 100%;
+                    min-height: 120px;
+                    background: none;
+                    border-radius: 0px;
+                    padding: 16px;
+                    font-size: 14px;
+                    font-family: inherit;
+                    text-align: center;
+                    resize: vertical;
+                    margin-bottom: 16px;
+                    border: none;
+                    color: #008ed6;
+                    outline: none;
+                }
+
+                .text-entry:focus {
+                    width: 100%;
+                    min-height: 120px;
+                    background: none;
+                    border-radius: 8px;
+                    padding: 16px;
+                    font-size: 14px;
+                    font-family: inherit;
+                    resize: vertical;
+                    margin-bottom: 16px;
+                    border: none;
+                    color: #008ed6;
+                    outline: none;
+                }
+
+                .text-entry::placeholder {
+                    color: #8b8d98;
+                }
+
+                .icon-row {
+                    display: flex;
+                    gap: 16px;
+                    align-items: center;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                }
+
+                .icon-group {
+                    display: flex;
+                    gap: 12px;
+                    align-items: center;
+                }
+
+                .icon {
+                    width: 24px;
+                    height: 24px;
+                    color: #6b6d78;
+                    opacity: 0.7;
+                    cursor: pointer;
+                    transition: opacity 0.2s, color 0.2s;
+                }
+
+                .icon:hover {
+                    opacity: 1;
+                    color: #8b8d98;
+                }
+
+                .icon-button {
+                    background: none;
+                    border: none;
+                    padding: 0;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .submit-button {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    background: transparent;
+                    border: none;
+                    color: white;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 16px auto;
+                    transition: all 0.2s;
+                    box-shadow: 0 2px 8px rgba(0, 142, 214, 0.3);
+                }
+
+                .submit-button:hover {
+                    background: #0077b3;
+                    transform: scale(1.05);
+                    box-shadow: 0 5px 12px rgba(0, 142, 214, 0.4);
+                }
+
+                .submit-button:active {
+                    transform: scale(0.95);
+                }
+
+                .submit-button svg {
+                    width: 24px;
+                    height: 24px;
+                    stroke: white;
+                }
+
+                .settings-link {
+                    color: #6b6d78;
+                    text-decoration: none;
+                    font-size: 13px;
+                    transition: color 0.2s;
+                    cursor: pointer;
+                }
+
+                .settings-link:hover,
+                .settings-link.active {
+                    color: #008ed6;
+                }
+
+                .divider {
+                    width: 1px;
+                    height: 24px;
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                /* Operations panel - status created / Roma (Adapt: missing section) */
+                .operations-panel {
+                    flex: 0 0 200px;
+                    min-height: 200px;
+                    max-height: 200px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                }
+                .operations-content {
+                    font-size: 12px;
+                    color: #8b8d98;
+                    line-height: 1.5;
+                }
+                .operations-exec-line {
+                    margin-bottom: 10px;
+                    font-size: 11px;
+                    color: #8b8d98;
+                }
+                /* Task section inside center-panel (above icons), rounded */
+                .task-section {
+                    border-radius: 12px;
+                    padding: 10px 12px;
+                    margin-bottom: 12px;
+                    background: rgba(0, 0, 0, 0.2);
+                    font-size: 12px;
+                    text-align: center;
+                    color: #008ed6;
+                    border: 1px solid rgba(0, 142, 214, 0.3);
+                }
+                .operations-content .status-list {
+                    list-style: none;
+                    margin: 0;
+                    padding: 0;
+                }
+                .operations-content .status-list li {
+                    padding: 4px 0;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 4px;
+                }
+                .operations-content .status-list li:hover,
+                .operations-content .status-list li.active {
+                    background: rgba(255, 255, 255, 0.04);
+                    color: #e8e9eb;
+                }
+                .operations-content .status-list li.active { color: #008ed6; }
+                .operations-content .status-list li:last-child { border-bottom: none; }
+                .operations-task-prompt {
+                    width: 100%;
+                    flex-basis: 100%;
+                    font-size: 11px;
+                    color: #6b6d78;
+                    margin-top: 2px;
+                    padding-left: 0;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .operations-content .roma-line {
+                    margin-top: 10px;
+                    padding-top: 8px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.06);
+                    font-size: 11px;
+                    color: #6b6d78;
+                }
+                .operations-view-details, .operations-why-link {
+                    margin-left: 4px;
+                    padding: 2px 6px;
+                    font-size: 11px;
+                    background: rgba(0, 142, 214, 0.2);
+                    color: #008ed6;
+                    border: 1px solid rgba(0, 142, 214, 0.3);
+                    border-radius: 4px;
+                    cursor: pointer;
+                    text-decoration: none;
+                }
+                .operations-why-link { background: transparent; }
+                .panel-toggle-label {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                }
+                .panel-toggle-btn {
+                    border: none;
+                    background: transparent;
+                    color: #8b8d98;
+                    cursor: pointer;
+                    padding: 2px 6px;
+                    font-size: 14px;
+                    line-height: 1;
+                }
+                .panel-toggle-btn:hover {
+                    background: rgba(255, 255, 255, 0.06);
+                    color: #e8e9eb;
+                }
+
+                .copy-btn {
+                    border: none;
+                    background: transparent;
+                    color: #8b8d98;
+                    cursor: pointer;
+                    padding: 2px 8px;
+                    font-size: 11px;
+                    border-radius: 4px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .copy-btn .icon-sm { width: 20px; height: 20px; }
+                .copy-btn:hover {
+                    background: rgba(255, 255, 255, 0.06);
+                    color: #e8e9eb;
+                }
+                .ai-response-area .copy-btn {
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    z-index: 2;
+                }
+                .ai-response-area {
+                    position: relative;
+                }
+
+                /* Right panel - Mini code review (same size as Operations for symmetry) */
+                .code-review-panel {
+                    width: 250px;
+                    flex: 0 0 200px;
+                    min-height: 200px;
+                    max-height: 200px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                }
+                .code-review-toolbar {
+                    display: none;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                    padding: 8px 0;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                    margin-bottom: 8px;
+                }
+                .code-review-panel.maximized .code-review-toolbar { display: flex; }
+                .code-review-toolbar-btn {
+                    padding: 6px 12px;
+                    background: rgba(255, 255, 255, 0.08);
+                    color: #e8e9eb;
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 12px;
+                }
+                .code-review-toolbar-btn:hover { background: rgba(255, 255, 255, 0.12); }
+                .code-review-target-chip {
+                    font-size: 11px;
+                    color: #8b8d98;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    max-width: 180px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .code-review-toolbar-clear {
+                    background: none;
+                    border: none;
+                    color: #6b6d78;
+                    cursor: pointer;
+                    padding: 0 2px;
+                    font-size: 14px;
+                }
+                .code-review-content {
+                    font-size: 12px;
+                    color: #8b8d98;
+                    line-height: 1.5;
+                }
+                .code-review-placeholder { color: #6b6d78; font-size: 12px; }
+                .code-review-snippet {
+                    background: rgba(20, 23, 29, 0.8);
+                    border-radius: 6px;
+                    padding: 10px;
+                    margin: 0;
+                    font-family: 'Monaco', 'Menlo', monospace;
+                    font-size: 11px;
+                    color: #e8e9eb;
+                    white-space: pre-wrap;
+                    word-break: break-all;
+                    overflow: auto;
+                    max-height: 280px;
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                }
+                .code-review-diff { font-size: 11px; font-family: monospace; white-space: pre-wrap; }
+                .diff-add { background: rgba(0, 200, 80, 0.15); color: #4ade80; }
+                .diff-mod { background: rgba(255, 180, 0, 0.15); color: #fbbf24; }
+                .diff-same { color: #8b8d98; }
+
+                .code-snippet {
+                    background: rgba(20, 23, 29, 0.6);
+                    border-radius: 4px;
+                    padding: 8px;
+                    margin-top: 8px;
+                    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+                    font-size: 11px;
+                    color: #6b6d78;
+                }
+
+                /* Chat panel - 200px × 200px, all content fits inside */
+                .chat-panel {
+                    flex: 0 0 200px;
+                    width: 200px;
+                    height: 200px;
+                    min-height: 200px;
+                    max-height: 200px;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                    padding: 8px;
+                }
+                .chat-panel .panel-label { flex-shrink: 0; margin-bottom: 4px; font-size: 11px; }
+                .chat-panel-body {
+                    display: flex;
+                    flex: 1;
+                    min-height: 0;
+                    overflow: hidden;
+                    font-size: 11px;
+                }
+                .chat-sidebar {
+                    flex: 0 0 72px;
+                    min-width: 72px;
+                    border-right: 1px solid rgba(255, 255, 255, 0.06);
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                }
+                .chat-sidebar-title {
+                    padding: 4px 6px;
+                    color: #8b8d98;
+                    font-size: 10px;
+                    text-transform: uppercase;
+                }
+                .chat-conversation-list { list-style: none; margin: 0; padding: 0; }
+                .chat-conversation-list li {
+                    padding: 4px 6px;
+                    cursor: pointer;
+                    color: #8b8d98;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    font-size: 10px;
+                }
+                .chat-conversation-list li:hover,
+                .chat-conversation-list li.selected {
+                    background: rgba(255, 255, 255, 0.06);
+                    color: #e8e9eb;
+                }
+                .chat-thread { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+                .chat-messages {
+                    flex: 1;
+                    min-height: 0;
+                    overflow-y: auto;
+                    padding: 4px 6px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+                .chat-message {
+                    max-width: 100%;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    font-size: 10px;
+                    line-height: 1.3;
+                    white-space: pre-wrap;
+                    word-break: break-word;
+                    color: #008ed6;
+                }
+                .chat-message.user {
+                    align-self: flex-end;
+                    background: rgba(0, 142, 214, 0.2);
+                    border: 1px solid rgba(0, 142, 214, 0.3);
+                }
+                .chat-message.assistant {
+                    align-self: flex-start;
+                    background: rgba(255, 255, 255, 0.06);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                }
+                .chat-message-content {
+                    color: #ffffff9c;
+                }
+                .chat-input-row {
+                    display: flex;
+                    gap: 4px;
+                    padding: 4px 6px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.06);
+                    flex-shrink: 0;
+                }
+                .chat-input {
+                    flex: 1;
+                    min-height: 0;
+                    padding: 4px 6px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 4px;
+                    color: #008ed6;
+                    font-size: 10px;
+                    resize: none;
+                }
+                .chat-send-btn {
+                    padding: 4px 8px;
+                    background: #008ed6;
+                    color: #fff;
+                    border: none;
+                    border-radius: 4px;
+                    font-size: 10px;
+                    cursor: pointer;
+                    flex-shrink: 0;
+                }
+                .chat-send-btn:hover { background: #007ab8; }
+                .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+                /* Panel maximize */
+                body.panel-max-open .ai-response-area { display: none; }
+                body.panel-max-open .panels-container { padding-top: 40px; }
+                .panel.maximized {
+                    position: fixed;
+                    top: 80px;
+                    left: 40px;
+                    right: 40px;
+                    bottom: 40px;
+                    z-index: 1000;
+                    background: rgba(3, 6, 12, 0.96);
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 300px;
+                }
+                .panel.maximized .panel-label { margin-bottom: 12px; }
+                .panel.maximized .operations-content,
+                .panel.maximized .code-review-content,
+                .panel.maximized .chat-panel-body { flex: 1; min-height: 0; overflow: auto; }
+
+                /* ROI popover */
+                .roi-popover {
+                    position: absolute;
+                    background: rgba(10, 12, 18, 0.98);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    font-size: 11px;
+                    color: #e8e9eb;
+                    z-index: 1001;
+                    max-width: 280px;
+                    white-space: pre-wrap;
+                }
+                .roi-popover-header {
+                    display: flex;
+                    justify-content: flex-end;
+                    margin-bottom: 6px;
+                }
+                .roi-popover .copy-btn { font-size: 10px; padding: 2px 6px; }
+
+                @media (max-width: 1024px) {
+                    .panels-container {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+
+                    .operations-panel,
+                    .content-panel,
+                    .center-panel,
+                    .code-review-panel,
+                    .chat-panel {
+                        flex: 1;
+                        width: 100%;
+                        max-width: 100%;
+                    }
+
+                    .ai-response-area {
+                        padding: 20px;
+                    }
+                }
+    </style>
+<style id="truai-parity-styles">
+            .truai-parity-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+            .truai-parity-modal-content { background: #1a1d23; color: #e8e9eb; padding: 24px; border-radius: 12px; max-width: 90vw; max-height: 90vh; overflow: auto; }
+            .truai-parity-modal-content h3 { margin: 0 0 12px 0; font-size: 16px; }
+            .truai-parity-modal-content label { display: block; margin: 8px 0 4px 0; font-size: 13px; }
+            .truai-parity-modal-content textarea, .truai-parity-modal-content input[type=text] { width: 100%; padding: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px; box-sizing: border-box; }
+            .truai-parity-actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+            .truai-parity-actions button { padding: 8px 16px; background: #008ed6; border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 13px; }
+            .truai-parity-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+            .truai-parity-actions button:last-of-type { background: rgba(255,255,255,0.1); }
+            .truai-context { font-size: 12px; color: #8b8d98; margin: 8px 0; }
+            .truai-diff-content { min-width: 560px; }
+            .truai-diff-governance { padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; font-weight: 500; }
+            .truai-gov-safe { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+            .truai-gov-elevated { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+            .truai-gov-locked { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+            .truai-diff-columns { display: flex; gap: 16px; margin: 12px 0; }
+            .truai-diff-col { flex: 1; min-width: 0; }
+            .truai-diff-header { font-size: 12px; color: #8b8d98; margin-bottom: 4px; }
+            .truai-diff-code { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; font-size: 12px; white-space: pre-wrap; word-break: break-all; margin: 0; overflow: auto; max-height: 200px; }
+            .truai-forensic { font-size: 11px; color: #6b6d78; margin: 8px 0; }
+            .truai-context-list { font-size: 12px; color: #8b8d98; padding: 8px 12px; margin-bottom: 8px; }
+            .truai-drop-zone-active { border-color: #008ed6 !important; background: rgba(0,142,214,0.1) !important; color: #e8e9eb !important; }
+            .truai-content-panel-drag-over { outline: 2px solid #008ed6; outline-offset: -2px; background: rgba(0,142,214,0.08) !important; }
+            .truai-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1d23; color: #e8e9eb; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 10001; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+            .truai-context-menu { position: fixed; background: #1a1d23; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px; z-index: 10000; }
+            .truai-context-menu button { display: block; width: 100%; padding: 8px 12px; background: none; border: none; color: #e8e9eb; cursor: pointer; text-align: left; font-size: 13px; }
+            .truai-context-menu button:hover { background: rgba(255,255,255,0.05); }
+        </style></head>
+<body class="">
+    <!-- Header: Logo and Title -->
+    <div class="header-section" style="position: relative;">
+        <div class="header-actions" style="left: 95px; right: 95px; top: 6px;">
+            <a href="/TruAi/phantom" title="Phantom.ai Portal">Phantom.Ai</a>
+            <a href="/TruAi/gemini" title="Gemini.ai Portal">Gemini.Ai</a>
+        </div>
+    </div>
+
+    <!-- Main area: Content (left) | ai-response (center) | Code Review (right) - rectangular, rounded -->
+    <div class="main-area">
+        <div class="content-extended" style="
+    min-height: 350px;
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 600px;
+    position: relative;
+    left: 16px;
+    right: -16;
+    bottom: 175px;
+">
+            <div class="panel-label">Content</div>
+            <ul class="file-list" id="fileList"></ul>
+        </div>
+        <div class="ai-response-area" style="
+    bottom: 80px;
+    padding-top: 10px;
+">
+            <button type="button" class="copy-btn" data-copy-target="aiResponse" aria-label="Copy AI response"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+            <div class="ai-response-content empty" id="aiResponse" role="status" aria-live="polite" aria-atomic="true" style="width:100%;max-width:900px;padding:40px;margin:auto;">
+                <!-- AI responses will appear here -->
+            </div>
+        </div>
+        <div class="code-review-extended" style="
+    flex: 0 0 200px;
+    min-height: 350px;
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 600px;
+    position: relative;
+    left: auto;
+    right: 16px;
+    bottom: 175px;
+">
+            <div class="panel-label panel-toggle-label"><span>Code Review</span></div>
+            <div class="code-review-toolbar" id="codeReviewToolbar">
+                <span id="codeReviewTargetChip" class="code-review-target-chip" style="display:none;" title="Target file"><span id="codeReviewTargetPath"></span> <button type="button" id="codeReviewClearTarget" class="code-review-toolbar-clear" aria-label="Clear target">×</button></span>
+                <button type="button" id="codeReviewApplyToFile" class="code-review-toolbar-btn" title="Apply to file">Apply to file</button>
+                <button type="button" id="codeReviewDiffBtn" class="code-review-toolbar-btn" title="Toggle diff preview">Diff</button>
+            </div>
+            <div class="code-review-content" id="codeReview">
+                <div class="code-review-placeholder" id="codeReviewPlaceholder">No code review available</div>
+                <pre class="code-review-snippet" id="codeReviewSnippet" style="display:none;"></pre>
+                <div class="code-review-diff" id="codeReviewDiff" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Settings popup — separate scrollable container, above bottom panels -->
+    <div class="settings-popup" id="settingsPopup" role="dialog" aria-label="AI Settings" aria-modal="true">
+        <div class="settings-panel">
+            <form id="aiSettingsForm" aria-label="AI Settings Configuration">
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: #e8e9eb; font-size: 14px; font-weight: 500; margin-bottom: 12px;">OpenAI Provider</h3>
+                    <div style="margin-bottom: 12px;">
+                        <label for="aiApiKeyOpenAI" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                            OpenAI API Key
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="password" id="aiApiKeyOpenAI" name="openai_api_key" placeholder="sk-..." style="flex: 1; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px; font-family: 'Monaco', 'Menlo', monospace;" aria-required="false">
+                            <button type="button" id="revealApiKeyOpenAI" style="padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #8b8d98; font-size: 12px; cursor: pointer; white-space: nowrap;" aria-label="Toggle OpenAI API key visibility">
+                                Reveal
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="aiModelOpenAI" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                            OpenAI Model
+                        </label>
+                        <select id="aiModelOpenAI" name="openai_model" style="width: 100%; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px;">
+                            <option value="gpt-4o">gpt-4o</option>
+                            <option value="gpt-4">gpt-4</option>
+                            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-bottom: 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+                    <h3 style="color: #e8e9eb; font-size: 14px; font-weight: 500; margin-bottom: 12px;">Sonnet Provider (Anthropic)</h3>
+                    <div style="margin-bottom: 12px;">
+                        <label for="aiApiKeySonnet" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                            Sonnet API Key
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="password" id="aiApiKeySonnet" name="sonnet_api_key" placeholder="sk-ant-..." style="flex: 1; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px; font-family: 'Monaco', 'Menlo', monospace;" aria-required="false">
+                            <button type="button" id="revealApiKeySonnet" style="padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #8b8d98; font-size: 12px; cursor: pointer; white-space: nowrap;" aria-label="Toggle Sonnet API key visibility">
+                                Reveal
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="aiModelSonnet" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                            Sonnet Model
+                        </label>
+                        <select id="aiModelSonnet" name="sonnet_model" style="width: 100%; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px;">
+                            <option value="sonnet-1">sonnet-1</option>
+                            <option value="claude-3-opus">claude-3-opus</option>
+                            <option value="claude-3-sonnet">claude-3-sonnet</option>
+                            <option value="claude-3-haiku">claude-3-haiku</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label for="defaultProvider" style="display: block; color: #e8e9eb; font-size: 13px; margin-bottom: 4px;">
+                        Default Provider
+                    </label>
+                    <select id="defaultProvider" name="default_provider" style="width: 100%; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px;">
+                        <option value="openai">OpenAI</option>
+                        <option value="sonnet">Sonnet (Anthropic)</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="enableStreaming" name="enable_streaming" style="width: 18px; height: 18px; cursor: pointer;" aria-label="Enable streaming responses">
+                        <span style="color: #e8e9eb; font-size: 13px;">Enable Streaming</span>
+                    </label>
+                </div>
+                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" id="saveSettings" style="padding: 10px 20px; background: #008ed6; border: none; border-radius: 6px; color: white; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s;" aria-label="Save settings">
+                            Save
+                        </button>
+                        <button type="button" id="resetSettings" style="padding: 10px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; color: #e8e9eb; font-size: 13px; cursor: pointer; transition: all 0.2s;" aria-label="Reset settings to defaults">
+                            Reset
+                        </button>
+                        <button type="button" id="exitSettings" style="padding: 10px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; color: #e8e9eb; font-size: 13px; cursor: pointer; transition: all 0.2s;" aria-label="Exit settings">
+                            Exit
+                        </button>
+                        <span id="settingsStatus" role="status" aria-live="polite" style="margin-left: 12px; font-size: 12px; color: #8b8d98;"></span>
+                    </div>
+            </form>
+        </div>
+    </div>
+    <!-- Operations popup — same style as Settings (icon popup) -->
+    <div class="operations-popup" id="operationsPopup" role="dialog" aria-label="Operations" aria-modal="true">
+        <div class="popup-panel">
+            <div class="popup-header">
+                <span>Operations</span>
+                <span>
+                    <button type="button" class="copy-btn" data-copy-target="operationsContent" aria-label="Copy Operations"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                    <button type="button" class="popup-close" id="operationsPopupClose" aria-label="Close">×</button>
+                </span>
+            </div>
+            <div class="popup-content" id="operationsPopupContent"></div>
+        </div>
+    </div>
+    <!-- Chat History popup — same style as Settings (icon popup) -->
+    <div class="chat-popup" id="chatPopup" role="dialog" aria-label="Chat History" aria-modal="true">
+        <div class="popup-panel">
+            <div class="popup-header">
+                <span>Chat History</span>
+                <span>
+                    <button type="button" class="copy-btn" data-copy-target="chatMessages" aria-label="Copy Chat History"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                    <button type="button" class="popup-close" id="chatPopupClose" aria-label="Close">×</button>
+                </span>
+            </div>
+            <div class="popup-content" id="chatPopupContent"></div>
+        </div>
+    </div>
+    <!-- Bottom Panels Container - Operations | Center | Code Review | Chat (Adapt) -->
+    <div class="panels-container" style="
+    margin-right: 80px;
+    margin-left: 80px;
+    width: calc(100vw - 160px);
+    max-width: 1400px;
+    padding-right: 16px;
+    padding-left: 16px;
+    height: 290px;
+">
+        <!-- Left Panel: Operations (task list, Roma, execution state, Why?) -->
+        <div class="panel operations-panel">
+            <div class="panel-label panel-toggle-label">
+                <span>Operations</span>
+                <button type="button" class="panel-toggle-btn" data-panel-toggle="operations" aria-label="Maximize Operations panel">⤢</button>
+            </div>
+            <div class="operations-content" id="operationsContent">
+                <div class="operations-loading" style="display: none;">Loading…</div>
+                <ul class="status-list" id="operationsStatusList" style="display: none;"></ul>
+                <div class="roma-line" id="operationsRoma" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Center Panel: text entry + submit + icons, then Task Bar at bottom -->
+        <div class="panel center-panel" id="centerPanel" style="background: rgba(0, 0, 0, 0.07);border-radius: 32px;padding-bottom: unset;padding-top: unset;height: 235px;">
+            
+            <button class="submit-button" id="submitButton" type="button" title="Submit" aria-label="Submit prompt" style="
+    margin-top: 10px;
+    margin-bottom: 10px;
+    position: relative;
+    bottom: 3px;
+">
+                <div class="header-section" style="
+    padding-top: unset;
+    padding-bottom: unset;
+    height: 24px;
+    padding-left: unset;
+    padding-right: unset;
+">
+                    <div class="logo-container" style="
+    position: relative;
+    bottom: auto;
+">
+                        <img src="/TruAi/assets/images/TruAi-Submit-button.gif" alt="TruAi Submit" style="
+    position: relative;
+    bottom: auto;
+">
+                    </div>
+                </div>
+            </button><textarea class="text-entry" id="aiTextEntry" placeholder="Standing by for instructions..." rows="4" style="
+    margin-bottom: unset;
+    position: relative;
+    bottom: 10px;
+    align-items: center;
+    align-content: center;
+    padding-top: unset;
+    padding-bottom: unset;
+    width: 681px;
+    height: 100px;
+"></textarea>
+            
+            <!-- Round Submit Button -->
+            
+            
+            <div class="icon-row" style="position: relative;top: auto;bottom: 5px;">
+                <div class="icon-group">
+                    <!-- Add Photos icon -->
+                    <button class="icon-button" title="Add Photos">
+                        <div class="header-section" style="
+    padding-left: unset;
+    padding-bottom: unset;
+    padding-right: unset;
+    padding-top: unset;
+    height: 24px;
+">
+                            <div class="logo-container">
+                                <img src="/TruAi/assets/images/TruAi-Images.png" alt="TruAi Logo">
+                            </div>
+                        </div>
+                    </button>
+                    <!-- Browser / Add URL icon -->
+                    <button class="icon-button" title="Add URL">
+                        <div class="header-section" style="
+    padding-bottom: unset;
+    padding-right: unset;
+    padding-top: unset;
+    padding-left: unset;
+    height: 24px;
+">
+                            <div class="logo-container">
+                                <img src="/TruAi/assets/images/TruAi-URL.png">
+                            </div>
+                        </div>
+                    </button>
+                    <!-- Add File / Folder icon -->
+                    <button class="icon-button" title="Add File / Folder" style="
+    height: 24px;
+">
+                        <div class="header-section" style="
+    padding-left: unset;
+    padding-bottom: unset;
+    padding-right: unset;
+    padding-top: unset;
+    height: 24px;
+">
+                            <div class="logo-container">
+                                <img src="/TruAi/assets/images/TruAi-File-Folder.png" alt="TruAi Logo">
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                
+
+                <!-- Settings link (center) -->
+                <div class="icon-group">
+                    <button class="icon-button" title="Settings">
+                        <div class="header-section" style="
+    padding-left: unset;
+    padding-bottom: unset;
+    padding-right: unset;
+    padding-top: unset;
+    height: 24px;
+">
+                            <div class="logo-container">
+                                <img src="/TruAi/assets/images/TruAi-Settings.png" alt="TruAi Logo" style="
+    padding-right: 150px;
+    width: 324px;
+    padding-left: 150px;
+">
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                
+
+                <div class="icon-group">
+                    <!-- Terminal icon -->
+                    <button class="icon-button" title="Terminal" style="
+    height: 24px;
+">
+                        <div class="header-section" style="padding-bottom: unset;padding-left: unset;padding-right: unset;padding-top: unset;">
+                            <div class="logo-container" style="
+    margin-bottom: unset;
+">
+                                <img src="/TruAi/assets/images/TruAi-Terminal.png" alt="TruAi Logo">
+                            </div>
+                        </div>
+                    </button>
+                    <!-- GitHub icon -->
+                    <button class="icon-button" title="GitHub">
+                        <div class="icon-group">
+                            <div class="logo-container" style="
+    margin-bottom: unset;
+">
+                                <img src="/TruAi/assets/images/TruAi-Github.png" alt="TruAi Logo" style="
+    padding-bottom: unset;
+">
+                            </div>
+                        </div>
+                    </button>
+                    <!-- Code View icon -->
+                    <button class="icon-button" title="Code View">
+                        <div class="header-section" style="
+    padding-bottom: 0px;
+    padding-left: unset;
+    padding-right: unset;
+    padding-top: unset;
+">
+                            <div class="logo-container" style="
+    margin-bottom: unset;
+">
+                                <img src="/TruAi/assets/images/TruAi-Code-Editor.png" alt="TruAi Logo" style="
+    border-top-width: 5px;
+    margin-top: unset;
+">
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Task Bar Section --><div class="task-section" style="
+    padding-bottom: 5px;
+    padding-top: 5px;
+    margin-bottom: 10px;
+    position: relative;
+    top: 3px;
+">Current: <span id="exec-current-label">Idle</span> · <span id="exec-risk-label">SAFE</span> · <span id="exec-roi-label">AUTO-ROI</span> · <span id="exec-roma-label" title="ROMA trust state">Roma: —</span></div>
+        </div>
+
+        <!-- Chat History: 200px × 200px, all content fits inside -->
+        <div class="panel chat-panel">
+            <div class="panel-label panel-toggle-label">
+                <span>Chat History</span>
+                <button type="button" class="copy-btn" data-copy-target="chatMessages" aria-label="Copy Chat History"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                <button type="button" class="panel-toggle-btn" id="chatNewChatBtn" title="New chat" aria-label="New chat">+</button>
+                <button type="button" class="panel-toggle-btn" data-panel-toggle="chat" aria-label="Maximize Chat panel">⤢</button>
+            </div>
+            <div class="chat-panel-body">
+                <div class="chat-sidebar">
+                    <div class="chat-sidebar-title">Past chats</div>
+                    <ul class="chat-conversation-list" id="chatConversationList"></ul>
+                </div>
+                <div class="chat-thread">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input-row">
+                        <textarea class="chat-input" id="chatInput" placeholder="Message…" rows="1"></textarea>
+                        <button type="button" class="chat-send-btn" id="chatSendBtn" aria-label="Send">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global configuration (preserved for API access if needed)
+        window.TRUAI_CONFIG = {
+            APP_NAME: 'Tru.ai',
+            APP_VERSION: '1.0.0',
+            API_BASE: window.location.origin + '/TruAi/api/v1',
+            CSRF_TOKEN: '74921826a8f1e0cad9b940a4f95590c3887d1f87dc9e19550c5aa4de8319cb7a',
+            IS_AUTHENTICATED: true,
+            USERNAME: 'Deme'
+        };
+
+        // Build structured copy payloads for TruAi (@TRUAI_TASKLOG and optional @TRUAI_CAPS)
+        function buildTruAiCopyPayload(targetId, rawText) {
+            var text = (rawText || '').trim();
+            if (!text) return '';
+
+            // For Operations + Chat History, wrap as task log
+            if (targetId === 'operationsContent' || targetId === 'chatMessages') {
+                var sections = [];
+                sections.push('@TRUAI_TASKLOG');
+                sections.push(text);
+
+                // Optional capabilities list:
+                // - Prefer explicit window.TRUAI_CAPS_TEXT if provided
+                // - Fallback to #truaiCapabilities element text if present
+                var capsText = '';
+                if (typeof window.TRUAI_CAPS_TEXT === 'string' && window.TRUAI_CAPS_TEXT.trim()) {
+                    capsText = window.TRUAI_CAPS_TEXT.trim();
+                } else {
+                    var capsEl = document.getElementById('truaiCapabilities');
+                    if (capsEl) {
+                        capsText = ((capsEl.textContent || capsEl.innerText || '') + '').trim();
+                    }
+                }
+                if (capsText) {
+                    sections.push('');
+                    sections.push('@TRUAI_CAPS');
+                    sections.push(capsText);
+                }
+
+                return sections.join('\n');
+            }
+
+            // Default: no special wrapping
+            return text;
+        }
+
+        // Copy button handler — ai-response, operations, chat history
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.copy-btn[data-copy-target]');
+            if (!btn) return;
+            var targetId = btn.getAttribute('data-copy-target');
+            var el = document.getElementById(targetId);
+            if (!el) return;
+            var text;
+            if (targetId === 'chatMessages') {
+                var parts = [];
+                el.querySelectorAll('.chat-message').forEach(function(msg) {
+                    var role = msg.classList.contains('user') ? 'User' : 'Assistant';
+                    var content = (msg.querySelector('.chat-message-content') || msg).textContent || '';
+                    if (content.trim()) parts.push(role + ': ' + content.trim());
+                });
+                text = parts.join('\n\n');
+            } else {
+                text = el.textContent || el.innerText || '';
+            }
+
+            text = buildTruAiCopyPayload(targetId, text);
+            if (!text.trim()) return;
+
+            var orig = btn.innerHTML;
+            navigator.clipboard.writeText(text).then(function() {
+                btn.innerHTML = 'Copied';
+                setTimeout(function() { btn.innerHTML = orig; }, 1500);
+            }).catch(function() {
+                btn.innerHTML = 'Failed';
+                setTimeout(function() { btn.innerHTML = orig; }, 1500);
+            });
+        });
+
+        // Icon button handlers
+        document.querySelectorAll('.icon-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const title = this.getAttribute('title');
+                console.log('Clicked:', title);
+                // TODO: Implement functionality for each icon
+            });
+        });
+
+        // Settings popup: toggle, exit on Save, and Exit button
+        const settingsButton = document.querySelector('.icon-button[title="Settings"]');
+        const settingsPopup = document.getElementById('settingsPopup');
+        
+        function closeSettingsPopup() {
+            if (settingsPopup) settingsPopup.classList.remove('visible');
+            if (settingsButton) settingsButton.classList.remove('active');
+        }
+        
+        if (settingsButton && settingsPopup) {
+            settingsButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                settingsPopup.classList.toggle('visible');
+                settingsButton.classList.toggle('active');
+            });
+        }
+        
+        document.getElementById('exitSettings')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeSettingsPopup();
+        });
+        
+        document.getElementById('saveSettings')?.addEventListener('click', function() {
+            closeSettingsPopup();
+        });
+
+        // Submit button handler - wait for DOM and AI client to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitButton = document.getElementById('submitButton');
+            const aiTextEntry = document.getElementById('aiTextEntry');
+            const aiResponse = document.getElementById('aiResponse');
+            
+            if (!submitButton || !aiTextEntry || !aiResponse) {
+                console.warn('Submit button or required elements not found');
+                return;
+            }
+
+            // Function to handle submission (same logic as keyboard handler)
+            async function handleSubmission() {
+                const prompt = aiTextEntry.value.trim();
+                if (!prompt) {
+                    console.log('No text to submit');
+                    return;
+                }
+
+                // Wait for AI client to be initialized (with timeout)
+                const maxWait = 5000; // 5 seconds
+                const startTime = Date.now();
+                
+                while (!window.truAiClient && (Date.now() - startTime) < maxWait) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                if (!window.truAiClient) {
+                    console.error('AI client not initialized after timeout');
+                    aiResponse.textContent = 'Error: AI client not ready. Please refresh the page.';
+                    aiResponse.classList.remove('empty');
+                    return;
+                }
+
+                try {
+                    // Disable UI
+                    aiTextEntry.disabled = true;
+                    aiTextEntry.classList.add('disabled');
+                    submitButton.disabled = true;
+                    submitButton.style.opacity = '0.5';
+                    submitButton.style.cursor = 'not-allowed';
+
+                    // Show loading state
+                    aiResponse.classList.remove('empty');
+                    aiResponse.textContent = 'Submitting prompt...';
+
+                    // Ensure CSRF token is up to date before submission
+                    if (window.truAiClient && window.truAiClient.updateCsrfToken) {
+                      window.truAiClient.updateCsrfToken();
+                      console.log('CSRF token updated before submission');
+                    }
+                    
+                    // Submit prompt using AI client (with context_files if Cursor Parity loaded)
+                    const context = (window.TruAiGetContextFiles && window.TruAiGetContextFiles().length) ? { context_files: window.TruAiGetContextFiles() } : null;
+                    const result = await window.truAiClient.submitPrompt(prompt, context, (progress) => {
+                        // Update progress status
+                        if (progress && progress.status && progress.status !== 'pending') {
+                            aiResponse.textContent = `Status: ${progress.status}...`;
+                        }
+                    });
+
+                    // Display result
+                    const output = result.output ?? result.results ?? result.text ?? JSON.stringify(result);
+                    aiResponse.textContent = output;
+                    aiResponse.classList.remove('empty');
+
+                    // Update exec line and Code Review (Adapt)
+                    if (result.task_id) {
+                        const el = document.getElementById('exec-current-label');
+                        if (el) el.textContent = String(result.task_id).slice(-12);
+                    }
+                    if (result.risk_level) {
+                        const el = document.getElementById('exec-risk-label');
+                        if (el) el.textContent = result.risk_level;
+                    }
+                    const roiEl = document.getElementById('exec-roi-label');
+                    if (roiEl) roiEl.textContent = result.auto_executed ? 'AUTO-ROI' : 'MANUAL';
+                    if (window.TruAiRefreshOperationsList) setTimeout(window.TruAiRefreshOperationsList, 300);
+                    if (output && window.updateCodeReview) window.updateCodeReview(output, 'Generated');
+
+                } catch (err) {
+                    console.error('Submission error:', err);
+                    let errorMessage = err.message;
+                    
+                    // Check if it's an authentication error
+                    if (errorMessage.includes('Unauthorized') || errorMessage.includes('Session expired')) {
+                        errorMessage = 'Session expired. Please refresh the page and log in again.';
+                        // Optionally redirect after a delay
+                        setTimeout(() => {
+                            if (confirm('Your session has expired. Would you like to go to the login page?')) {
+                                window.location.href = '/TruAi/login-portal.html';
+                            }
+                        }, 2000);
+                    }
+                    
+                    aiResponse.textContent = `Error: ${errorMessage}`;
+                    aiResponse.classList.remove('empty');
+                } finally {
+                    // Re-enable UI
+                    aiTextEntry.disabled = false;
+                    aiTextEntry.classList.remove('disabled');
+                    submitButton.disabled = false;
+                    submitButton.style.opacity = '1';
+                    submitButton.style.cursor = 'pointer';
+                    
+                    // Clear textarea and refocus
+                    aiTextEntry.value = '';
+                    aiTextEntry.focus();
+                }
+            }
+
+            // Wire submit button click
+            submitButton.addEventListener('click', handleSubmission);
+
+            // Also allow Cmd/Ctrl+Enter to trigger submit button
+            aiTextEntry.addEventListener('keydown', function(e) {
+                const metaPressed = e.metaKey || e.ctrlKey;
+                if (e.key === 'Enter' && metaPressed) {
+                    e.preventDefault();
+                    handleSubmission();
+                }
+            });
+
+            console.log('✅ Submit button wired to AI client');
+        });
+
+        // Operations & Chat History popups — same style as Settings (icon popup)
+        (function() {
+            var operationsPopup = document.getElementById('operationsPopup');
+            var chatPopup = document.getElementById('chatPopup');
+            var operationsContent = document.getElementById('operationsContent');
+            var chatPanelBody = document.querySelector('.chat-panel .chat-panel-body');
+            var operationsPanel = document.querySelector('.panel.operations-panel');
+            var chatPanel = document.querySelector('.panel.chat-panel');
+            var operationsBtn = document.querySelector('[data-panel-toggle="operations"]');
+            var chatBtn = document.querySelector('[data-panel-toggle="chat"]');
+
+            function openOperationsPopup() {
+                if (!operationsPopup || !operationsContent) return;
+                var container = document.getElementById('operationsPopupContent');
+                if (container) {
+                    container.appendChild(operationsContent);
+                    operationsPopup.classList.add('visible');
+                }
+            }
+            function closeOperationsPopup() {
+                if (!operationsPopup || !operationsContent) return;
+                operationsPopup.classList.remove('visible');
+                if (operationsPanel) operationsPanel.querySelector('.panel-toggle-label')?.insertAdjacentElement('afterend', operationsContent);
+            }
+            function openChatPopup() {
+                if (!chatPopup || !chatPanelBody) return;
+                var container = document.getElementById('chatPopupContent');
+                if (container) {
+                    container.appendChild(chatPanelBody);
+                    chatPopup.classList.add('visible');
+                }
+            }
+            function closeChatPopup() {
+                if (!chatPopup || !chatPanelBody) return;
+                chatPopup.classList.remove('visible');
+                if (chatPanel) chatPanel.appendChild(chatPanelBody);
+            }
+
+            operationsBtn?.addEventListener('click', function() { openOperationsPopup(); });
+            chatBtn?.addEventListener('click', function() { openChatPopup(); });
+            document.getElementById('operationsPopupClose')?.addEventListener('click', closeOperationsPopup);
+            document.getElementById('chatPopupClose')?.addEventListener('click', closeChatPopup);
+
+            // Close on overlay click (click outside panel)
+            operationsPopup?.addEventListener('click', function(e) {
+                if (e.target === operationsPopup) closeOperationsPopup();
+            });
+            chatPopup?.addEventListener('click', function(e) {
+                if (e.target === chatPopup) closeChatPopup();
+            });
+
+            // Close on Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (operationsPopup?.classList.contains('visible')) closeOperationsPopup();
+                    else if (chatPopup?.classList.contains('visible')) closeChatPopup();
+                }
+            });
+        })();
+
+        // Operations: load task list, exec line, task click to load, Why? popover
+        (function() {
+            var apiBase = (window.TRUAI_CONFIG && window.TRUAI_CONFIG.API_BASE) || (window.location.origin + '/TruAi/api/v1');
+            var operationsContent = document.getElementById('operationsContent');
+            var operationsStatusList = document.getElementById('operationsStatusList');
+            var operationsRoma = document.getElementById('operationsRoma');
+            var execCurrent = document.getElementById('exec-current-label');
+            var execRisk = document.getElementById('exec-risk-label');
+            var execRoi = document.getElementById('exec-roi-label');
+            var execRoma = document.getElementById('exec-roma-label');
+            var operationsLoading = operationsContent && operationsContent.querySelector('.operations-loading');
+
+            function setExecLine(current, risk, roi) {
+                if (execCurrent) execCurrent.textContent = current || 'Idle';
+                if (execRisk) execRisk.textContent = risk || 'SAFE';
+                if (execRoi) execRoi.textContent = roi || 'AUTO-ROI';
+            }
+            function setExecRoma(state) {
+                if (execRoma) {
+                    execRoma.textContent = 'Roma: ' + (state || '—');
+                    var c = state === 'Active' ? '#008ed6' : (state === 'Blocked' ? '#1d3e52' : (state === 'Unverified' ? '#ffffff99' : '#8b8d98'));
+                    execRoma.style.setProperty('color', c, 'important');
+                    execRoma.style.opacity = '1';
+                }
+            }
+
+            function loadOperationsList() {
+                if (!operationsContent || !operationsStatusList || !operationsRoma) return;
+                fetch(apiBase + '/task/list?limit=15', { credentials: 'include' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (operationsLoading) operationsLoading.style.display = 'none';
+                        if (data.tasks && data.tasks.length) {
+                            operationsStatusList.style.display = 'block';
+                            operationsStatusList.innerHTML = '';
+                            data.tasks.forEach(function(t) {
+                                var li = document.createElement('li');
+                                li.dataset.taskId = t.id;
+                                var shortId = (t.id || '').toString().slice(-12);
+                                var status = t.status || '\u2014';
+                                var risk = t.risk_level || t.risk || '\u2014';
+                                var label = document.createElement('span');
+                                label.textContent = shortId + ' \u2022 ' + status;
+                                label.style.color = (status === 'CREATED' || status === 'LOCKED') ? '#008ed6' : '#8b8d98';
+                                li.appendChild(label);
+                                var prompt = (t.prompt || '').toString().replace(/\s+/g, ' ').trim();
+                                if (prompt) {
+                                    var promptEl = document.createElement('div');
+                                    promptEl.className = 'operations-task-prompt';
+                                    promptEl.title = prompt;
+                                    promptEl.textContent = prompt.length > 50 ? prompt.slice(0, 50) + '\u2026' : prompt;
+                                    li.appendChild(promptEl);
+                                }
+                                var viewBtn = document.createElement('button');
+                                viewBtn.type = 'button';
+                                viewBtn.textContent = 'View details';
+                                viewBtn.className = 'operations-view-details';
+                                viewBtn.addEventListener('click', function(e) { e.stopPropagation(); openTaskDetails(t.id); });
+                                li.appendChild(viewBtn);
+                                var whyLink = document.createElement('button');
+                                whyLink.type = 'button';
+                                whyLink.textContent = 'Why?';
+                                whyLink.className = 'operations-why-link';
+                                whyLink.addEventListener('click', function(e) { e.stopPropagation(); showWhyPopover(e.target, t); });
+                                li.appendChild(whyLink);
+                                li.addEventListener('click', function() { loadTaskIntoResponse(t.id); });
+                                operationsStatusList.appendChild(li);
+                            });
+                        } else {
+                            operationsStatusList.style.display = 'none';
+                        }
+                        return fetch(apiBase + '/operations/status', { credentials: 'include' });
+                    })
+                    .then(function(r) { return r && r.json ? r.json() : {}; })
+                    .then(function(data) {
+                        if (operationsRoma) {
+                            operationsRoma.style.display = 'block';
+                            if (data.roma && data.roma.monitor === 'active') {
+                                operationsRoma.textContent = 'Roma \u2022 Portal protected \u2022 Monitor active';
+                                setExecRoma('Active');
+                            } else if (data.roma && data.roma.trust_state === 'BLOCKED') {
+                                operationsRoma.textContent = 'Roma \u2022 Blocked (suspicion threshold)';
+                                setExecRoma('Blocked');
+                            } else {
+                                operationsRoma.textContent = 'Roma \u2022 Unverified';
+                                setExecRoma('Unverified');
+                            }
+                        }
+                    })
+                    .catch(function() {
+                        if (operationsLoading) operationsLoading.textContent = 'Operations unavailable';
+                    });
+            }
+
+            function loadTaskIntoResponse(taskId) {
+                fetch(apiBase + '/task/' + encodeURIComponent(taskId), { credentials: 'include' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(full) {
+                        if (full.error) return;
+                        var resp = document.getElementById('aiResponse');
+                        if (resp) {
+                            resp.textContent = full.output != null ? full.output : (full.prompt || '');
+                            resp.classList.remove('empty');
+                        }
+                        document.querySelectorAll('#operationsStatusList li').forEach(function(el) { el.classList.remove('active'); });
+                        var li = document.querySelector('#operationsStatusList li[data-task-id="' + taskId + '"]');
+                        if (li) li.classList.add('active');
+                        setExecLine((taskId || '').toString().slice(-12), full.risk_level || full.risk || 'SAFE', full.auto_executed ? 'AUTO-ROI' : 'MANUAL');
+                    })
+                    .catch(function() {});
+            }
+
+            function openTaskDetails(taskId) {
+                fetch(apiBase + '/task/' + encodeURIComponent(taskId), { credentials: 'include' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(full) {
+                        if (full.error) return;
+                        var taskResult = { task_id: full.id, id: full.id, status: full.status, risk_level: full.risk_level, prompt: full.prompt, output: full.output };
+                        if (window.openApprovalModal) window.openApprovalModal(taskResult, full.prompt);
+                        else loadTaskIntoResponse(taskId);
+                    })
+                    .catch(function() {});
+            }
+
+            function showWhyPopover(anchor, t) {
+                var existing = document.getElementById('roi-popover-el');
+                if (existing) existing.remove();
+                var pop = document.createElement('div');
+                pop.id = 'roi-popover-el';
+                pop.className = 'roi-popover';
+                var prompt = (t.prompt || '').toString().trim();
+                var displayLines = ['Task: ' + (t.id || '\u2014'), 'Status: ' + (t.status || '\u2014'), 'Risk: ' + (t.risk_level || t.risk || '\u2014'), 'Auto-executed: ' + (t.auto_executed ? 'Yes' : 'No')];
+                if (prompt) displayLines.unshift('Request: ' + (prompt.length > 80 ? prompt.slice(0, 80) + '\u2026' : prompt));
+                var copyLines = ['Task: ' + (t.id || '\u2014'), 'Status: ' + (t.status || '\u2014'), 'Risk: ' + (t.risk_level || t.risk || '\u2014'), 'Auto-executed: ' + (t.auto_executed ? 'Yes' : 'No')];
+                if (prompt) copyLines.unshift('Request: ' + prompt);
+                var text = copyLines.join('\n');
+                var header = document.createElement('div');
+                header.className = 'roi-popover-header';
+                var copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'copy-btn';
+                copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+                copyBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var orig = copyBtn.innerHTML;
+                    navigator.clipboard.writeText(text).then(function() {
+                        copyBtn.innerHTML = 'Copied';
+                        setTimeout(function() { copyBtn.innerHTML = orig; }, 1500);
+                    });
+                });
+                header.appendChild(copyBtn);
+                pop.appendChild(header);
+                var content = document.createElement('div');
+                content.textContent = displayLines.join('\n');
+                pop.appendChild(content);
+                document.body.appendChild(pop);
+                var rect = anchor.getBoundingClientRect();
+                pop.style.left = (rect.left + window.scrollX) + 'px';
+                pop.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+                setTimeout(function() {
+                    document.addEventListener('click', function close() {
+                        if (pop.parentNode) pop.remove();
+                        document.removeEventListener('click', close);
+                    }, 0);
+                }, 0);
+            }
+
+            window.TruAiRefreshOperationsList = loadOperationsList;
+            document.addEventListener('DOMContentLoaded', function() {
+                if (operationsContent && operationsStatusList && operationsRoma) loadOperationsList();
+            });
+        })();
+
+        // Code Review: updateCodeReview global, Diff toggle, target chip
+        window.updateCodeReview = function(content, label) {
+            var placeholder = document.getElementById('codeReviewPlaceholder');
+            var snippet = document.getElementById('codeReviewSnippet');
+            var diffEl = document.getElementById('codeReviewDiff');
+            if (!placeholder || !snippet) return;
+            if (!content || (typeof content === 'string' && !content.trim())) {
+                placeholder.style.display = 'block';
+                placeholder.textContent = label || 'No code review available';
+                snippet.style.display = 'none';
+                if (diffEl) diffEl.style.display = 'none';
+                return;
+            }
+            var text = typeof content === 'string' ? content : (content.code || content.text || JSON.stringify(content));
+            var display = (label ? label + '\n\n' : '') + text;
+            if (display.length > 8000) display = display.substring(0, 8000) + '\n\n\u2026 (truncated)';
+            placeholder.style.display = 'none';
+            snippet.style.display = 'block';
+            snippet.textContent = display;
+            if (diffEl) { diffEl.style.display = 'none'; diffEl.innerHTML = ''; }
+            window.__truaiCodeReviewContent = display;
+        };
+        window.TruAiUpdateTargetChip = function() {
+            var path = window.__truaiXcodeTargetPath;
+            var chip = document.getElementById('codeReviewTargetChip');
+            var pathEl = document.getElementById('codeReviewTargetPath');
+            if (!chip || !pathEl) return;
+            if (path) { chip.style.display = 'inline-flex'; pathEl.textContent = path; } else { chip.style.display = 'none'; pathEl.textContent = ''; }
+        };
+        document.getElementById('codeReviewClearTarget')?.addEventListener('click', function() {
+            window.__truaiXcodeTargetPath = null;
+            if (window.TruAiUpdateTargetChip) window.TruAiUpdateTargetChip();
+        });
+        (function() {
+            var diffBtn = document.getElementById('codeReviewDiffBtn');
+            var snippet = document.getElementById('codeReviewSnippet');
+            var diffEl = document.getElementById('codeReviewDiff');
+            var placeholder = document.getElementById('codeReviewPlaceholder');
+            if (!diffBtn || !snippet || !diffEl) return;
+            function renderSimpleDiff() {
+                var content = window.__truaiCodeReviewContent || snippet.textContent || '';
+                if (!content.trim()) return;
+                var lines = content.split(/\n/);
+                diffEl.innerHTML = '';
+                lines.forEach(function(line) {
+                    var div = document.createElement('div');
+                    div.className = 'diff-same';
+                    div.textContent = (line === '' ? ' ' : line);
+                    diffEl.appendChild(div);
+                });
+            }
+            diffBtn.addEventListener('click', function() {
+                var showDiff = diffEl.style.display !== 'none';
+                if (showDiff) {
+                    diffEl.style.display = 'none';
+                    snippet.style.display = 'block';
+                    diffBtn.textContent = 'Diff';
+                } else {
+                    renderSimpleDiff();
+                    snippet.style.display = 'none';
+                    diffEl.style.display = 'block';
+                    diffBtn.textContent = 'Snippet';
+                }
+            });
+        })();
+
+        // Chat: conversations list, load conversation, send message, new chat
+        (function() {
+            var apiBase = (window.TRUAI_CONFIG && window.TRUAI_CONFIG.API_BASE) || (window.location.origin + '/TruAi/api/v1');
+            var csrf = (window.TRUAI_CONFIG && window.TRUAI_CONFIG.CSRF_TOKEN) || '';
+            var chatCurrentConvId = null;
+            var chatConversations = [];
+            var chatMessagesList = [];
+
+            function chatReq(path, opts) {
+                opts = opts || {};
+                opts.credentials = 'include';
+                opts.headers = opts.headers || {};
+                opts.headers['Content-Type'] = 'application/json';
+                if (csrf) opts.headers['X-CSRF-Token'] = csrf;
+                return fetch(apiBase + path, opts).then(function(r) { return r.json(); });
+            }
+
+            function renderConversationList() {
+                var list = document.getElementById('chatConversationList');
+                if (!list) return;
+                list.innerHTML = '';
+                chatConversations.forEach(function(c) {
+                    var li = document.createElement('li');
+                    li.textContent = (c.title || 'Chat') + (c.message_count ? ' (' + c.message_count + ')' : '');
+                    li.dataset.id = c.id;
+                    if (chatCurrentConvId === String(c.id)) li.classList.add('selected');
+                    li.addEventListener('click', function() {
+                        chatCurrentConvId = String(c.id);
+                        renderConversationList();
+                        loadConversation(chatCurrentConvId);
+                    });
+                    list.appendChild(li);
+                });
+            }
+
+            function renderMessages() {
+                var container = document.getElementById('chatMessages');
+                if (!container) return;
+                if (chatMessagesList.length === 0) {
+                    container.innerHTML = '<div style="color:#8b8d98;font-size:12px;padding:8px;">No messages. Start a new chat or select one from Past chats.</div>';
+                    return;
+                }
+                container.innerHTML = '';
+                chatMessagesList.forEach(function(m) {
+                    var wrap = document.createElement('div');
+                    wrap.className = 'chat-message ' + (m.role || 'user');
+                    var content = document.createElement('div');
+                    content.className = 'chat-message-content';
+                    content.textContent = m.content || '';
+                    wrap.appendChild(content);
+                    container.appendChild(wrap);
+                });
+                container.scrollTop = container.scrollHeight;
+            }
+
+            function loadConversations() {
+                chatReq('/chat/conversations').then(function(data) {
+                    chatConversations = (data && data.conversations) ? data.conversations : [];
+                    renderConversationList();
+                }).catch(function() {});
+            }
+
+            function loadConversation(id) {
+                chatReq('/chat/conversation/' + id).then(function(conv) {
+                    if (!conv || !conv.messages) return;
+                    chatMessagesList = conv.messages.map(function(m) {
+                        return { id: m.id, role: m.role, content: m.content };
+                    });
+                    renderMessages();
+                }).catch(function() {});
+            }
+
+            function sendMessage() {
+                var input = document.getElementById('chatInput');
+                if (!input) return;
+                var text = (input.value || '').trim();
+                if (!text) return;
+                input.value = '';
+                input.disabled = true;
+                var sendBtn = document.getElementById('chatSendBtn');
+                if (sendBtn) sendBtn.disabled = true;
+                chatReq('/chat/message', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        conversation_id: chatCurrentConvId,
+                        message: text,
+                        model: 'auto'
+                    })
+                }).then(function(res) {
+                    if (res.error) throw new Error(res.error);
+                    chatCurrentConvId = res.conversation_id;
+                    loadConversations();
+                    loadConversation(chatCurrentConvId);
+                }).catch(function() {}).finally(function() {
+                    input.disabled = false;
+                    if (sendBtn) sendBtn.disabled = false;
+                });
+            }
+
+            document.getElementById('chatNewChatBtn')?.addEventListener('click', function() {
+                chatCurrentConvId = null;
+                chatMessagesList = [];
+                renderConversationList();
+                renderMessages();
+                var input = document.getElementById('chatInput');
+                if (input) { input.value = ''; input.focus(); }
+            });
+            document.getElementById('chatSendBtn')?.addEventListener('click', sendMessage);
+            document.getElementById('chatInput')?.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+            });
+            document.addEventListener('DOMContentLoaded', loadConversations);
+        })();
+    </script>
+
+    <!-- Wire the AI client and enable accessible live region updates -->
+    <script src="/TruAi/assets/js/crypto.js"></script>
+    <script src="/TruAi/assets/js/ai-client.js"></script>
+    <script src="/TruAi/assets/js/settings-client.js"></script>
+    <script src="/TruAi/assets/js/cursor-parity.js"></script>
+    <script>
+      // Initialize AI client immediately (before DOMContentLoaded if possible)
+      // This ensures it's available as soon as possible
+      (function() {
+        try {
+          if (window.TRUAI_CONFIG && window.TruAiAIClient) {
+            window.truAiClient = new TruAiAIClient(window.TRUAI_CONFIG);
+            console.log('✅ AI client created with CSRF:', window.TRUAI_CONFIG.CSRF_TOKEN ? 'present' : 'missing');
+          }
+        } catch (err) {
+          console.error('❌ Failed to create AI client:', err);
+        }
+      })();
+
+      document.addEventListener('DOMContentLoaded', () => {
+        try {
+          // Attach AI client to UI elements
+          if (window.truAiClient) {
+            window.truAiClient.attachToUI({ textareaId: 'aiTextEntry', responseId: 'aiResponse' });
+            console.log('✅ AI client attached to UI');
+          } else if (window.TRUAI_CONFIG && window.TruAiAIClient) {
+            // Fallback: create if not already created
+            window.truAiClient = new TruAiAIClient(window.TRUAI_CONFIG);
+            window.truAiClient.attachToUI({ textareaId: 'aiTextEntry', responseId: 'aiResponse' });
+            console.log('✅ AI client created and attached to UI');
+          }
+          
+          // Initialize settings client with config
+          if (window.TruAiSettingsClient && window.TRUAI_CONFIG) {
+            window.TruAiSettingsClient.init(window.TRUAI_CONFIG);
+            console.log('✅ Settings client initialized with config');
+          }
+          
+          // Log authentication status for debugging
+          console.log('Auth status:', {
+            isAuthenticated: window.TRUAI_CONFIG?.IS_AUTHENTICATED,
+            hasCsrfToken: !!window.TRUAI_CONFIG?.CSRF_TOKEN,
+            csrfTokenLength: window.TRUAI_CONFIG?.CSRF_TOKEN?.length || 0
+          });
+        } catch (err) {
+          console.error('❌ Failed to initialize clients:', err);
+        }
+      });
+    </script>
+
+
+
+
+
+</body></html>

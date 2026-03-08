@@ -1,0 +1,137 @@
+/**
+ * Data Sharing Consent Modal Styles
+ * 
+ * Cursor IDE style consent modal
+ * 
+ * @package TruAi
+ * @version 1.0.0
+ */
+
+.data-sharing-modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.data-sharing-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.data-sharing-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.data-sharing-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.data-sharing-content {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.data-sharing-intro {
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.data-sharing-points {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.data-sharing-points li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    padding-left: 24px;
+    position: relative;
+    line-height: 1.6;
+}
+
+.data-sharing-points li::before {
+    content: '•';
+    position: absolute;
+    left: 8px;
+    color: var(--text-tertiary);
+    font-size: 16px;
+}
+
+.data-sharing-points li strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.data-sharing-link {
+    display: block;
+    color: var(--accent-blue);
+    font-size: 12px;
+    text-decoration: none;
+    margin-top: 16px;
+    transition: color 0.2s;
+}
+
+.data-sharing-link:hover {
+    color: var(--accent-blue-hover);
+    text-decoration: underline;
+}
+
+.data-sharing-consent {
+    margin-bottom: 24px;
+}
+
+.data-sharing-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.data-sharing-checkbox input[type="checkbox"] {
+    margin-top: 2px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.data-sharing-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-continue-data {
+    background: var(--accent-blue);
+    border: none;
+    color: white;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 200px;
+}
+
+.btn-continue-data:hover {
+    background: var(--accent-blue-hover);
+}

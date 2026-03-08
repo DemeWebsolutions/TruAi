@@ -1,0 +1,481 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruAi Login Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('/TruAi/assets/images/TruAi-Start-Background.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #0b0d11;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            transition: background-image 1s ease-in-out;
+        }
+
+        body.background-changed {
+            background-image: url('/TruAi/assets/images/Project.gif');
+        }
+
+        .user-input {
+            position: absolute;
+            left: 50%;
+            top: 65.8%;
+            width: 13.8%;
+            min-width: 200px;
+            max-width: 300px;
+            height: 50px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 18px;
+            padding: 0 20px;
+            outline: none;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            text-align: center;
+            line-height: 50px;
+            vertical-align: middle;
+        }
+
+        .user-input:focus {
+            background: none;
+        }
+
+        .user-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+        }
+
+        .password-input {
+            position: absolute;
+            left: 50%;
+            top: 79.2%;
+            width: 13.8%;
+            min-width: 200px;
+            max-width: 300px;
+            height: 50px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 18px;
+            padding: 0 20px;
+            outline: none;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            text-align: center;
+            line-height: 50px;
+            vertical-align: middle;
+        }
+
+        .password-input:focus {
+            background: none;
+        }
+
+        .password-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+        }
+
+        /* Error and Loading Messages */
+        .error-message {
+            position: absolute;
+            left: 50%;
+            top: 85%;
+            transform: translateX(-50%);
+            color: #f44336;
+            font-size: 14px;
+            text-align: center;
+            padding: 12px 24px;
+            background-color: rgba(244, 67, 54, 0.15);
+            border-radius: 8px;
+            border: 1px solid rgba(244, 67, 54, 0.4);
+            display: none;
+            max-width: 400px;
+            width: auto;
+            z-index: 1000;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .loading {
+            position: absolute;
+            left: 50%;
+            top: 85%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            text-align: center;
+            padding: 12px 24px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        /* Hidden submit button for form submission */
+        .submit-button {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Responsive adjustments */
+        /* Mobile (portrait) */
+        @media (max-width: 480px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 85%;
+                min-width: 180px;
+                max-width: none;
+                font-size: 16px;
+                padding: 0 15px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 58%;
+            }
+            
+            .password-input {
+                top: 68%;
+            }
+
+            .error-message,
+            .loading {
+                top: 75%;
+                width: 90%;
+                font-size: 12px;
+            }
+        }
+
+        /* Mobile (landscape) and small tablets */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 70%;
+                min-width: 200px;
+                max-width: 400px;
+                font-size: 17px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 60%;
+            }
+            
+            .password-input {
+                top: 70%;
+            }
+
+            .error-message,
+            .loading {
+                top: 78%;
+            }
+        }
+
+        /* Tablets */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 25%;
+                min-width: 220px;
+                max-width: 350px;
+                font-size: 17px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 63%;
+            }
+            
+            .password-input {
+                top: 75%;
+            }
+
+            .error-message,
+            .loading {
+                top: 82%;
+            }
+        }
+
+        /* Laptops and small desktops */
+        @media (min-width: 1025px) and (max-width: 1440px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 18%;
+                min-width: 240px;
+                max-width: 320px;
+                font-size: 18px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 64.5%;
+            }
+            
+            .password-input {
+                top: 77%;
+            }
+
+            .error-message,
+            .loading {
+                top: 83%;
+            }
+        }
+
+        /* Large desktops */
+        @media (min-width: 1441px) and (max-width: 1919px) {
+            .user-input,
+            .password-input {
+                left: 50%;
+                width: 15%;
+                min-width: 250px;
+                max-width: 300px;
+                font-size: 18px;
+                transform: translateX(-50%);
+            }
+            
+            .user-input {
+                top: 65.2%;
+            }
+            
+            .password-input {
+                top: 78.5%;
+            }
+
+            .error-message,
+            .loading {
+                top: 84%;
+            }
+        }
+
+        /* Extra large desktops (1920px+) */
+        @media (min-width: 1920px) {
+            .user-input {
+                left: 50%;
+                width: 264.7px;
+                top: 700.177px;
+                transform: translateX(-50%);
+            }
+
+            .password-input {
+                left: 50%;
+                width: 264.7px;
+                top: 854.484px;
+                transform: translateX(-50%);
+            }
+
+            .error-message,
+            .loading {
+                top: 920px;
+            }
+        }
+
+        /* Project Option Images - Exact positioning from example SVG */
+        .project-option {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            pointer-events: auto;
+            border: 2px solid rgba(255, 255, 255, 0.27);
+            background: transparent;
+            text-decoration: none;
+            display: block;
+        }
+
+        .project-option:hover {
+            border-color: rgba(255, 255, 255, 1);
+        }
+
+        .project-option.selected {
+            border-color: #008ED6;
+        }
+
+        .project-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Exact positions from example SVG (1920x1080 viewport) */
+        /* Option 1: View Previous Project - x=197, y=322, width=434, height=434 */
+        .project-option.option-1 {
+            left: 10.26%;
+            top: 29.81%;
+            width: 22.6%;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.27);
+        }
+
+        /* Option 2: Start New Project - x=744, y=322, width=434, height=434 */
+        .project-option.option-2 {
+            left: 38.75%;
+            top: 29.81%;
+            width: 22.6%;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.27);
+        }
+
+        /* Option 3: Review Completed Projects - x=1289, y=322, width=436, height=434 */
+        .project-option.option-3 {
+            left: 67.14%;
+            top: 29.81%;
+            width: 22.71%;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.27);
+        }
+
+        /* For 1920px+ screens, use exact pixel values */
+        @media (min-width: 1920px) {
+            .project-option.option-1 {
+                left: 197px;
+                top: 322px;
+                width: 434px;
+                height: 434px;
+            }
+
+            .project-option.option-2 {
+                left: 744px;
+                top: 322px;
+                width: 434px;
+                height: 434px;
+            }
+
+            .project-option.option-3 {
+                left: 1289px;
+                top: 322px;
+                width: 436px;
+                height: 434px;
+            }
+        }
+    </style>
+</head>
+    <body>
+        <!-- Project Option Images -->
+        <a href="#view-previous" class="project-option option-1" id="option-view-previous" aria-label="View Previous Project" style="border: 2px solid rgba(255, 255, 255, 0.27);">
+            <img src="/TruAi/assets/images/view-previous-project.png" alt="View Previous Project">
+        </a>
+        <a href="#start-new" class="project-option option-2" id="option-start-new" aria-label="Start New Project" style="">
+            <img src="/TruAi/assets/images/start-new-project.png" alt="Start New Project">
+        </a>
+        <a href="#review-completed" class="project-option option-3" id="option-review-completed" aria-label="Review Completed Projects" style="">
+            <img src="/TruAi/assets/images/review-completed-projects.png" alt="Review Completed Projects">
+        </a>
+
+        <script>
+            // Make the three project option images act as (#) hyperlinks
+            // Default outline: 0.27 opacity #ffffff
+            // Hover: 100% opacity #ffffff
+            // Click/selection (complete): #008ED6
+
+            window.addEventListener('DOMContentLoaded', function() {
+                const linkTargets = ['#view-previous', '#start-new', '#review-completed'];
+                const linkLabels  = ['View Previous Project', 'Start New Project', 'Review Completed Projects'];
+                const optionSections = document.querySelectorAll('.project-option');
+
+                // Initialize each section
+                optionSections.forEach((section, index) => {
+                    console.log(`Initializing section ${index}: ${linkLabels[index]}`);
+                    
+                    // Set default border style (0.27 opacity #ffffff)
+                    section.style.border = '2px solid rgba(255, 255, 255, 0.27)';
+
+                    // Hover: set opacity to 1 on outline
+                    section.addEventListener('mouseenter', function(e) {
+                        console.log(`Hover ENTER: ${linkLabels[index]}`);
+                        if (!this.classList.contains('selected')) {
+                            this.style.border = '2px solid rgba(255, 255, 255, 1)';
+                        }
+                    });
+
+                    // Mouse leave: revert to 0.27
+                    section.addEventListener('mouseleave', function(e) {
+                        console.log(`Hover LEAVE: ${linkLabels[index]}`);
+                        if (!this.classList.contains('selected')) {
+                            this.style.border = '2px solid rgba(255, 255, 255, 0.27)';
+                        }
+                    });
+
+                    // Click: mark selection (#008ED6) and update hash
+                    section.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log(`Click/Select: ${linkLabels[index]} - Setting color to #008ED6`);
+                        
+                        // Clear selection from all options
+                        optionSections.forEach(opt => {
+                            opt.classList.remove('selected');
+                            opt.style.border = '2px solid rgba(255, 255, 255, 0.27)';
+                        });
+
+                        // Select current option
+                        this.classList.add('selected');
+                        this.style.border = '2px solid #008ED6';
+
+                        // Act as a (#) hyperlink in the main document
+                        const targetHash = linkTargets[index] || '#';
+                        try {
+                            window.location.hash = targetHash;
+                            console.log(`Hash updated to: ${targetHash}`);
+                        } catch (_) {
+                            // Fallback: do nothing if setting hash fails
+                        }
+
+                        // Change background to Project.gif
+                        document.body.classList.add('background-changed');
+                        console.log('Background changed to Project.gif');
+
+                        // After 10 seconds, navigate to http://localhost:8080/TruAi/
+                        setTimeout(function() {
+                            console.log('Navigating to http://localhost:8080/TruAi/');
+                            window.location.href = 'http://localhost:8080/TruAi/';
+                        }, 10000); // 10 seconds
+                    });
+
+                    // Keyboard accessibility: Enter/Space
+                    section.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.click();
+                        }
+                    });
+                });
+
+                console.log(`Initialized ${optionSections.length} project option sections`);
+            });
+        </script>
+    
+</body></html>

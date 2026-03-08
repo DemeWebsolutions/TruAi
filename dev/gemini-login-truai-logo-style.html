@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gemini.ai – TruAi-style Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #292929;
+      color: #B3B3B3;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .shell {
+      max-width: 960px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 800px) {
+      .shell { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: rgba(42, 42, 42, 0.95);
+      border-radius: 12px;
+      border: 1px solid #4A4A4A;
+      padding: 24px 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #A0A0A0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-pill {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #00A3FF;
+      color: #FFFFFF;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .status-pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(0, 163, 255, 0.2);
+      color: #00A3FF;
+      border: 1px solid rgba(0, 163, 255, 0.5);
+    }
+
+    .legal {
+      font-size: 11px;
+      color: #A0A0A0;
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 3px solid #00A3FF;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #696969;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: #1A1A1A;
+      border-radius: 8px;
+      border: 1px solid #4A4A4A;
+      color: #FFFFFF;
+      padding: 10px 12px;
+      font-size: 13px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #00A3FF;
+      box-shadow: 0 0 0 1px rgba(0, 163, 255, 0.4);
+    }
+
+    .actions-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0 18px;
+      font-size: 11px;
+      color: #696969;
+    }
+
+    .actions-row a {
+      color: #00A3FF;
+      text-decoration: none;
+    }
+
+    .actions-row a:hover { color: #FFFFFF; text-decoration: underline; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 11px 0;
+      border-radius: 8px;
+      border: none;
+      background: #00A3FF;
+      color: #FFFFFF;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.08s;
+    }
+
+    .btn-primary:hover {
+      background: #0088DD;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .side-panel-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #696969;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .side-item {
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid #4A4A4A;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #A0A0A0;
+    }
+
+    .side-item span:last-child {
+      font-size: 11px;
+      color: #00A3FF;
+    }
+
+    .side-foot {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #696969;
+    }
+
+    .side-foot a {
+      color: #00A3FF;
+      text-decoration: none;
+    }
+
+    .side-foot a:hover { color: #FFFFFF; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="panel">
+      <header class="panel-header">
+        <div class="title">
+          <div class="title-pill">G</div>
+          <span>Gemini.ai • Secure Portal</span>
+        </div>
+        <span class="status-pill">ROMA • Internal Only</span>
+      </header>
+
+      <p class="legal">
+        <strong>PROPRIETARY SYSTEM.</strong> © 2013 –
+        <script>document.write(new Date().getFullYear())</script> My Deme, LLC. All Rights Reserved.
+        Unauthorized access or use is strictly prohibited and may be monitored and logged.
+      </p>
+
+      <form id="geminiTruAiLogin">
+        <div class="form-group">
+          <label for="gt-username">Portal Username</label>
+          <input id="gt-username" name="username" type="text" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="gt-password">Portal Password</label>
+          <input id="gt-password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+
+        <div class="actions-row">
+          <span>My Deme • Contabo VPS</span>
+          <a href="#" onclick="alert('Password reset is managed via Gemini.ai configuration.');return false;">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">Sign in to Gemini.ai</button>
+      </form>
+    </section>
+
+    <aside class="panel">
+      <div class="side-panel-title">Runtime status</div>
+      <div class="side-item">
+        <span>Portal</span>
+        <span>http://154.53.54.169:5000</span>
+      </div>
+      <div class="side-item">
+        <span>gemini-portal.service</span>
+        <span>active</span>
+      </div>
+      <div class="side-item">
+        <span>ROMA</span>
+        <span>internal-only</span>
+      </div>
+      <div class="side-foot">
+        <a href="https://demewebsolutions.com" target="_blank">DEMEWEBSOLUTIONS.COM</a> • WEB SOLUTIONS MADE SIMPLE
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    document.getElementById('geminiTruAiLogin').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const u = document.getElementById('gt-username').value.trim();
+      const p = document.getElementById('gt-password').value;
+      console.log('Gemini.ai (TruAi-style) login', { username: u, password: p ? '••••••' : '' });
+      alert('Login submitted (TruAi-style demo).');
+    });
+  </script>
+</body>
+</html>

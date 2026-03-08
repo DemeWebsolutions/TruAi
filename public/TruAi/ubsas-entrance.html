@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TruAi — Secure Access Portal</title>
+  <script>
+    window.TRUAI_CONFIG = {
+      API_BASE: (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi'),
+      CSRF_TOKEN: '',
+      IS_AUTHENTICATED: false,
+      USERNAME: ''
+    };
+  </script>
+  <script src="/TruAi/assets/js/crypto.js"></script>
+  <script src="/TruAi/assets/js/api.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-image: url('/TruAi/assets/images/TruAiLoginPortalBackground.png');
+            background-color: #0b0d11;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+    }
+
+    /* ── Portal card ── */
+    .portal {
+      background: rgb(42 42 42 / 0%);
+      border: 1px solid #c3c2c26b;
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      padding: 32px 28px 24px;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    /* ── Logo ── */
+    .logo {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo img {
+      width: 180px;
+      height: 180px;
+      display: block;
+      margin: 0 auto 8px;
+    }
+
+    .logo h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    .logo p {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 4px;
+      letter-spacing: 1px;
+      font-weight: 200;
+    }
+
+    /* ── Legal notice ── */
+    .legal-notice {
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 2px solid #00A3FF;
+      border-right: 2px solid #00A3FF;
+      padding: 12px 14px;
+      margin-bottom: 22px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #A0A0A0;
+    }
+
+    .legal-notice strong { color: #ffffff; }
+
+    /* ── Status message ── */
+    .status-msg {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+      display: none;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .status-msg.info {
+      background: rgba(0,163,255,0.08);
+      color: #00A3FF;
+      border-left: 2px solid #00A3FF;
+      border-right: 2px solid #00A3FF;
+      display: block;
+    }
+
+    .status-msg.success {
+      background: rgba(76,175,80,0.08);
+      color: #4caf50;
+      border-left: 2px solid #4caf50;
+      border-right: 2px solid #4caf50;
+      display: block;
+    }
+
+    .status-msg.error {
+      background: rgba(244,67,54,0.08);
+      color: #ef5350;
+      border-left: 2px solid #ef5350;
+      border-right: 2px solid #ef5350;
+      display: block;
+    }
+
+    .status-msg.warning {
+      background: rgba(251,191,36,0.08);
+      color: #fbbf24;
+      border-left: 2px solid #fbbf24;
+      border-right: 2px solid #fbbf24;
+      display: block;
+    }
+
+    /* ── Auth method grid ── */
+    .method-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .method-card {
+      background: rgb(42 42 42 / 0%);
+      border: 1px solid #c3c2c26b;
+      border-radius: 10px;
+      padding: 18px 14px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .method-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 10px 10px 0 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .method-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    .method-card.available:hover::before  { opacity: 1; }
+    .method-card.selected                 { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .method-card.selected::before         { opacity: 1; }
+
+    .method-card.unavailable {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .method-card.unavailable:hover { transform: none; box-shadow: none; }
+
+    /* Tier accent colours — left/right border + top bar */
+    .tier-1::before                           { background: #00A3FF; }
+    .tier-1.selected, .tier-1.available:hover { border-color: #00A3FF; }
+    .tier-2::before                           { background: #8B5CF6; }
+    .tier-2.selected, .tier-2.available:hover { border-color: #8B5CF6; }
+    .tier-3::before                           { background: #a0aec0; }
+    .tier-3.selected, .tier-3.available:hover { border-color: #a0aec0; }
+    .tier-4::before                           { background: #F59E0B; }
+    .tier-4.selected, .tier-4.available:hover { border-color: #F59E0B; }
+
+    .method-icon { font-size: 1.8rem; margin-bottom: 8px; display: block; }
+
+    .method-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .method-desc {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.4;
+      font-weight: 200;
+    }
+
+    .tier-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .tier-1 .tier-badge { background: rgba(0,163,255,0.12);   color: #00A3FF; }
+    .tier-2 .tier-badge { background: rgba(139,92,246,0.12);  color: #8B5CF6; }
+    .tier-3 .tier-badge { background: rgba(160,174,192,0.12); color: #a0aec0; }
+    .tier-4 .tier-badge { background: rgba(245,158,11,0.12);  color: #F59E0B; }
+
+    .availability-dot {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      transition: background 0.3s;
+    }
+
+    .method-card.available   .availability-dot { background: #4caf50; }
+    .method-card.unavailable .availability-dot { background: rgba(255,255,255,0.15); }
+    .method-card.checking    .availability-dot { background: #fbbf24; animation: dotPulse 1s infinite; }
+
+    @keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Panels (password / masterkey) ── */
+    .password-panel         { display: none; margin-bottom: 16px; }
+    .password-panel.visible { display: block; }
+
+    .panel-divider {
+      display: flex;
+      align-items: center;
+      margin: 0 0 16px;
+      color: rgba(255,255,255,0.25);
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-divider::before,
+    .panel-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .panel-divider span { padding: 0 10px; }
+
+    /* ── Form controls ── */
+    .form-group { margin-bottom: 14px; }
+
+    .form-group label {
+      display: block;
+      font-weight: 200;
+      font-size: 0.78rem;
+      color: #ffffff;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid #ffffffad;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      color: #ffffff;
+      background: transparent;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      text-align: center;
+    }
+
+    .form-group input::placeholder { color: rgba(255,255,255,0.3); }
+
+    .form-group input:focus {
+      border-color: #00A3FF;
+      box-shadow: 0 0 0 3px rgba(0,163,255,0.12);
+    }
+
+    .form-group input[style*="monospace"] {
+      font-family: monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Action button ── */
+    .btn-primary {
+      width: 100%;
+      padding: 12px 0;
+      border-radius: 8px;
+      border: none;
+      background: #00A3FF;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(0,163,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,163,255,0.52);
+    }
+
+    .btn-primary:disabled {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.3);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* ── Footer links ── */
+    .footer-links {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .footer-links a {
+      color: #00A3FF;
+      text-decoration: none;
+      font-size: 0.7rem;
+    }
+
+    .footer-links a:hover { opacity: 0.75; text-decoration: underline; }
+
+    .copyright {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.2);
+    }
+
+    .copyright a { color: #00A3FF; text-decoration: none; }
+    .copyright a:hover { opacity: 0.75; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── ROMA indicator ── */
+    .roma-indicator {
+      position: fixed;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.05em;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      z-index: 100;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.5s;
+    }
+
+    .roma-indicator.confirmed { color: rgba(255,255,255,0.75); }
+
+    .roma-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4caf50;
+      animation: romaPulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    .roma-dot.unverified { background: #f6ad55; animation: none; }
+    .roma-dot.offline    { background: #a0aec0; animation: none; }
+
+    @keyframes romaPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  </style>
+</head>
+<body>
+
+<div class="portal">
+
+  <!-- Logo -->
+  <div class="logo">
+    <img
+      src="/Users/mydemellc./Desktop/TruAi+/assets/images/TruAi by DemeWebsolutions.com.png"
+      onerror="this.style.display='none'"
+      alt="TruAi Logo"
+    >
+    <h1>Secure Access Portal</h1>
+    <p>UBSAS — Unified Biometric Sovereign Authentication</p>
+  </div>
+
+  <!-- Legal notice -->
+  <div class="legal-notice">
+    <strong>⚠️ Authorized access only.</strong>
+    This portal is protected by <strong>ROMA</strong> (Recursive Oversight &amp; Monitoring Architecture).
+    All access attempts are logged and audited. Unauthorized use is prohibited.
+  </div>
+
+  <!-- Status message -->
+  <div class="status-msg" id="status-msg"></div>
+
+  <!-- 4-Tier authentication method grid -->
+  <div class="method-grid" id="method-grid">
+
+    <div class="method-card tier-1 checking" id="card-biometric" onclick="selectMethod('biometric')">
+      <div class="availability-dot"></div>
+      <span class="method-icon">👆</span>
+      <div class="method-name">Biometric</div>
+      <div class="method-desc">Touch ID · Face ID<br>OS hardware authentication</div>
+      <div class="tier-badge">Tier 1</div>
+    </div>
+
+    <div class="method-card tier-2 checking" id="card-keychain" onclick="selectMethod('keychain')">
+      <div class="availability-dot"></div>
+      <span class="method-icon">🔑</span>
+      <div class="method-name">Auto-Fill</div>
+      <div class="method-desc">Keychain credential<br>macOS / Linux libsecret</div>
+      <div class="tier-badge">Tier 2</div>
+    </div>
+
+    <div class="method-card tier-3 available" id="card-password" onclick="selectMethod('password')">
+      <div class="availability-dot"></div>
+      <span class="method-icon">⌨️</span>
+      <div class="method-name">Manual Entry</div>
+      <div class="method-desc">Username + password<br>Always available</div>
+      <div class="tier-badge">Tier 3</div>
+    </div>
+
+    <div class="method-card tier-4 available" id="card-masterkey" onclick="selectMethod('masterkey')">
+      <div class="availability-dot"></div>
+      <span class="method-icon">🔐</span>
+      <div class="method-name">Master Key</div>
+      <div class="method-desc">256-bit recovery key<br>Emergency access only</div>
+      <div class="tier-badge">Tier 4</div>
+    </div>
+
+  </div>
+
+  <!-- Manual password panel -->
+  <div class="password-panel" id="password-panel">
+    <div class="panel-divider"><span>Manual Entry</span></div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="Enter username"
+             autocomplete="username"
+             onkeydown="if(event.key==='Enter')document.getElementById('password').focus()">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Enter password"
+             autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+  </div>
+
+  <!-- Master key panel -->
+  <div class="password-panel" id="masterkey-panel">
+    <div class="panel-divider"><span>Master Key Recovery</span></div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="mk-username" placeholder="Enter username"
+             autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Master Recovery Key</label>
+      <input type="text" id="master-key" placeholder="256-bit recovery key (hex)"
+             autocomplete="off"
+             style="font-family:monospace; font-size:0.75rem; letter-spacing:0.04em;"
+             onkeydown="if(event.key==='Enter')doMasterKeyLogin()">
+    </div>
+  </div>
+
+  <!-- Action button -->
+  <button class="btn-primary" id="btn-action" onclick="doAction()" disabled>
+    Choose an authentication method above
+  </button>
+
+  <!-- Footer links -->
+  <div class="footer-links">
+    <a href="/TruAi/login-portal.html">Classic Login</a>
+    <a href="/TruAi/secure-recovery.html">Forgot Password?</a>
+    <a href="/TruAi/ubsas-enroll.html">Enroll Device</a>
+  </div>
+
+  <div class="copyright">
+    © 2026 <a href="https://demewebsolutions.com" target="_blank" rel="noopener">My Deme, LLC</a>
+    · TruAi v1.0 · UBSAS v2.0
+  </div>
+
+</div>
+
+<!-- ROMA indicator -->
+<div class="roma-indicator" id="roma-indicator">
+  <span class="roma-dot" id="roma-dot"></span>
+  <span id="roma-label">ROMA • Checking…</span>
+</div>
+
+<script>
+'use strict';
+
+const API_BASE       = window.TRUAI_CONFIG.API_BASE;
+let selectedMethod   = null;
+let availableMethods = [];
+
+/* ── Status helpers ──────────────────────────────────────────────────── */
+function showStatus(type, msg) {
+  const el = document.getElementById('status-msg');
+  el.className   = 'status-msg ' + type;
+  el.textContent = msg;
+}
+
+function clearStatus() {
+  const el = document.getElementById('status-msg');
+  el.className   = 'status-msg';
+  el.textContent = '';
+}
+
+/* ── ROMA indicator ──────────────────────────────────────────────────── */
+async function checkROMA() {
+  const dot   = document.getElementById('roma-dot');
+  const label = document.getElementById('roma-label');
+  const ind   = document.getElementById('roma-indicator');
+  try {
+    const r = await fetch(API_BASE + '/security/roma', { credentials: 'include' });
+    const d = await r.json();
+    if (d.roma && d.trust_state === 'VERIFIED') {
+      dot.className     = 'roma-dot';
+      label.textContent = 'ROMA • Portal Protected • Monitor Active';
+      ind.classList.add('confirmed');
+    } else if (d.trust_state === 'BLOCKED') {
+      dot.className     = 'roma-dot';
+      dot.style.background = '#ef5350';
+      dot.style.animation  = 'none';
+      label.textContent = 'ROMA • Blocked';
+    } else {
+      dot.className     = 'roma-dot unverified';
+      label.textContent = 'ROMA • ' + (d.trust_state || 'Unverified');
+    }
+  } catch {
+    dot.className     = 'roma-dot offline';
+    label.textContent = 'ROMA • Offline';
+  }
+}
+
+/* ── Method availability detection ──────────────────────────────────── */
+async function detectAvailability() {
+  try {
+    const r = await fetch(API_BASE + '/auth/methods', { credentials: 'include' });
+    const d = await r.json();
+    availableMethods = d.methods || [];
+  } catch {
+    availableMethods = [];
+  }
+  setCardState('biometric', availableMethods.includes('biometric'));
+  setCardState('keychain',  availableMethods.includes('keychain'));
+  setCardState('password',  true);
+  setCardState('masterkey', true);
+}
+
+function setCardState(method, available) {
+  const card = document.getElementById('card-' + method);
+  card.classList.remove('checking', 'available', 'unavailable');
+  card.classList.add(available ? 'available' : 'unavailable');
+  if (!available) card.title = method + ' is not available on this device';
+}
+
+/* ── Method selection ────────────────────────────────────────────────── */
+function selectMethod(method) {
+  const card = document.getElementById('card-' + method);
+  if (card.classList.contains('unavailable')) return;
+
+  document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedMethod = method;
+
+  document.getElementById('password-panel').classList.remove('visible');
+  document.getElementById('masterkey-panel').classList.remove('visible');
+
+  const btn = document.getElementById('btn-action');
+  btn.disabled = false;
+
+  const labels = {
+    biometric : '👆 Authenticate with Touch ID / Face ID',
+    keychain  : '🔑 Sign In with Keychain',
+    password  : '⌨️ Sign In',
+    masterkey : '🔐 Sign In with Master Key'
+  };
+
+  if (method === 'password') {
+    document.getElementById('password-panel').classList.add('visible');
+  } else if (method === 'masterkey') {
+    document.getElementById('masterkey-panel').classList.add('visible');
+  }
+
+  btn.textContent = labels[method] || 'Continue';
+  clearStatus();
+}
+
+/* ── Action dispatcher ───────────────────────────────────────────────── */
+async function doAction() {
+  if (!selectedMethod) return;
+  switch (selectedMethod) {
+    case 'biometric': await doBiometricLogin(); break;
+    case 'keychain':  await doKeychainLogin();  break;
+    case 'password':  await doLogin();          break;
+    case 'masterkey': await doMasterKeyLogin(); break;
+  }
+}
+
+/* ── Tier 1: Biometric ───────────────────────────────────────────────── */
+async function doBiometricLogin() {
+  const btn = document.getElementById('btn-action');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Requesting biometric…';
+  showStatus('info', '🔒 Requesting OS biometric authentication…');
+  try {
+    const r = await fetch(API_BASE + '/auth/biometric', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app: 'TruAi' })
+    });
+    const d = await r.json();
+    if (r.ok && d.success !== false) {
+      showStatus('success', '✓ Biometric authentication successful. Redirecting…');
+      setTimeout(() => { window.location.href = '/TruAi/'; }, 800);
+    } else {
+      showStatus('error', '✗ ' + (d.error || d.message || 'Biometric authentication failed'));
+      btn.disabled = false;
+      btn.textContent = '👆 Retry Biometric';
+    }
+  } catch (err) {
+    showStatus('error', '✗ Biometric unavailable: ' + (err.message || 'Service error'));
+    btn.disabled = false;
+    btn.textContent = '👆 Retry Biometric';
+  }
+}
+
+/* ── Tier 2: Keychain ────────────────────────────────────────────────── */
+async function doKeychainLogin() {
+  const btn = document.getElementById('btn-action');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Reading keychain…';
+  showStatus('info', '🔑 Reading credentials from keychain…');
+  try {
+    const r = await fetch(API_BASE + '/auth/autofill', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app: 'TruAi' })
+    });
+    const d = await r.json();
+    if (r.ok && d.success !== false) {
+      showStatus('success', '✓ Keychain authentication successful. Redirecting…');
+      setTimeout(() => { window.location.href = '/TruAi/'; }, 800);
+    } else {
+      showStatus('error', '✗ ' + (d.error || d.message || 'Keychain authentication failed'));
+      btn.disabled = false;
+      btn.textContent = '🔑 Retry Keychain';
+    }
+  } catch (err) {
+    showStatus('error', '✗ Keychain unavailable: ' + (err.message || 'Service error'));
+    btn.disabled = false;
+    btn.textContent = '🔑 Retry Keychain';
+  }
+}
+
+/* ── Tier 3: Manual password ─────────────────────────────────────────── */
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) { showStatus('error', '⚠️ Username and password are required.'); return; }
+
+  const btn = document.getElementById('btn-action');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Signing in…';
+  showStatus('info', '🔒 Authenticating…');
+
+  try {
+    let loginResult = null;
+    if (window.TruAiCrypto) {
+      const crypto = new TruAiCrypto();
+      const initialized = await crypto.initialize().catch(() => false);
+      if (initialized) {
+        try {
+          const enc = await crypto.encryptCredentials(username, password);
+          if (enc) {
+            const r = await fetch(API_BASE + '/auth/login', {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ encrypted_data: enc.encryptedData, session_id: enc.sessionId })
+            });
+            loginResult = await r.json().catch(() => null);
+            if (loginResult && loginResult.success) { handleLoginSuccess(loginResult); return; }
+          }
+        } catch { /* fall through */ }
+      }
+    }
+    const r = await fetch(API_BASE + '/auth/login', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const d = await r.json();
+    if (r.ok && (d.success || d.username)) {
+      handleLoginSuccess(d);
+    } else {
+      showStatus('error', '✗ ' + (d.error || d.message || 'Invalid credentials'));
+      btn.disabled = false;
+      btn.textContent = '⌨️ Sign In';
+    }
+  } catch (err) {
+    showStatus('error', '✗ ' + (err.message || 'Network error'));
+    btn.disabled = false;
+    btn.textContent = '⌨️ Sign In';
+  }
+}
+
+/* ── Tier 4: Master key ──────────────────────────────────────────────── */
+async function doMasterKeyLogin() {
+  const username  = document.getElementById('mk-username').value.trim();
+  const masterKey = document.getElementById('master-key').value.trim();
+  if (!username || !masterKey) { showStatus('error', '⚠️ Username and master recovery key are required.'); return; }
+
+  const btn = document.getElementById('btn-action');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Verifying key…';
+  showStatus('info', '🔐 Verifying master recovery key…');
+  try {
+    const r = await fetch(API_BASE + '/auth/masterkey', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, master_key: masterKey })
+    });
+    const d = await r.json();
+    if (r.ok && d.success !== false) {
+      showStatus('success', '✓ Master key accepted. Redirecting…');
+      setTimeout(() => { window.location.href = '/TruAi/secure-recovery.html'; }, 800);
+    } else {
+      showStatus('error', '✗ ' + (d.error || d.message || 'Invalid master key'));
+      btn.disabled = false;
+      btn.textContent = '🔐 Sign In with Master Key';
+    }
+  } catch (err) {
+    showStatus('error', '✗ ' + (err.message || 'Network error'));
+    btn.disabled = false;
+    btn.textContent = '🔐 Sign In with Master Key';
+  }
+}
+
+/* ── Success handler ─────────────────────────────────────────────────── */
+function handleLoginSuccess(data) {
+  if (window.TRUAI_CONFIG) {
+    window.TRUAI_CONFIG.IS_AUTHENTICATED = true;
+    window.TRUAI_CONFIG.USERNAME         = data.username || '';
+    window.TRUAI_CONFIG.CSRF_TOKEN       = data.csrf_token || '';
+  }
+  showStatus('success', '✓ Welcome, ' + (data.username || 'user') + '. Redirecting…');
+  setTimeout(() => { window.location.href = '/TruAi/'; }, 600);
+}
+
+/* ── Init ────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  checkROMA();
+  detectAvailability();
+});
+</script>
+
+</body>
+</html>

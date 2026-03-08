@@ -1,0 +1,56 @@
+# Environment variables
+.env
+.env.local
+
+# Database files (keep structure, exclude data)
+database/truai.db
+database/truai.db-wal
+database/truai.db-shm
+database/.initial_credentials
+**/truai.db
+**/truai.db-wal
+**/truai.db-shm
+
+# Encryption keys (sensitive - generated on setup)
+database/keys/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (if used for development tools)
+node_modules/
+
+# PHP
+vendor/
+composer.lock
+
+# Backups
+*.bak
+*.backup
+
+# API keys and sensitive data
+encryption_keys.json
+test-phase1-fixes.php
+
+# Electron build output
+electron/dist/
+electron/out/
+*.dmg
+*.zip

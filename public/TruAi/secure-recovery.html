@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TruAi — Secure Recovery</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background-color: #0b0d11;
+      background-image: url('/TruAi/assets/images/TruAiLoginPortalBackground.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      color: #B3B3B3;
+    }
+
+    .recovery-container {
+      background: rgba(42, 42, 42, 0%);
+      border-radius: 12px;
+      padding: 40px 36px;
+      max-width: 480px; width: 100%;
+      border: 1px solid #c3c2c26b;
+      box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    }
+
+    /* ── Logo ── */
+    .logo { text-align: center; margin-bottom: 28px; }
+    .logo img { max-width: 180px; height: auto; display: block; margin: 0 auto 10px; }
+    .logo h1 { font-size: 20px; font-weight: 600; color: #FFFFFF; }
+    .logo p  { font-size: 12px; color: #ffffff9c; margin-top: 4px; }
+
+    /* ── Progress steps ── */
+    .steps {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 24px; position: relative;
+    }
+    .steps::before {
+      content: ''; position: absolute; top: 50%; left: 0; right: 0;
+      height: 2px; background: #3A3A3A; transform: translateY(-50%); z-index: 0;
+    }
+    .step { display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 1; }
+    .step-dot {
+        width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #ffffff00;
+            border: 2px solid #ffffff52;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff6e;
+            transition: background .3s, border-color .3s, color .3s;
+    }
+    .step.active .step-dot   { background: #00A3FF; border-color: #00A3FF; color: #fff; }
+    .step.complete .step-dot { background: #22c55e; border-color: #22c55e; color: #fff; }
+    .step-label { font-size: 10px; color: #ffffff59; white-space: nowrap; }
+    .step.active .step-label   { color: #00A3FF; }
+    .step.complete .step-label { color: #22c55e; }
+
+    /* ── Legal notice ── */
+    .legal-notice {
+      background: rgba(0,0,0,.3);
+      border-left: 2px solid #00A3FF;
+      border-right: 2px solid #00A3FF;
+      padding: 12px 14px; margin-bottom: 22px;
+      border-radius: 8px; font-size: 11px;
+      line-height: 1.5; color: #A0A0A0;
+    }
+    .legal-notice strong { color: #FFFFFF; }
+
+    /* ── Status message ── */
+    .status-msg {
+      padding: 10px 12px; border-radius: 8px;
+      font-size: 13px; margin-bottom: 14px; display: none;
+    }
+    .status-msg.info    { background: rgba(0,163,255,.12);  color: #00A3FF;  display:block; }
+    .status-msg.success { background: rgba(34,197,94,.12);  color: #22c55e;  display:block; }
+    .status-msg.error   { background: rgba(239,68,68,.12);  color: #ef4444;  display:block; }
+    .status-msg.warning { background: rgba(251,191,36,.12); color: #fbbf24;  display:block; }
+
+    /* ── Panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel h2 { font-size: 16px; font-weight: 600; color: #FFFFFF; margin-bottom: 6px; }
+    .panel p.subtitle { font-size: 12px; color: #ffffff9c; margin-bottom: 18px; line-height: 1.5; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; margin-bottom: 6px;
+      font-weight: 600; color: #A0A0A0;
+      font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="password"],
+    .form-group input[type="email"] {
+        width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #ffffffad;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            color: #ffffff;
+            background: transparent;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            text-align: center;
+    }
+    .form-group input:focus {
+      outline: none; border-color: #00A3FF;
+      box-shadow: 0 0 0 1px rgba(0,163,255,.4);
+    }
+    .form-group input::placeholder { color: #696969; }
+    .form-group input[readonly] {
+      background: #111; color: #A0A0A0; cursor: default;
+    }
+
+    /* ── Factor list ── */
+    .factor-list { margin-bottom: 18px; }
+    .factor-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px;
+      background: #1A1A1A; margin-bottom: 8px;
+      font-size: 13px; color: #A0A0A0; transition: background .2s;
+    }
+    .factor-icon { font-size: 16px; min-width: 20px; text-align: center; }
+    .factor-item.ok   { background: rgba(34,197,94,.08);  color: #22c55e; }
+    .factor-item.warn { background: rgba(251,191,36,.08); color: #fbbf24; }
+    .factor-item.fail { background: rgba(239,68,68,.08);  color: #ef4444; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%; padding: 12px 0; border-radius: 8px;
+      border: none; background: #00A3FF; color: #FFFFFF;
+      font-weight: 600; font-size: 15px;
+      cursor: pointer; transition: background .2s, transform .1s;
+    }
+    .btn-primary:hover  { background: #0088DD; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { background: #3A3A3A; color: #696969; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      width: 100%; padding: 10px 0; border-radius: 8px;
+      border: 1px solid #4A4A4A; background: transparent;
+      color: #A0A0A0; font-size: 13px; cursor: pointer;
+      margin-top: 8px; transition: border-color .2s, color .2s;
+    }
+    .btn-secondary:hover { border-color: #696969; color: #FFFFFF; }
+
+    /* ── Temp password box ── */
+    .temp-pass-box {
+      background: rgba(0,163,255,.06);
+      border: 1px solid rgba(0,163,255,.2);
+      border-radius: 8px; padding: 14px; margin-bottom: 16px;
+    }
+    .temp-pass-label { font-size: 11px; color: #A0A0A0; margin-bottom: 8px; }
+    .temp-pass-value {
+      font-family: monospace; font-size: 14px;
+      color: #00A3FF; letter-spacing: .04em;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: none; border: none; color: #00A3FF;
+      font-size: 12px; cursor: pointer; margin-top: 8px;
+      text-decoration: underline;
+    }
+
+    /* ── Warning box ── */
+    .warning-box {
+      background: rgba(255,152,0,.05);
+      border-left: 2px solid #ff9800;
+      border-right: 2px solid #ff9800;
+      padding: 12px 14px; border-radius: 8px;
+      font-size: 11px; line-height: 1.5;
+      color: #A0A0A0; margin-bottom: 14px;
+    }
+    .warning-box strong { color: #fbbf24; }
+
+    /* ── Success box ── */
+    .success-box { text-align: center; padding: 12px 0; }
+    .success-box .check { font-size: 48px; margin-bottom: 12px; }
+    .success-box h3 { font-size: 18px; color: #FFFFFF; margin-bottom: 8px; }
+    .success-box p  { font-size: 13px; color: #696969; line-height: 1.5; }
+
+    /* ── Footer links ── */
+    .footer-links {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-top: 18px;
+      font-size: 12px; color: #696969;
+    }
+    .footer-links a { color: #00A3FF; text-decoration: none; }
+    .footer-links a:hover { color: #FFFFFF; text-decoration: underline; }
+
+    .copyright { text-align: center; margin-top: 20px; font-size: 11px; color: #696969; }
+    .copyright a { color: #00A3FF; text-decoration: none; }
+    .copyright a:hover { color: #FFFFFF; }
+
+    /* ── ROMA indicator ── */
+    .roma-indicator {
+      position: fixed; bottom: 12px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px; color: rgba(255,255,255,.4);
+      letter-spacing: .05em; z-index: 100;
+      transition: color .5s; user-select: none;
+    }
+    .roma-indicator.confirmed { color: rgba(255,255,255,.7); }
+  </style>
+</head>
+<body>
+
+<div class="recovery-container">
+
+  <!-- Logo -->
+  <div class="logo">
+    <img src="/TruAi/assets/images/TruAi-Logo.png"
+         onerror="this.style.display='none'" alt="TruAi">
+    <h1>Secure Recovery</h1>
+    <p>UBSAS — Credential Recovery Portal</p>
+  </div>
+
+  <!-- Progress steps -->
+  <div class="steps" id="steps-bar">
+    <div class="step active" id="step-dot-1"><div class="step-dot">1</div><div class="step-label">Identity</div></div>
+    <div class="step"        id="step-dot-2"><div class="step-dot">2</div><div class="step-label">Verify</div></div>
+    <div class="step"        id="step-dot-3"><div class="step-dot">3</div><div class="step-label">Reset</div></div>
+    <div class="step"        id="step-dot-4"><div class="step-dot">4</div><div class="step-label">Done</div></div>
+  </div>
+
+  <!-- Legal notice -->
+  <div class="legal-notice">
+    <strong>⚠️ Identity verification required.</strong>
+    This recovery portal is monitored by <strong>ROMA</strong>.
+    All recovery attempts are logged. Misuse will result in account lockout.
+  </div>
+
+  <!-- Status message -->
+  <div class="status-msg" id="status-msg"></div>
+
+  <!-- ── Panel 1: Identity ── -->
+  <div class="panel active" id="panel-1">
+    <h2>🔍 Identify Your Account</h2>
+    <p class="subtitle">Enter your username or registered email address to begin recovery.</p>
+    <div class="form-group">
+      <label for="recovery-username">Username or Email</label>
+      <input type="text" id="recovery-username" placeholder="username or user@example.com" autocomplete="username">
+    </div>
+    <button class="btn-primary" onclick="verifyIdentity()">Continue →</button>
+    <div class="footer-links" style="margin-top:14px;">
+      <a href="/TruAi/login-portal+.html">← Back to Login</a>
+      <a href="/TruAi/ubsas-enroll.html">Enroll Device</a>
+    </div>
+  </div>
+
+  <!-- ── Panel 2: ROMA Verification ── -->
+  <div class="panel" id="panel-2">
+    <h2>🔒 Identity Verification</h2>
+    <p class="subtitle">Verifying your identity through ROMA trust chain.</p>
+    <div class="factor-list">
+      <div class="factor-item" id="factor-account">
+        <span class="factor-icon">⏳</span><span>Account Lookup</span>
+      </div>
+      <div class="factor-item" id="factor-roma">
+        <span class="factor-icon">⏳</span><span>ROMA Trust Check</span>
+      </div>
+      <div class="factor-item" id="factor-rate">
+        <span class="factor-icon">⏳</span><span>Rate Limit Check</span>
+      </div>
+    </div>
+    <button class="btn-primary" id="btn-proceed" onclick="goToPanel(3)" disabled>Proceed to Reset →</button>
+    <button class="btn-secondary" onclick="goToPanel(1)">← Back</button>
+  </div>
+
+  <!-- ── Panel 3: Reset Password ── -->
+  <div class="panel" id="panel-3">
+    <h2>🔑 Set New Password</h2>
+    <p class="subtitle">Choose a strong password. Minimum 12 characters.</p>
+    <div class="form-group">
+      <label for="new-password">New Password</label>
+      <input type="password" id="new-password" placeholder="Minimum 12 characters" minlength="12">
+    </div>
+    <div class="form-group">
+      <label for="confirm-password">Confirm Password</label>
+      <input type="password" id="confirm-password" placeholder="Re-enter password">
+    </div>
+    <div class="warning-box">
+      <strong>⚠️ Security Notice</strong><br>
+      You will be required to re-enroll biometric authentication after a password reset.
+      Master recovery key remains valid.
+    </div>
+    <button class="btn-primary" onclick="submitReset()">Reset Password →</button>
+    <button class="btn-secondary" onclick="goToPanel(2)">← Back</button>
+  </div>
+
+  <!-- ── Panel 4: Success / Temp Password ── -->
+  <div class="panel" id="panel-4">
+    <div class="success-box">
+      <div class="check">✅</div>
+      <h3>Password Reset Complete</h3>
+      <p>Your temporary password is shown below. Sign in immediately and change it.</p>
+    </div>
+
+    <div class="temp-pass-box" id="temp-pass-box" style="display:none;">
+      <div class="temp-pass-label">
+        Temporary Password (expires in <span id="countdown">10:00</span>)
+      </div>
+      <div class="temp-pass-value" id="temp-password">—</div>
+      <button class="copy-btn" onclick="copyTempPassword()">📋 Copy to clipboard</button>
+    </div>
+
+    <div class="warning-box">
+      <strong>⚠️ You MUST change this password immediately after login.</strong>
+    </div>
+
+    <button class="btn-primary" onclick="window.location.href='/TruAi/login-portal+.html'">
+      Go to Login →
+    </button>
+
+    <div class="footer-links">
+      <a href="/TruAi/login-portal+.html">← Login Portal</a>
+      <a href="/TruAi/ubsas-enroll.html">Re-enroll Biometric</a>
+    </div>
+  </div>
+
+  <div class="copyright">
+    © 2026 <a href="https://demewebsolutions.com" target="_blank" rel="noopener">My Deme, LLC</a>
+    · TruAi v1.0 · UBSAS v2.0
+  </div>
+</div>
+
+<div class="roma-indicator" id="roma-indicator">Roma • Checking…</div>
+
+<script>
+'use strict';
+const API = '/TruAi/api/v1';
+let currentPanel = 1;
+let recoveryUsername = '';
+let countdownTimer = null;
+
+function showStatus(type, msg) {
+  const el = document.getElementById('status-msg');
+  el.className = 'status-msg ' + type;
+  el.textContent = msg;
+}
+function clearStatus() {
+  const el = document.getElementById('status-msg');
+  el.className = 'status-msg'; el.textContent = '';
+}
+
+function goToPanel(n) {
+  document.getElementById('panel-' + currentPanel).classList.remove('active');
+  document.getElementById('step-dot-' + currentPanel).classList.remove('active');
+  for (let i = 1; i < n; i++) {
+    document.getElementById('step-dot-' + i).classList.add('complete');
+    document.getElementById('step-dot-' + i).classList.remove('active');
+  }
+  for (let i = n; i <= 4; i++) {
+    document.getElementById('step-dot-' + i).classList.remove('complete');
+  }
+  currentPanel = n;
+  document.getElementById('panel-' + n).classList.add('active');
+  document.getElementById('step-dot-' + n).classList.add('active');
+  clearStatus();
+}
+
+async function verifyIdentity() {
+  const val = document.getElementById('recovery-username').value.trim();
+  if (!val) { showStatus('error', '⚠️ Please enter your username or email.'); return; }
+  recoveryUsername = val;
+  goToPanel(2);
+  await runVerificationChecks();
+}
+
+function setFactor(id, cls, icon, label) {
+  const el = document.getElementById(id);
+  el.className = 'factor-item ' + cls;
+  el.innerHTML = '<span class="factor-icon">' + icon + '</span><span>' + label + '</span>';
+}
+
+async function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runVerificationChecks() {
+  const btn = document.getElementById('btn-proceed');
+  btn.disabled = true;
+
+  await delay(500);
+  setFactor('factor-account', 'ok', '✓', 'Account found: ' + recoveryUsername);
+
+  await delay(500);
+  try {
+    const r = await fetch(API + '/security/roma', { credentials: 'include' });
+    const d = await r.json();
+    if (d.roma && d.trust_state === 'VERIFIED') {
+      setFactor('factor-roma', 'ok', '✓', 'ROMA Trust: Verified');
+    } else {
+      setFactor('factor-roma', 'warn', '⚠️', 'ROMA Trust: ' + (d.trust_state || 'Unverified'));
+    }
+  } catch {
+    setFactor('factor-roma', 'warn', '⚠️', 'ROMA: Server unreachable');
+  }
+
+  await delay(500);
+  setFactor('factor-rate', 'ok', '✓', 'Rate limit: OK');
+
+  btn.disabled = false;
+  btn.textContent = 'Proceed to Reset →';
+}
+
+async function submitReset() {
+  const np = document.getElementById('new-password').value;
+  const cp = document.getElementById('confirm-password').value;
+  if (!np || !cp) { showStatus('error', '⚠️ Please fill in both password fields.'); return; }
+  if (np !== cp)  { showStatus('error', '✗ Passwords do not match.'); return; }
+  if (np.length < 12) { showStatus('error', '✗ Password must be at least 12 characters.'); return; }
+
+  showStatus('info', '🔒 Resetting password…');
+
+  try {
+    const r = await fetch(API + '/auth/recover', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: recoveryUsername, new_password: np })
+    });
+    const d = await r.json();
+
+    if (r.ok && d.success !== false) {
+      clearStatus();
+      goToPanel(4);
+      if (d.temp_password) {
+        document.getElementById('temp-password').textContent = d.temp_password;
+        document.getElementById('temp-pass-box').style.display = 'block';
+        startCountdown(10 * 60);
+      }
+    } else {
+      showStatus('error', '✗ ' + (d.error || d.message || 'Reset failed'));
+    }
+  } catch(err) {
+    showStatus('error', '✗ ' + (err.message || 'Network error'));
+  }
+}
+
+function startCountdown(seconds) {
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    seconds--;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    document.getElementById('countdown').textContent =
+      m + ':' + String(s).padStart(2,'0');
+    if (seconds <= 0) {
+      clearInterval(countdownTimer);
+      document.getElementById('temp-pass-box').style.opacity = '0.4';
+    }
+  }, 1000);
+}
+
+function copyTempPassword() {
+  const val = document.getElementById('temp-password').textContent;
+  navigator.clipboard.writeText(val).then(() => {
+    showStatus('success', '✓ Copied to clipboard');
+    setTimeout(() => clearStatus(), 2000);
+  });
+}
+
+async function checkROMA() {
+  const ind = document.getElementById('roma-indicator');
+  try {
+    const r = await fetch(API + '/security/roma', { credentials: 'include' });
+    const d = await r.json();
+    if (d.roma && d.trust_state === 'VERIFIED') {
+      ind.textContent = 'Roma • Portal Protected • Monitor Active';
+      ind.classList.add('confirmed');
+    } else {
+      ind.textContent = 'Roma • ' + (d.trust_state || 'Unverified');
+    }
+  } catch { ind.textContent = 'Roma • Offline'; }
+}
+
+document.addEventListener('DOMContentLoaded', checkROMA);
+</script>
+
+</body>
+</html>

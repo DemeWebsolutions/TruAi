@@ -1,0 +1,4438 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TruAi - Start New Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            width: 100vw;
+            min-height: 100vh;
+            background: url('/TruAi/assets/images/TruAi-Background.jpg');
+            background-size: cover;
+            background-position: bottom;
+            background-repeat: no-repeat;
+            background-color: #0b0d11;
+            color: #B3B3B3;
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+            transition: background-image 1s ease-in-out;
+    }
+
+    /* ── Header portal links ── */
+    .header-actions {
+        position: absolute;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        pointer-events: none;
+        top: 35px;
+        right: 40px;
+        left: 40px;
+    }
+
+    .header-actions a {
+        pointer-events: all;
+        padding: 6px 12px;
+        font-size: 13px;
+        color: #8b8d98;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        transition: color 0.2s, border-color 0.2s;
+        text-align: center;
+        min-width: 100px;
+        width: 16pc;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .header-actions a:hover {
+      color: #008ed6;
+      border-color: rgba(0, 142, 214, 0.4);
+    }
+
+    /* ── Logo / Header Section ── */
+    .header-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 20px 8px;
+      flex-shrink: 0;
+    }
+
+    .header-section--top {
+      position: relative;
+      top: 0;
+      margin-bottom: 18px;
+    }
+
+    .header-section--icon {
+      padding-top: unset;
+      padding-right: unset;
+      padding-bottom: unset;
+      padding-left: unset;
+      height: 24px;
+    }
+
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .logo-container--offset {
+      position: relative;
+      top: 70px;
+    }
+
+    .logo-container--no-margin {
+      margin-bottom: unset;
+    }
+
+    .logo-container img {
+      width: 28px;
+      height: auto;
+      display: block;
+    }
+
+    .logo-image--large {
+      width: 100px;
+      margin-top: -70;
+    }
+
+    .project-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #e8e9eb;
+    }
+
+    /* ── Main 3-Column Area ── */
+    .main-area {
+        display: flex;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            margin: 0 auto;
+            gap: 16px;
+            padding: 0 40px 16px;
+            align-items: stretch;
+    }
+
+    /* Extended side panels */
+    .content-extended {
+        width: 16pc;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(0, 0, 0, 0.15);
+            padding: 16px;
+            overflow-y: auto;
+            font-size: 12px;
+            color: #8b8d98;
+            overflow-x: hidden;
+            height: 34pc;
+    }
+
+    .content-extended .panel-label { margin-bottom: 10px; }
+
+    .code-review-extended {
+        width: 16pc;
+            height: 34pc;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.15);
+    }
+
+    .code-review-extended .code-review-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 0 0 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 8px;
+    }
+
+    .code-review-extended .code-review-content { flex: 1; min-height: 0; overflow: auto; }
+
+    /* ── AI Response Area (center) ── */
+    .ai-response-area {
+      flex: 1;
+      margin: 0;
+      min-width: 0;
+      min-height: 40vh;
+      border-radius: 12px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+      transition: background-image 1s ease-in-out;
+    }
+
+    /* ── AI Response Container (required structure) ───────────────────────── */
+    .ai-response-content {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px;
+      width: 100%;
+      min-height: 34pc;
+      font-family: "DM Sans", sans-serif !important;
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.72);
+      overflow-y: auto;
+    }
+
+    .ai-response-content--absolute {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+    }
+
+    .ai-response-content.empty p {
+      font-size: 15px;
+      margin-bottom: 8px;
+      color: #8b8d98;
+    }
+
+    .ai-response-content.empty span {
+      font-size: 12px;
+      color: #3a3a3a;
+    }
+
+    /* Message hierarchy: ai-response-content → msg-ai / msg-user → msg-bubble */
+    .msg-user, .msg-ai {
+      margin-bottom: 16px;
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .msg-avatar { display: none !important; }
+
+    .msg-bubble {
+      background: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+      max-width: 100%;
+      width: 100%;
+      font-family: "DM Sans", sans-serif;
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+      text-align: center;
+    }
+
+    .msg-ai .msg-bubble {
+      color: #ffffff;
+    }
+
+    .msg-user .msg-bubble {
+      color: rgba(255, 255, 255, 0.25);
+      font-size: 12px;
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Typing indicator ── */
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 10px 14px;
+    }
+
+    .typing-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4B5563;
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+      40%            { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* ── Copy button on AI response ── */
+    .copy-btn {
+      border: none;
+      background: transparent;
+      color: #8b8d98;
+      cursor: pointer;
+      padding: 2px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .copy-btn .icon-sm { width: 20px; height: 20px; }
+
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #e8e9eb;
+    }
+
+    .ai-response-area > .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 2;
+    }
+
+    /* ── Panel label ── */
+    .panel-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #555;
+      margin-bottom: 10px;
+    }
+
+    /* ── File List ── */
+    .file-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 4px;
+      font-size: 12px;
+      color: #9ca3af;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .file-item:last-child { border-bottom: none; }
+
+    .file-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e8e9eb;
+    }
+
+    .file-item.active {
+      background: rgba(0, 142, 214, 0.1);
+      color: #008ed6;
+    }
+
+    .file-icon { font-size: 14px; flex-shrink: 0; }
+
+    /* ── Code Review Syntax Tokens (from Cursor) ── */
+    .tok-keyword { color: #8B5CF6; }
+    .tok-string  { color: #22c55e; }
+    .tok-comment { color: #4B5563; font-style: italic; }
+    .tok-fn      { color: #008ed6; }
+    .tok-num     { color: #F59E0B; }
+
+    /* Code Review panel elements */
+    .code-review-toolbar-btn {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #6b6d78;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 5px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .code-review-toolbar-btn:hover {
+      color: #e8e9eb;
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .code-review-target-chip {
+      font-size: 11px;
+      color: #8b8d98;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .code-review-toolbar-clear {
+      background: none;
+      border: none;
+      color: #6b6d78;
+      cursor: pointer;
+      padding: 0 2px;
+      font-size: 14px;
+    }
+
+    .code-review-content {
+      font-size: 12px;
+      color: #8b8d98;
+      line-height: 1.5;
+      font-family: 'SF Mono', 'Fira Code', 'Monaco', 'Menlo', monospace;
+    }
+
+    .code-review-content pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .code-review-placeholder { color: #6b6d78; font-size: 12px; }
+
+    .code-review-snippet {
+      background: rgba(20, 23, 29, 0.8);
+      border-radius: 6px;
+      padding: 10px;
+      margin: 0;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 11px;
+      color: #e8e9eb;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow: auto;
+      max-height: 280px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .code-review-diff { font-size: 11px; font-family: monospace; white-space: pre-wrap; }
+    .diff-add  { background: rgba(0, 200, 80, 0.15);  color: #4ade80; }
+    .diff-mod  { background: rgba(255, 180, 0, 0.15); color: #fbbf24; }
+    .diff-same { color: #8b8d98; }
+
+    /* ── Bottom Panels Container ── */
+    .panels-container {
+        display: flex;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            margin: 0 auto;
+            gap: 5pc;
+            padding: 0 40px 16px;
+            align-items: stretch;
+    }
+
+    .panel {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    /* Operations panel */
+    .operations-panel {
+        width: 16pc;
+        height: 16pc;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .operations-content {
+      font-size: 12px;
+      color: #8b8d98;
+      line-height: 1.5;
+    }
+
+    .operations-exec-line {
+      margin-bottom: 10px;
+      font-size: 11px;
+      color: #8b8d98;
+    }
+
+    .operations-content .status-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .operations-content .status-list li {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .operations-content .status-list li:hover,
+    .operations-content .status-list li.active {
+      background: rgba(255, 255, 255, 0.04);
+      color: #e8e9eb;
+    }
+
+    .operations-content .status-list li.active { color: #008ed6; }
+    .operations-content .status-list li:last-child { border-bottom: none; }
+
+    .operations-task-prompt {
+      width: 100%;
+      flex-basis: 100%;
+      font-size: 11px;
+      color: #6b6d78;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .operations-content .roma-line {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 11px;
+      color: #6b6d78;
+    }
+
+    .operations-view-details, .operations-details-link {
+      margin-left: 4px;
+      padding: 2px 6px;
+      font-size: 11px;
+      background: rgba(0, 142, 214, 0.2);
+      color: #008ed6;
+      border: 1px solid rgba(0, 142, 214, 0.3);
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .operations-details-link { background: transparent; }
+
+    .operations-remove-btn {
+      margin-left: 4px;
+      padding: 2px 6px;
+      font-size: 11px;
+      background: rgba(0, 142, 214, 0.2);
+      color: #008ed6;
+      border: 1px solid rgba(0, 142, 214, 0.3);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .operations-remove-btn:hover { background: rgba(0, 142, 214, 0.35); }
+
+    /* ── Tool Modals (URL, Terminal, GitHub, Code Review) ─────────────────── */
+    .tool-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .tool-modal-overlay.visible { display: flex; }
+    .tool-modal {
+      background: #15161e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      width: 680px;
+      max-width: 95vw;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    }
+    .tool-modal.wide { width: 820px; }
+    .tool-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+    .tool-modal-title { font-size: 14px; font-weight: 700; color: #e8e9eb; }
+    .tool-modal-close {
+      background: none;
+      border: none;
+      color: #6b6d78;
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .tool-modal-close:hover { color: #e8e9eb; background: rgba(255,255,255,0.07); }
+    .tool-modal-body { flex: 1; overflow: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+    /* URL address bar */
+    .url-bar { display: flex; gap: 8px; }
+    .url-input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: #e8e9eb;
+      font-size: 12px;
+      padding: 8px 10px;
+      outline: none;
+    }
+    .url-input:focus { border-color: #008ed6; }
+    .url-preview-frame {
+      flex: 1;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 320px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .url-preview-frame iframe { width:100%; height:100%; border:none; min-height:320px; }
+    .url-source-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 11px;
+      font-family: monospace;
+      color: #8b8d98;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    /* Terminal */
+    .terminal-output {
+      flex: 1;
+      background: #0d0e13;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 12px;
+      color: #22c55e;
+      min-height: 260px;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    .terminal-line { margin-bottom: 2px; }
+    .terminal-line.err { color: #e05555; }
+    .terminal-line.info { color: #8b8d98; }
+    .terminal-prompt-row { display: flex; gap: 8px; align-items: center; }
+    .terminal-prompt-label { color: #008ed6; font-family: monospace; font-size: 12px; white-space: nowrap; }
+    .terminal-input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: #e8e9eb;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 12px;
+      padding: 7px 10px;
+      outline: none;
+    }
+    .terminal-input:focus { border-color: #008ed6; }
+    /* GitHub */
+    .github-field { display:flex; flex-direction:column; gap:5px; }
+    .github-field label { font-size:11px; color:#8b8d98; font-weight:600; }
+    .github-field input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: #e8e9eb;
+      font-size: 12px;
+      padding: 8px 10px;
+      outline: none;
+    }
+    .github-field input:focus { border-color: #008ed6; }
+    .github-file-list {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .github-file-item {
+      padding: 7px 12px;
+      font-size: 12px;
+      color: #8b8d98;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .github-file-item:hover { background: rgba(0,142,214,0.1); color: #e8e9eb; }
+    .github-file-item:last-child { border-bottom: none; }
+
+    /* Content panel search icon */
+    .content-search-btn {
+      background: none;
+      border: none;
+      color: #6b6d78;
+      cursor: pointer;
+      padding: 2px 4px;
+      line-height: 1;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .content-search-btn:hover { color: #e8e9eb; background: rgba(255,255,255,0.06); }
+
+    /* ── Center Panel ── */
+    .center-panel {
+        flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            position: relative;
+            background: rgba(0, 0, 0, 0.07);
+            border-radius: 32px;
+            padding-bottom: unset;
+            padding-top: unset;
+            height: 19pc;
+    }
+
+    /* Task section */
+    .task-section {
+        border-radius: 12px;
+        padding: 5px 12px;
+        background: rgba(0, 0, 0, 0.2);
+        font-size: 12px;
+        text-align: center;
+        color: #008ed6;
+        border: 1px solid rgba(0, 142, 214, 0.3);
+        padding-bottom: 5px;
+        padding-top: 5px;
+        position: relative;
+        margin-top: 10px;
+        margin-bottom: 18px;
+
+    }
+
+    /* Text entry */
+    .text-entry {
+        width: 100%;
+            height: 10pc;
+            background: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-family: inherit;
+            text-align: left;
+            resize: none;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #008ed6;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            text-align: center;
+            border: none;
+            align-content: center;
+    }
+
+    .text-entry:focus {
+      border: none;
+    }
+
+    .text-entry::placeholder { color: #4B5563; }
+
+    /* Submit button */
+    .submit-button {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 8px auto;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 142, 214, 0.3);
+    }
+
+    .submit-button-wrapper {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      position: relative;
+      bottom: 3px;
+    }
+
+    .submit-button:hover { transform: scale(1.05); box-shadow: 0 5px 12px rgba(0, 142, 214, 0.4); }
+    .submit-button:active { transform: scale(0.95); }
+    .submit-button svg { width: 24px; height: 24px; stroke: white; }
+
+    /* Icon row */
+    .icon-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 4px 0;
+    }
+
+    .icon-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .icon-button {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .icon-button img { width: 24px; height: auto; display: block; }
+
+    .settings-logo-wide {
+      padding-right: 150px;
+      padding-left: 150px;
+      width: 324px;
+    }
+
+    .code-editor-logo {
+      border-top-width: 5px;
+      margin-top: unset;
+    }
+
+    /* ── Input Toolbar (from Cursor) ── */
+    .input-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      flex-wrap: wrap;
+    }
+
+    .toolbar-btn {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #6b6d78;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 5px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .toolbar-btn:hover {
+      color: #e8e9eb;
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .toolbar-btn.active {
+      color: #008ed6;
+      border-color: rgba(0, 142, 214, 0.35);
+      background: rgba(0, 142, 214, 0.1);
+    }
+
+    .toolbar-separator {
+      width: 1px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0 2px;
+    }
+
+    .toolbar-spacer { flex: 1; }
+
+    .model-select {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 5px;
+      color: #6b6d78;
+      font-size: 11px;
+      padding: 3px 6px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .model-select option { background: #1a1a1a; }
+
+    /* ── Chat panel ── */
+    .chat-panel {
+        display: flex;
+            flex-direction: column;
+            padding: 8px;
+            width: 16pc;
+            height: 16pc;
+            overflow-y: auto;
+            overflow-x: hidden;
+    }
+
+    .chat-panel .panel-label {
+      flex-shrink: 0;
+      margin-bottom: 4px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .chat-panel-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      font-size: 11px;
+    }
+
+    .chat-sidebar {
+      flex: 0 0 72px;
+      min-width: 72px;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .chat-sidebar-title {
+      padding: 4px 6px;
+      color: #8b8d98;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .chat-conversation-list { list-style: none; margin: 0; padding: 0; }
+
+    .chat-conversation-list li {
+      padding: 4px 6px;
+      cursor: pointer;
+      color: #8b8d98;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 10px;
+    }
+
+    .chat-conversation-list li:hover,
+    .chat-conversation-list li.selected {
+      background: rgba(255, 255, 255, 0.06);
+      color: #e8e9eb;
+    }
+
+    .chat-thread { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+
+    .chat-messages {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 4px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chat-message {
+      max-width: 100%;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      line-height: 1.3;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #008ed6;
+    }
+
+    .chat-message.user {
+      align-self: flex-end;
+      background: rgba(0, 142, 214, 0.2);
+      border: 1px solid rgba(0, 142, 214, 0.3);
+    }
+
+    .chat-message.assistant {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .chat-message-content { color: #ffffff9c; }
+
+    .chat-input-row {
+      display: flex;
+      gap: 4px;
+      padding: 4px 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      flex-shrink: 0;
+    }
+
+    .chat-input {
+        flex: 1;
+        min-height: 0;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        color: #008ed6;
+        font-size: 10px;
+        resize: none;
+        display: flex;
+        white-space: nowrap;
+        text-align: center;
+        font-family: arial;
+        font-weight: 200;
+        padding-top: 3px;
+        padding-left: 3px;
+        white-space: nowrap;
+        display: flex;
+    }
+
+    .chat-send-btn {
+      padding: 4px 8px;
+      background: #008ed6;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .chat-send-btn:hover { background: #007ab8; }
+    .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Panel toggle / maximize controls */
+    .panel-toggle-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-toggle-btn {
+      border: none;
+      background: transparent;
+      color: #8b8d98;
+      cursor: pointer;
+      padding: 2px 6px;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .panel-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #e8e9eb;
+    }
+
+    /* Panel maximize */
+    body.panel-max-open .ai-response-area { display: none; }
+    body.panel-max-open .panels-container { padding-top: 40px; }
+
+    .panel.maximized {
+      position: fixed;
+      top: 80px;
+      left: 40px;
+      right: 40px;
+      bottom: 40px;
+      z-index: 1000;
+      background: rgba(3, 6, 12, 0.96);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      min-height: 300px;
+    }
+
+    .panel.maximized .panel-label { margin-bottom: 12px; }
+    .panel.maximized .operations-content,
+    .panel.maximized .code-review-content,
+    .panel.maximized .chat-panel-body { flex: 1; min-height: 0; overflow: auto; }
+
+    /* ROI Popover */
+    .roi-popover {
+      position: absolute;
+      background: rgba(10, 12, 18, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: #e8e9eb;
+      z-index: 1001;
+      max-width: 280px;
+      white-space: pre-wrap;
+    }
+
+    .roi-popover-header {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 6px;
+    }
+
+    .roi-popover .copy-btn { font-size: 10px; padding: 2px 6px; }
+
+    /* ── Status Bar (from Cursor) ── */
+    .statusbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 5px 16px;
+      background: rgba(0, 0, 0, 0.45);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 11px;
+      color: #4B5563;
+      flex-shrink: 0;
+    }
+
+    .statusbar-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .dot-green  { background: #22c55e; box-shadow: 0 0 5px rgba(34, 197, 94, 0.6); }
+    .dot-blue   { background: #008ed6; }
+    .dot-yellow { background: #fbbf24; }
+    .dot-gray   { background: #4B5563; }
+
+    .statusbar-spacer { flex: 1; }
+
+    /* ROMA indicator removed — status shown in task bar only */
+
+    /* ── Popups ── */
+    /* Full-screen overlay style (Settings, Operations, Chat) */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 9, 15, 0.95);
+      z-index: 9999;
+      overflow-y: auto;
+    }
+
+    .popup-overlay.visible { display: block; }
+
+    .popup-inner {
+      max-width: 720px;
+      width: 100%;
+      margin: 40px auto 60px;
+      padding: 28px;
+      background: rgba(20, 22, 30, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+    }
+
+    .popup-inner.narrow { max-width: 500px; }
+
+    .popup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .popup-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #e8e9eb;
+    }
+
+    .popup-close {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #9ca3af;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .popup-close:hover { background: rgba(255, 255, 255, 0.1); color: #e8e9eb; }
+
+    /* Settings tabs (from Cursor) */
+    .settings-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      padding-bottom: 12px;
+    }
+
+    .settings-tab {
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #6b6d78;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .settings-tab:hover { color: #e8e9eb; background: rgba(255, 255, 255, 0.04); }
+
+    .settings-tab.active {
+      color: #008ed6;
+      border-color: rgba(0, 142, 214, 0.3);
+      background: rgba(0, 142, 214, 0.08);
+    }
+
+    /* Form elements */
+    .form-group { margin-bottom: 16px; }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: #111318;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #e8e9eb;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: #008ed6;
+      box-shadow: 0 0 0 1px rgba(0, 142, 214, 0.3);
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: #3a3d4a; }
+
+    .form-group input[type="password"] { font-family: 'Monaco', 'Menlo', monospace; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Settings status */
+    .status-info    { color: #8b8d98; }
+    .status-success { color: #4ade80; }
+    .status-error   { color: #f87171; }
+
+    /* Reveal button */
+    .reveal-btn {
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      color: #8b8d98;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .reveal-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .verify-btn {
+      padding: 10px 12px;
+      background: rgba(74, 144, 226, 0.12);
+      border: 1px solid rgba(74, 144, 226, 0.35);
+      border-radius: 4px;
+      color: #4a90e2;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .verify-btn:hover { background: rgba(74, 144, 226, 0.22); border-color: rgba(74, 144, 226, 0.6); }
+    .verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .verify-btn.ok  { background: rgba(50, 205, 100, 0.14); border-color: rgba(50, 205, 100, 0.45); color: #32cd64; }
+    .verify-btn.err { background: rgba(220, 60, 60, 0.14);  border-color: rgba(220, 60, 60, 0.45);  color: #e05555; }
+
+    .input-with-btn { display: flex; gap: 8px; }
+    .input-with-btn input { flex: 1; }
+
+    /* Save/Reset buttons */
+    .btn-primary {
+      padding: 9px 22px;
+      background: #008ed6;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover { background: #0077b3; }
+    .btn-primary:disabled { background: #2a2a2a; color: #555; cursor: not-allowed; }
+
+    /* Operations op-list (from Cursor) */
+    .op-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .op-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+    }
+
+    .op-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .op-icon.blue   { background: rgba(0, 163, 255, 0.15); }
+    .op-icon.purple { background: rgba(139, 92, 246, 0.15); }
+    .op-icon.green  { background: rgba(34, 197, 94, 0.15); }
+    .op-icon.orange { background: rgba(245, 158, 11, 0.15); }
+
+    .op-details { flex: 1; min-width: 0; }
+    .op-name { font-size: 13px; font-weight: 600; color: #e8e9eb; margin-bottom: 2px; }
+    .op-desc { font-size: 11px; color: #6b6d78; }
+
+    .op-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-ready   { background: rgba(34, 197, 94, 0.12);  color: #22c55e; }
+    .badge-running { background: rgba(0, 163, 255, 0.12);  color: #008ed6; }
+    .badge-pending { background: rgba(245, 158, 11, 0.12); color: #F59E0B; }
+
+    /* Chat History popup list (from Cursor) */
+    .chat-history-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .chat-history-item {
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .chat-history-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .chat-history-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e8e9eb;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-history-preview {
+      font-size: 11px;
+      color: #6b6d78;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-history-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 10px;
+      color: #3a3d4a;
+    }
+
+    /* Cursor parity modal / toast styles */
+    .truai-parity-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .truai-parity-modal-content { background: #1a1d23; color: #e8e9eb; padding: 24px; border-radius: 12px; max-width: 90vw; max-height: 90vh; overflow: auto; }
+    .truai-parity-modal-content h3 { margin: 0 0 12px 0; font-size: 16px; }
+    .truai-parity-modal-content label { display: block; margin: 8px 0 4px 0; font-size: 13px; }
+    .truai-parity-modal-content textarea, .truai-parity-modal-content input[type=text] { width: 100%; padding: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #e8e9eb; font-size: 13px; box-sizing: border-box; }
+    .truai-parity-actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .truai-parity-actions button { padding: 8px 16px; background: #008ed6; border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 13px; }
+    .truai-parity-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .truai-parity-actions button:last-of-type { background: rgba(255,255,255,0.1); }
+    .truai-context { font-size: 12px; color: #8b8d98; margin: 8px 0; }
+    .truai-diff-content { min-width: 560px; }
+    .truai-diff-governance { padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; font-weight: 500; }
+    .truai-gov-safe    { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+    .truai-gov-elevated{ background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+    .truai-gov-locked  { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+    .truai-diff-columns{ display: flex; gap: 16px; margin: 12px 0; }
+    .truai-diff-col    { flex: 1; min-width: 0; }
+    .truai-diff-header { font-size: 12px; color: #8b8d98; margin-bottom: 4px; }
+    .truai-diff-code   { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; font-size: 12px; white-space: pre-wrap; word-break: break-all; margin: 0; overflow: auto; max-height: 200px; }
+    .truai-forensic    { font-size: 11px; color: #6b6d78; margin: 8px 0; }
+    .truai-context-list{ font-size: 12px; color: #8b8d98; padding: 8px 12px; margin-bottom: 8px; }
+    .truai-drop-zone-active { border-color: #008ed6 !important; background: rgba(0,142,214,0.1) !important; color: #e8e9eb !important; }
+    .truai-content-panel-drag-over { outline: 2px solid #008ed6; outline-offset: -2px; background: rgba(0,142,214,0.08) !important; }
+    .truai-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1d23; color: #e8e9eb; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 10001; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .truai-context-menu { position: fixed; background: #1a1d23; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px; z-index: 10000; }
+    .truai-context-menu button { display: block; width: 100%; padding: 8px 12px; background: none; border: none; color: #e8e9eb; cursor: pointer; text-align: left; font-size: 13px; }
+    .truai-context-menu button:hover { background: rgba(255,255,255,0.05); }
+
+    /* ── Settings AI Mode buttons ── */
+    .settings-mode-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: #9ca3af;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .settings-mode-btn strong {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e8e9eb;
+      display: block;
+    }
+
+    .settings-mode-btn span {
+      font-size: 11px;
+      color: #6b6d78;
+      display: block;
+    }
+
+    .settings-mode-btn:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .settings-mode-btn.active {
+      background: rgba(0, 142, 214, 0.1);
+      border-color: rgba(0, 142, 214, 0.35);
+      color: #008ed6;
+    }
+
+    .settings-mode-btn.active strong { color: #008ed6; }
+
+    /* ── Security Tab ── */
+    .sec-section {
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      background: rgba(255,255,255,0.02);
+    }
+    .sec-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #555;
+      margin-bottom: 12px;
+    }
+    .sec-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .sec-row:last-child { border-bottom: none; }
+    .sec-row-label { font-size: 12px; color: #c5c6cc; flex: 1; }
+    .sec-row-sub   { font-size: 10px; color: #555; margin-top: 1px; }
+    /* Toggle switch */
+    .sec-toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .sec-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .sec-toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #2a2c38;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .sec-toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      left: 2px;
+      top: 2px;
+      background: #6b6d78;
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .sec-toggle input:checked + .sec-toggle-track { background: rgba(0,142,214,0.25); border-color: #008ed6; }
+    .sec-toggle input:checked + .sec-toggle-track::after { transform: translateX(16px); background: #008ed6; }
+    /* ROMA status badge */
+    .roma-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+    }
+    .roma-badge.verified   { color: #008ed6;
+        border-radius: 6px;
+        font-size: 12px;
+        padding: 4px 8px;
+        background: rgba(0, 142, 214, 0.08);
+        border: 1px solid rgba(0, 142, 214, 0.2); }
+    .roma-badge.unverified { background: rgba(255,190,0,0.10);  color: #f0a500; border: 1px solid rgba(255,190,0,0.2); }
+    .roma-badge.blocked    { background: rgba(220,50,50,0.12);  color: #e05050; border: 1px solid rgba(220,50,50,0.2); }
+    .roma-badge::before { content: '●'; font-size: 8px; }
+    /* Biometric button */
+    .sec-bio-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(0,142,214,0.08);
+      border: 1px solid rgba(0,142,214,0.2);
+      border-radius: 8px;
+      color: #008ed6;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      margin-top: 6px;
+    }
+    .sec-bio-btn:hover { background: rgba(0,142,214,0.14); border-color: rgba(0,142,214,0.4); }
+    .sec-bio-btn:disabled { opacity: 0.5; cursor: default; }
+    /* Change password form in security tab */
+    .sec-pass-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .sec-pass-row input {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: #e8e9eb;
+      font-size: 12px;
+      padding: 7px 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .sec-pass-row input:focus { border-color: #008ed6; }
+    .sec-pass-row input::placeholder { color: #4b5060; }
+    /* Security action buttons row */
+    .sec-action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .sec-action-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 7px 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      color: #c5c6cc;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .sec-action-btn:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15); color: #e8e9eb; }
+    .sec-action-btn.danger { border-color: rgba(220,50,50,0.2); color: #e05050; }
+    .sec-action-btn.danger:hover { background: rgba(220,50,50,0.08); }
+    #sec-status-msg {
+      font-size: 11px;
+      min-height: 14px;
+      margin-top: 6px;
+      padding: 0 2px;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .panels-container { flex-direction: column; align-items: stretch; height: auto; }
+      .operations-panel, .center-panel, .chat-panel { flex: 1; width: 100%; max-width: 100%; max-height: none; height: auto; }
+      .main-area { padding: 0 16px 12px; }
+    }
+
+    @media (max-width: 900px) {
+      .content-extended, .code-review-extended { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .header-actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Logo / Header ── -->
+  <div class="header-section header-section--top">
+    <div class="header-actions" style="bottom: 10px;">
+      <a href="/TruAi/phantom" title="Phantom.ai Portal">Phantom.Ai</a>
+      <a href="/TruAi/gemini" title="Gemini.ai Portal">Gemini.Ai</a>
+    </div>
+    <div class="logo-container logo-container--offset">
+      <img src="/TruAi/assets/images/TruAi-dashboard-logo.png" alt="TruAi" class="logo-image--large" style="
+    width: 80px;
+    position: absolute;
+    top: auto;
+    bottom: 20px;
+">
+      <div class="project-title" id="header-project-title">Start New Project</div>
+    </div>
+  </div>
+
+  <!-- ── Main 3-Column Area ── -->
+  <div class="main-area">
+
+    <!-- Left: Content Panel -->
+    <div class="content-extended">
+      <div class="panel-label" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <span>Content</span>
+        <button type="button" class="content-search-btn" id="contentSearchBtn" title="Browse local files or folders" aria-label="Browse files">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <!-- File picker: individual / multiple files -->
+        <input type="file" id="contentFileInput" style="display:none;" multiple
+          accept=".html,.css,.js,.ts,.jsx,.tsx,.php,.json,.md,.txt,.sh,.yaml,.yml,.xml,.py,.rb,.sql,.env,.gitignore,.htaccess,.csv,.toml,.ini,.conf">
+        <!-- Directory picker -->
+        <input type="file" id="contentDirInput" style="display:none;" multiple
+          webkitdirectory mozdirectory directory>
+      </div>
+      <ul class="file-list" id="file-list">
+        <li class="file-item active" onclick="selectFile(this, 'index.php')">
+          <span class="file-icon">📄</span> index.php
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'router.php')">
+          <span class="file-icon">📄</span> router.php
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'dashboard.html')">
+          <span class="file-icon">🌐</span> dashboard.html
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'ubsas-entrance.html')">
+          <span class="file-icon">🌐</span> ubsas-entrance.html
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'login-portal.html')">
+          <span class="file-icon">🌐</span> login-portal.html
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'welcome.html')">
+          <span class="file-icon">🌐</span> welcome.html
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'start.html')">
+          <span class="file-icon">🌐</span> start.html
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'assets/js/api.js')">
+          <span class="file-icon">📜</span> api.js
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'assets/js/ai-client.js')">
+          <span class="file-icon">📜</span> ai-client.js
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'assets/js/crypto.js')">
+          <span class="file-icon">📜</span> crypto.js
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'assets/js/cursor-parity.js')">
+          <span class="file-icon">📜</span> cursor-parity.js
+        </li>
+        <li class="file-item" onclick="selectFile(this, 'composer.json')">
+          <span class="file-icon">📦</span> composer.json
+        </li>
+      </ul>
+    </div>
+
+    <!-- Center: AI Response Area -->
+    <div class="ai-response-area" id="ai-response-area">
+      <button type="button" class="copy-btn" data-copy-target="ai-response-content" aria-label="Copy AI response">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </button>
+      <div class="ai-response-content ai-response-content--absolute empty" id="ai-response-content" role="status" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+    <!-- Right: Code Review Panel -->
+    <div class="code-review-extended">
+      <div class="panel-label panel-toggle-label"><span>Code Review</span></div>
+      <div class="code-review-toolbar">
+        <span id="codeReviewTargetChip" class="code-review-target-chip" style="display:none;" title="Target file">
+          <span id="codeReviewTargetPath"></span>
+          <button type="button" id="codeReviewClearTarget" class="code-review-toolbar-clear" aria-label="Clear target">×</button>
+        </span>
+        <button type="button" class="code-review-toolbar-btn" onclick="runCodeReview()">▶ Run</button>
+        <button type="button" class="code-review-toolbar-btn" onclick="copyReview()">📋 Copy</button>
+        <button type="button" id="codeReviewDiffBtn" class="code-review-toolbar-btn">Diff</button>
+        <button type="button" id="codeReviewApplyToFile" class="code-review-toolbar-btn" title="Apply to file">Apply to file</button>
+      </div>
+      <div class="code-review-content" id="code-review-content">
+        <div class="code-review-placeholder" id="codeReviewPlaceholder">
+          <pre style="color:#3a3d4a; font-size:11px; text-align:center; padding-top:40px;">Select a file or run
+a review to see
+analysis here.</pre>
+        </div>
+        <pre class="code-review-snippet" id="codeReviewSnippet" style="display:none;"></pre>
+        <div class="code-review-diff" id="codeReviewDiff" style="display:none;"></div>
+      </div>
+    </div>
+
+  </div><!-- /.main-area -->
+
+  <!-- ══════════ POPUPS ══════════ -->
+
+  <!-- Settings Popup (tabbed, from Cursor + API keys from Prototype) -->
+  <div class="popup-overlay" id="settings-popup" role="dialog" aria-label="AI Settings" aria-modal="true">
+    <div class="popup-inner">
+      <div class="popup-header">
+        <div class="popup-title">⚙ Settings</div>
+        <button class="popup-close" onclick="togglePopup('settings-popup')">✕ Close</button>
+      </div>
+      <div class="settings-tabs">
+        <button class="settings-tab active" onclick="switchSettingsTab(this, 'general')">General</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'models')">Models &amp; API</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'aimode')">AI Mode</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'operations')">Operations</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'features')">Features</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'privacy')">Privacy</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'security')">Security</button>
+      </div>
+
+      <!-- General Tab -->
+      <div id="settings-tab-general">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="settings-username" placeholder="Enter username">
+          </div>
+          <div class="form-group">
+            <label>Theme</label>
+            <select id="settings-theme">
+              <option value="dark">Dark (Default)</option>
+              <option value="darker">Darker</option>
+              <option value="midnight">Midnight</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Font Size</label>
+            <input type="number" id="settings-fontsize" value="13" min="10" max="22">
+          </div>
+          <div class="form-group">
+            <label>Keybinding</label>
+            <select id="settings-keybinding">
+              <option value="vscode">VS Code</option>
+              <option value="vim">Vim</option>
+              <option value="emacs">Emacs</option>
+              <option value="sublime">Sublime Text</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Models & API Tab -->
+      <div id="settings-tab-models" style="display:none;">
+        <div class="form-group">
+          <label>Default Model</label>
+          <select id="aiModelSelect" name="default_model">
+            <option value="auto">Auto (Recommended)</option>
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gpt-4">GPT-4</option>
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+            <option value="claude-3-opus">Claude 3 Opus</option>
+            <option value="claude-3-haiku">Claude 3 Haiku</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>OpenAI API Key</label>
+          <div class="input-with-btn">
+            <input type="password" id="aiApiKeyOpenAI" name="openai_api_key" placeholder="sk-…">
+            <button type="button" class="reveal-btn" onclick="toggleReveal('aiApiKeyOpenAI')">Reveal</button>
+            <button type="button" class="verify-btn" id="verifyOpenAI" onclick="verifyApiKey('openai')">Verify</button>
+          </div>
+          <div id="verifyStatusOpenAI" style="font-size:11px; margin-top:5px; min-height:14px;"></div>
+        </div>
+        <div class="form-group">
+          <label>Anthropic API Key</label>
+          <div class="input-with-btn">
+            <input type="password" id="aiApiKeySonnet" name="anthropic_api_key" placeholder="sk-ant-…">
+            <button type="button" class="reveal-btn" onclick="toggleReveal('aiApiKeySonnet')">Reveal</button>
+            <button type="button" class="verify-btn" id="verifyAnthropic" onclick="verifyApiKey('anthropic')">Verify</button>
+          </div>
+          <div id="verifyStatusAnthropic" style="font-size:11px; margin-top:5px; min-height:14px;"></div>
+        </div>
+        <div class="form-group">
+          <label>Default Provider</label>
+          <select id="defaultProvider" name="default_provider">
+            <option value="openai">OpenAI</option>
+            <option value="sonnet">Anthropic (Claude)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- AI Mode Tab -->
+      <div id="settings-tab-aimode" style="display:none;">
+        <div class="form-group">
+          <label>Active Mode</label>
+          <p style="font-size:12px; color:#6b6d78; margin-bottom:12px;">Select how TruAi interprets your prompts. The active mode is reflected in the task bar.</p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="settings-mode-btn active" id="smode-agent" onclick="setModeFromSettings('agent', this)">
+              <strong>Agent</strong>
+              <span>Multi-step autonomous task execution</span>
+            </button>
+            <button class="settings-mode-btn" id="smode-chat" onclick="setModeFromSettings('chat', this)">
+              <strong>Chat</strong>
+              <span>Conversational Q&amp;A with context</span>
+            </button>
+            <button class="settings-mode-btn" id="smode-edit" onclick="setModeFromSettings('edit', this)">
+              <strong>Inline Edit</strong>
+              <span>Targeted code edits (Ctrl+K)</span>
+            </button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:16px;">
+          <label>Quick Model</label>
+          <select id="model-select" onchange="onModelChange(this)">
+            <option value="auto">Auto (Recommended)</option>
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+            <option value="claude-3-opus">Claude 3 Opus</option>
+            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+          </select>
+        </div>
+        <p style="font-size:11px; color:#3a3d4a; margin-top:8px;">Model selection also available in the Models &amp; API tab for full provider configuration.</p>
+      </div>
+
+      <!-- Operations Tab -->
+      <div id="settings-tab-operations" style="display:none;">
+        <p style="font-size:12px; color:#6b6d78; margin-bottom:16px;">Monitor active tasks, queue new operations, and check UBSAS / ROMA status.</p>
+        <div style="margin-bottom:16px;">
+          <button class="btn-primary" style="width:100%; margin-bottom:8px;" onclick="togglePopup('settings-popup'); setTimeout(()=&gt;togglePopup('operations-popup'),150);">
+            <img src="/TruAi/assets/images/TruAi-Terminal.png" style="width:14px;height:14px;vertical-align:middle;margin-right:5px;"> Open Full Operations Panel
+          </button>
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:14px;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#555; margin-bottom:10px;">Live Task Summary</div>
+          <div id="settings-ops-live" style="font-size:12px; color:#8b8d98;">
+            Loading tasks…
+          </div>
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:14px; margin-top:14px;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#555; margin-bottom:10px;">Available Operations</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:8px;">
+              <img src="/TruAi/assets/images/TruAi-transparent-bg.png" style="width:20px;height:20px;object-fit:contain;flex-shrink:0;">
+              <div style="flex:1;"><div style="font-size:12px; color:#e8e9eb; font-weight:600;">AI Agent Task</div><div style="font-size:11px; color:#6b6d78;">Queue a multi-step agent operation</div></div>
+              <span class="op-badge badge-ready">Ready</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:8px;">
+              <img src="/TruAi/assets/images/TruAi-Code-Editor.png" style="width:20px;height:20px;object-fit:contain;flex-shrink:0;">
+              <div style="flex:1;"><div style="font-size:12px; color:#e8e9eb; font-weight:600;">Code Review</div><div style="font-size:11px; color:#6b6d78;">Analyze selected files for issues</div></div>
+              <span class="op-badge badge-ready">Ready</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:8px;">
+              <img src="/TruAi/assets/images/TruAi-Settings.png" style="width:20px;height:20px;object-fit:contain;flex-shrink:0;">
+              <div style="flex:1;"><div style="font-size:12px; color:#e8e9eb; font-weight:600;">UBSAS Auth Check</div><div style="font-size:11px; color:#6b6d78;">Verify ROMA + UBSAS token integrity</div></div>
+              <span class="op-badge badge-running">Running</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Tab -->
+      <div id="settings-tab-features" style="display:none;">
+        <div class="form-group">
+          <label>Enable Streaming Responses</label>
+          <select id="settings-streaming">
+            <option value="1">Enabled</option>
+            <option value="0">Disabled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Inline Edit (Ctrl+K)</label>
+          <select>
+            <option>Enabled</option>
+            <option>Disabled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Code Review on Save</label>
+          <select>
+            <option>Disabled</option>
+            <option>Enabled</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Privacy Tab -->
+      <div id="settings-tab-privacy" style="display:none;">
+        <div class="form-group">
+          <label>Data Sharing</label>
+          <select id="settings-data-sharing">
+            <option value="1">Enabled — Help improve TruAi</option>
+            <option value="0">Disabled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Session Logging</label>
+          <select>
+            <option>Local only</option>
+            <option>Disabled</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Security Tab -->
+      <div id="settings-tab-security" style="display:none;">
+
+        <!-- ROMA Status -->
+        <div class="sec-section">
+          <div class="sec-section-title">ROMA Security</div>
+          <div class="sec-row">
+            <div>
+              <div class="sec-row-label">ROMA Status</div>
+              <div class="sec-row-sub">Real-time Operational Monitoring &amp; Authentication</div>
+            </div>
+            <span id="sec-roma-badge" class="roma-badge unverified">Checking…</span>
+          </div>
+          <div class="sec-row">
+            <div>
+              <div class="sec-row-label">Portal Protection</div>
+              <div class="sec-row-sub">Enforce ROMA check on login portal access</div>
+            </div>
+            <label class="sec-toggle">
+              <input type="checkbox" id="sec-portal-protection" checked onchange="secSaveToggle('portalProtection', this.checked)">
+              <span class="sec-toggle-track"></span>
+            </label>
+          </div>
+          <div class="sec-row">
+            <div>
+              <div class="sec-row-label">Monitor Active</div>
+              <div class="sec-row-sub">Keep ROMA monitor running in background</div>
+            </div>
+            <label class="sec-toggle">
+              <input type="checkbox" id="sec-monitor-active" checked onchange="secSaveToggle('monitorActive', this.checked)">
+              <span class="sec-toggle-track"></span>
+            </label>
+          </div>
+          <div class="sec-row">
+            <div>
+              <div class="sec-row-label">Encryption</div>
+              <div class="sec-row-sub" id="sec-encryption-label">AES-256-GCM</div>
+            </div>
+            <span style="font-size:11px; color:#555;">RSA-2048</span>
+          </div>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button class="sec-action-btn" onclick="secVerifyRoma()">Verify Now</button>
+            <button class="sec-action-btn" onclick="secRefreshRomaStatus()">Refresh Status</button>
+          </div>
+        </div>
+
+        <!-- Authentication Methods -->
+        <div class="sec-section">
+          <div class="sec-section-title">Authentication Methods</div>
+          <div class="sec-row">
+            <div>
+              <div class="sec-row-label">Password Authentication</div>
+              <div class="sec-row-sub">Require password on every login</div>
+            </div>
+            <label class="sec-toggle">
+              <input type="checkbox" id="sec-password-auth" checked onchange="secSaveToggle('passwordAuth', this.checked)">
+              <span class="sec-toggle-track"></span>
+            </label>
+          </div>
+          <div class="sec-row">
+            <div>
+              <div class="sec-row-label">Biometric Authentication</div>
+              <div class="sec-row-sub">Touch ID / System password via UBSAS</div>
+            </div>
+            <label class="sec-toggle">
+              <input type="checkbox" id="sec-biometric-enabled" onchange="secSaveToggle('biometricEnabled', this.checked)">
+              <span class="sec-toggle-track"></span>
+            </label>
+          </div>
+          <div class="sec-row" id="sec-biometric-method-row" style="display:none;">
+            <div class="sec-row-label">Biometric Method</div>
+            <select id="sec-biometric-method" onchange="secSaveToggle('biometricMethod', this.value)"
+              style="background:#1a1c26; border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#c5c6cc; font-size:12px; padding:4px 8px;">
+              <option value="touch_id">Touch ID (macOS)</option>
+              <option value="fingerprint">Fingerprint (fprintd)</option>
+              <option value="system_password">System Password</option>
+              <option value="auto">Auto-detect</option>
+            </select>
+          </div>
+          <div class="sec-row">
+            <div>
+              <div class="sec-row-label">Auto-Login After Biometric</div>
+              <div class="sec-row-sub">Prefill &amp; submit credentials after verification</div>
+            </div>
+            <label class="sec-toggle">
+              <input type="checkbox" id="sec-autologin" onchange="secSaveToggle('autoLogin', this.checked)">
+              <span class="sec-toggle-track"></span>
+            </label>
+          </div>
+          <button class="sec-bio-btn" id="sec-test-bio-btn" onclick="secTestBiometric()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6c-1.5 0-2.9.6-3.9 1.5"/><path d="M12 18c1.5 0 2.9-.6 3.9-1.5"/><path d="M6 12c0-1.5.6-2.9 1.5-3.9"/><path d="M18 12c0 1.5-.6 2.9-1.5 3.9"/><circle cx="12" cy="12" r="2"/></svg>
+            Test Biometric Now
+          </button>
+        </div>
+
+        <!-- Portal Access & Session -->
+        <div class="sec-section">
+          <div class="sec-section-title">Portal Access &amp; Session</div>
+          <div class="sec-row">
+            <div class="sec-row-label">Session Timeout (minutes)</div>
+            <input type="number" id="sec-session-timeout" value="60" min="5" max="1440"
+              onchange="secSaveToggle('sessionTimeout', this.value)"
+              style="width:70px; background:#1a1c26; border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#c5c6cc; font-size:12px; padding:4px 8px; text-align:right;">
+          </div>
+          <div class="sec-row">
+            <div>
+              <div class="sec-row-label">Require Re-auth on Wake</div>
+              <div class="sec-row-sub">Lock session when system sleeps</div>
+            </div>
+            <label class="sec-toggle">
+              <input type="checkbox" id="sec-reauth-wake" onchange="secSaveToggle('reauthOnWake', this.checked)">
+              <span class="sec-toggle-track"></span>
+            </label>
+          </div>
+          <div class="sec-row">
+            <div>
+              <div class="sec-row-label">Suspend on Inactivity</div>
+              <div class="sec-row-sub">Block ROMA monitor when idle</div>
+            </div>
+            <label class="sec-toggle">
+              <input type="checkbox" id="sec-suspend-idle" onchange="secSaveToggle('suspendIdle', this.checked)">
+              <span class="sec-toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Security Actions -->
+        <div class="sec-section">
+          <div class="sec-section-title">Security Actions</div>
+          <div class="sec-pass-row">
+            <input type="password" id="sec-pass-current" placeholder="Current password">
+            <input type="password" id="sec-pass-new" placeholder="New password">
+            <input type="password" id="sec-pass-confirm" placeholder="Confirm new password">
+          </div>
+          <div class="sec-action-row" style="margin-top:8px;">
+            <button class="sec-action-btn" onclick="secChangePassword()">Change Password</button>
+            <button class="sec-action-btn" onclick="window.open('/TruAi/ubsas-enroll.html','_blank')">Enroll Biometric</button>
+          </div>
+          <div class="sec-action-row">
+            <button class="sec-action-btn danger" onclick="secLogoutAll()">Log Out All Sessions</button>
+          </div>
+        </div>
+
+        <div id="sec-status-msg" role="status" aria-live="polite"></div>
+
+      </div>
+
+      <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+        <button class="toolbar-btn" onclick="togglePopup('settings-popup')">Cancel</button>
+        <span id="settingsStatus" role="status" aria-live="polite" style="font-size:12px; color:#8b8d98; margin-left:8px;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operations Popup -->
+  <div class="popup-overlay" id="operations-popup" role="dialog" aria-label="Operations" aria-modal="true">
+    <div class="popup-inner narrow">
+      <div class="popup-header">
+        <div class="popup-title"><img src="/TruAi/assets/images/TruAi-Terminal.png" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Operations</div>
+        <button class="popup-close" onclick="togglePopup('operations-popup')">✕ Close</button>
+      </div>
+      <!-- Live task list from API -->
+      <div id="operations-popup-live" style="margin-bottom:16px;"></div>
+      <!-- Static operations catalog -->
+      <div class="op-list">
+        <div class="op-item">
+          <div class="op-icon blue">🤖</div>
+          <div class="op-details">
+            <div class="op-name">AI Agent Task</div>
+            <div class="op-desc">Queue a multi-step agent operation</div>
+          </div>
+          <span class="op-badge badge-ready">Ready</span>
+        </div>
+        <div class="op-item">
+          <div class="op-icon purple">🔍</div>
+          <div class="op-details">
+            <div class="op-name">Code Review</div>
+            <div class="op-desc">Analyze selected files for issues</div>
+          </div>
+          <span class="op-badge badge-ready">Ready</span>
+        </div>
+        <div class="op-item">
+          <div class="op-icon green">✅</div>
+          <div class="op-details">
+            <div class="op-name">Run Tests</div>
+            <div class="op-desc">Execute test suite via run-all-tests.sh</div>
+          </div>
+          <span class="op-badge badge-pending">Pending</span>
+        </div>
+        <div class="op-item">
+          <div class="op-icon orange">🚀</div>
+          <div class="op-details">
+            <div class="op-name">Deploy</div>
+            <div class="op-desc">Push to production environment</div>
+          </div>
+          <span class="op-badge badge-pending">Pending</span>
+        </div>
+        <div class="op-item">
+          <div class="op-icon blue">🔐</div>
+          <div class="op-details">
+            <div class="op-name">UBSAS Auth Check</div>
+            <div class="op-desc">Verify ROMA + UBSAS token integrity</div>
+          </div>
+          <span class="op-badge badge-running">Running</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat History Popup -->
+  <div class="popup-overlay" id="chat-popup" role="dialog" aria-label="Chat History" aria-modal="true">
+    <div class="popup-inner narrow">
+      <div class="popup-header">
+        <div class="popup-title"><img src="/TruAi/assets/images/TruAi-transparent-bg.png" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;object-fit:contain;"> Chat History</div>
+        <button class="popup-close" onclick="togglePopup('chat-popup')">✕ Close</button>
+      </div>
+      <div class="chat-history-list" id="chat-history-list">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Bottom Panels Container ── -->
+  <div class="panels-container">
+
+    <!-- Left: Operations Panel (live task list) -->
+    <div class="panel operations-panel">
+      <div class="panel-label panel-toggle-label">
+        <span>Operations</span>
+        <button type="button" class="panel-toggle-btn" data-panel-toggle="operations" aria-label="Expand Operations">⤢</button>
+      </div>
+      <div class="operations-content" id="operationsContent">
+        <div class="operations-loading" style="display:none;">Operations unavailable</div>
+        <ul class="status-list" id="operationsStatusList" style="display:none;"></ul>
+        <div class="roma-line" id="operationsRoma" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Center: Prompt Input + Icon Row + Task Bar -->
+    <div class="panel center-panel" id="centerPanel">
+
+      <!-- Submit button (GIF, Prototype layout) -->
+      <button class="submit-button submit-button-wrapper" id="submitButton" type="button" title="Submit" aria-label="Submit prompt">
+        <div class="header-section header-section--icon">
+          <div class="logo-container">
+            <img src="/TruAi/assets/images/TruAi-Submit-button.gif" alt="TruAi Submit">
+          </div>
+        </div>
+      </button>
+
+      <!-- Text entry (Prototype placeholder, rows, dimensions) -->
+      <textarea class="text-entry" id="aiTextEntry" placeholder="Standing by for instructions..." rows="4" onkeydown="handleInputKeydown(event)"></textarea>
+
+      <!-- Icon row (Prototype structure: header-section / logo-container wrappers) -->
+      <div class="icon-row" style="position:relative; top:auto; bottom:5px;">
+
+        <!-- Left group: Add Photos · Add URL · Add File/Folder -->
+        <div class="icon-group">
+          <!-- Add Photos -->
+          <button class="icon-button" title="Add Photos" onclick="attachFile('image')">
+            <div class="header-section header-section--icon">
+              <div class="logo-container">
+                <img src="/TruAi/assets/images/TruAi-Images.png" alt="TruAi Logo">
+              </div>
+            </div>
+          </button>
+          <!-- Add URL -->
+          <button class="icon-button" title="Add URL" onclick="openUrlBrowser()">
+            <div class="header-section header-section--icon">
+              <div class="logo-container">
+                <img src="/TruAi/assets/images/TruAi-URL.png">
+              </div>
+            </div>
+          </button>
+          <!-- Add File / Folder -->
+          <button class="icon-button" title="Add File / Folder" style="height:24px;" onclick="attachFile()">
+            <div class="header-section header-section--icon">
+              <div class="logo-container">
+                <img src="/TruAi/assets/images/TruAi-File-folder.png" alt="TruAi Logo">
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Center group: Settings (wide image, Prototype sizing) -->
+        <div class="icon-group">
+          <button class="icon-button" title="Settings" id="settingsIconBtn" onclick="togglePopup('settings-popup')">
+            <div class="header-section header-section--icon">
+              <div class="logo-container">
+                <img src="/TruAi/assets/images/TruAi-Settings.png" alt="TruAi Logo" class="settings-logo-wide" style="
+    width: 328px;
+">
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Right group: Terminal · GitHub · Code View -->
+        <div class="icon-group">
+          <!-- Terminal -->
+          <button class="icon-button" title="Terminal" style="height:24px;" onclick="openTerminalPanel()">
+            <div class="header-section header-section--icon">
+              <div class="logo-container logo-container--no-margin">
+                <img src="/TruAi/assets/images/TruAi-Terminal.png" alt="TruAi Logo">
+              </div>
+            </div>
+          </button>
+          <!-- GitHub -->
+          <button class="icon-button" title="GitHub" onclick="openGitHubPanel()">
+            <div class="icon-group">
+              <div class="logo-container logo-container--no-margin">
+                <img src="/TruAi/assets/images/TruAi-Github.png" alt="TruAi Logo">
+              </div>
+            </div>
+          </button>
+          <!-- Code View -->
+          <button class="icon-button" title="Code Review" onclick="openCodeReviewFilePicker()">
+            <div class="header-section header-section--icon">
+              <div class="logo-container logo-container--no-margin">
+                <img src="/TruAi/assets/images/TruAi-Code-Editor.png" alt="TruAi Logo" class="code-editor-logo">
+              </div>
+            </div>
+          </button>
+        </div>
+
+      </div><!-- /.icon-row -->
+
+      <!-- Task Bar -->
+      <div class="task-section">
+        Current: <span id="exec-current-label">Idle</span>
+        · <span id="exec-risk-label">SAFE</span>
+        · <span id="exec-roi-label">AUTO-ROI</span>
+        · <span id="exec-roma-label" title="ROMA trust state">ROMA: Offline</span>
+        · <span id="sb-mode">Agent Mode</span>
+      </div>
+
+    </div><!-- /.center-panel -->
+
+    <!-- Right: Chat Panel (mini, with sidebar) -->
+    <div class="panel chat-panel">
+      <div class="panel-label panel-toggle-label">
+        <span>Chat History</span>
+        <button type="button" class="copy-btn" data-copy-target="chatMessages" aria-label="Copy Chat History">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+        <button type="button" class="panel-toggle-btn" id="chatNewChatBtn" title="New chat">+</button>
+        <button type="button" class="panel-toggle-btn" data-panel-toggle="chat" aria-label="Expand Chat">⤢</button>
+      </div>
+      <div class="chat-panel-body">
+        <div class="chat-sidebar">
+          <div class="chat-sidebar-title">Past chats</div>
+          <ul class="chat-conversation-list" id="chatConversationList"></ul>
+        </div>
+        <div class="chat-thread">
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Message" rows="1"></textarea>
+            <button type="button" class="chat-send-btn" id="chatSendBtn" aria-label="Send">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.panels-container -->
+
+  <!-- ── Status Bar ── -->
+  <div class="statusbar">
+    <div class="statusbar-item">
+      <div class="status-dot dot-green"></div>
+      <span id="sb-connection">Connected</span>
+    </div>
+    <div class="statusbar-item">
+      <div class="status-dot dot-blue"></div>
+      <span id="sb-model">Auto</span>
+    </div>
+    <div class="statusbar-item">
+      <span id="sb-file">index.php</span>
+    </div>
+    <div class="statusbar-spacer"></div>
+    <div class="statusbar-item"><span>TruAi v1.0</span></div>
+    <div class="statusbar-item"><span>UBSAS v2.0</span></div>
+    <div class="statusbar-item">
+      <a href="/TruAi/login-portal.html" style="color:#4B5563; font-size:11px; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#008ed6'" onmouseout="this.style.color='#4B5563'">Login</a>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SCRIPTS
+  ════════════════════════════════════════════ -->
+  <script>
+  'use strict';
+
+  // ── Global Config ──────────────────────────────────────────────────────────
+  window.TRUAI_CONFIG = window.TRUAI_CONFIG || {
+    APP_NAME:   'Tru.ai',
+    APP_VERSION:'1.0.0',
+    API_BASE:   (window.location.origin + '/TruAi/api/v1').replace(/\/TruAi\/TruAi/, '/TruAi'),
+    CSRF_TOKEN: '74921826a8f1e0cad9b940a4f95590c3887d1f87dc9e19550c5aa4de8319cb7a',
+    IS_AUTHENTICATED: true,
+    USERNAME: 'Deme'
+  };
+
+  // ── App State ──────────────────────────────────────────────────────────────
+  const state = {
+    mode:       'agent',
+    model:      'auto',
+    activeFile: 'index.php',
+    isLoading:  false,
+    messages:   [],
+    chatHistory:[]
+  };
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    checkROMA();
+    loadChatHistory();
+  });
+
+  // ── ROMA Check (from Cursor) ───────────────────────────────────────────────
+  async function checkROMA() {
+    const execRomaEl = document.getElementById('exec-roma-label');
+    try {
+      const r = await fetch(window.TRUAI_CONFIG.API_BASE + '/security/roma', { credentials: 'include' });
+      const d = await r.json();
+      const ts = d.trust_state || 'Unverified';
+      if (ts === 'VERIFIED') {
+        if (execRomaEl) { execRomaEl.textContent = 'ROMA: Active'; execRomaEl.style.color = '#008ed6'; }
+      } else if (ts === 'BLOCKED') {
+        if (execRomaEl) { execRomaEl.textContent = 'ROMA: Blocked'; execRomaEl.style.color = '#1d3e52'; }
+      } else {
+        if (execRomaEl) execRomaEl.textContent = 'ROMA: ' + ts;
+      }
+    } catch {
+      if (execRomaEl) execRomaEl.textContent = 'ROMA: Offline';
+    }
+  }
+
+  // ── Model change ──────────────────────────────────────────────────────────
+  function onModelChange(sel) {
+    state.model = sel.value;
+    const label = sel.options[sel.selectedIndex].text.replace('Model: ', '');
+    document.getElementById('sb-model').textContent = label;
+  }
+
+  // ── Mode setter ───────────────────────────────────────────────────────────
+  function setMode(m) {
+    state.mode = m;
+    const label = m.charAt(0).toUpperCase() + m.slice(1) + ' Mode';
+    const sbMode = document.getElementById('sb-mode');
+    if (sbMode) sbMode.textContent = label;
+  }
+
+  // ── File selection (from Cursor) ───────────────────────────────────────────
+  function selectFile(el, fname) {
+    document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    state.activeFile = fname;
+    document.getElementById('sb-file').textContent = fname;
+    document.getElementById('aiTextEntry').placeholder =
+      `Ask about ${fname}, or describe changes you want…`;
+    // Wire to Code Review target so ▶ Run uses this file
+    window.__truaiCodeReviewTargetPath = fname;
+    window.__truaiLocalFileContent = null; // clear any previous local content
+    const chip   = document.getElementById('codeReviewTargetChip');
+    const pathEl = document.getElementById('codeReviewTargetPath');
+    if (chip && pathEl) { pathEl.textContent = fname; chip.style.display = 'inline-flex'; }
+  }
+
+  // ── Keyboard shortcut for text entry ──────────────────────────────────────
+  function handleInputKeydown(e) {
+    const metaPressed = e.metaKey || e.ctrlKey;
+    if (e.key === 'Enter' && (metaPressed || !e.shiftKey)) {
+      e.preventDefault();
+      handleSubmission();
+    }
+  }
+
+  // ── Send / Submit (combined from both files) ───────────────────────────────
+  async function handleSubmission() {
+    const input  = document.getElementById('aiTextEntry');
+    const content = (input.value || '').trim();
+    if (!content || state.isLoading) return;
+
+    state.isLoading = true;
+    input.value = '';
+
+    const responseArea    = document.getElementById('ai-response-area');
+    const responseContent = document.getElementById('ai-response-content');
+
+    if (responseContent.classList.contains('empty')) {
+      responseContent.classList.remove('empty');
+      responseContent.innerHTML = '';
+    }
+
+    appendMessage('user', content, responseContent);
+    const typingEl = createTypingIndicator();
+    responseContent.appendChild(typingEl);
+    responseArea.scrollTop = responseArea.scrollHeight;
+    state.messages.push({ role: 'user', content });
+
+    // Disable UI
+    input.disabled = true;
+    const submitBtn = document.getElementById('submitButton');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.5'; }
+
+    try {
+      // Update CSRF token if AI client available
+      if (window.truAiClient && window.truAiClient.updateCsrfToken) {
+        window.truAiClient.updateCsrfToken();
+      }
+
+      const context = (window.TruAiGetContextFiles && window.TruAiGetContextFiles().length)
+        ? { context_files: window.TruAiGetContextFiles() } : null;
+
+      let reply;
+
+      // Try real AI client first
+      if (window.truAiClient) {
+        const result = await window.truAiClient.submitPrompt(content, context);
+        reply = result.output ?? result.results ?? result.text ?? JSON.stringify(result);
+        // Update task bar
+        if (result.task_id) {
+          const el = document.getElementById('exec-current-label');
+          if (el) el.textContent = String(result.task_id).slice(-12);
+        }
+        if (result.risk_level) {
+          const el = document.getElementById('exec-risk-label');
+          if (el) el.textContent = result.risk_level;
+        }
+        const roiEl = document.getElementById('exec-roi-label');
+        if (roiEl) roiEl.textContent = result.auto_executed ? 'AUTO-ROI' : 'MANUAL';
+        if (window.TruAiRefreshOperationsList) setTimeout(window.TruAiRefreshOperationsList, 300);
+        // Only push to Code Review in edit/rewrite mode or when content looks like code
+        if (reply && window.updateCodeReview && (state.mode === 'edit' || /^[\s\S]{0,200}(function |class |<\?php|<!DOCTYPE|import |export |const |let |var |def |#!)/.test(reply))) {
+          window.updateCodeReview(reply, 'Generated · ' + new Date().toLocaleTimeString());
+        }
+      } else {
+        // Fallback to chat API
+        const r = await fetch(window.TRUAI_CONFIG.API_BASE + '/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ message: content, model: state.model, mode: state.mode, file: state.activeFile })
+        });
+        if (r.ok) {
+          const d = await r.json();
+          reply = d.reply || d.message || d.content || '(No response)';
+        } else {
+          reply = getDemoResponse(content);
+        }
+      }
+
+      typingEl.remove();
+      appendMessage('ai', reply, responseContent);
+      state.messages.push({ role: 'assistant', content: reply });
+    } catch (err) {
+      typingEl.remove();
+      let msg = err.message || '';
+      if (msg.includes('Unauthorized') || msg.includes('Session expired')) {
+        msg = 'Session expired. Please refresh and log in again.';
+        setTimeout(() => {
+          if (confirm('Session expired. Go to login page?')) {
+            window.location.href = '/TruAi/login-portal.html';
+          }
+        }, 2000);
+      } else {
+        msg = getDemoResponse(content);
+      }
+      appendMessage('ai', msg, responseContent);
+    } finally {
+      state.isLoading = false;
+      input.disabled = false;
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; }
+      responseArea.scrollTop = responseArea.scrollHeight;
+      const lastAiMsg = state.messages.length ? state.messages[state.messages.length - 1] : null;
+      saveChatHistory(content, lastAiMsg && lastAiMsg.role === 'assistant' ? lastAiMsg.content : '');
+      input.focus();
+    }
+  }
+
+  // Wire submit button
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('submitButton');
+    if (btn) btn.addEventListener('click', handleSubmission);
+  });
+
+  // ── Message bubble helpers (from Cursor) ───────────────────────────────────
+  function appendMessage(role, text, container) {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-' + role;
+    // No avatar — minimal frameless layout
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    container.appendChild(wrap);
+  }
+
+  function createTypingIndicator() {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-ai';
+    wrap.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+    return wrap;
+  }
+
+  function getDemoResponse(msg) {
+    const responses = [
+      `I've reviewed your request regarding "${state.activeFile}". The structure looks solid. I recommend adding input validation and ensuring CSRF tokens are checked on all state-mutating endpoints.`,
+      `For the task you've described, I'd break it into three steps: (1) identify affected files, (2) make targeted changes, (3) run the test suite via run-all-tests.sh to verify nothing breaks.`,
+      `Based on the TruAi architecture, this change should be made in the backend layer. The ROMA oversight system will log this operation automatically. Shall I proceed?`,
+      `Based on the UBSAS authentication system, Tier 1 (biometric) and Tier 2 (keychain) flows depend on the native host being installed. If testing locally, Tier 3 (manual) is always available.`,
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  // ── Code Review ────────────────────────────────────────────────────────────
+  async function runCodeReview() {
+    const placeholder = document.getElementById('codeReviewPlaceholder');
+    const snippet     = document.getElementById('codeReviewSnippet');
+    const diffEl      = document.getElementById('codeReviewDiff');
+
+    // Determine which file / content to review
+    const filePath = window.__truaiCodeReviewTargetPath || state.activeFile;
+    const localContent = window.__truaiLocalFileContent || null;
+
+    if (!filePath && !localContent) {
+      if (placeholder) { placeholder.style.display = 'block'; placeholder.textContent = 'Select a file in the Content panel (or drag one in) before running a review.'; }
+      if (snippet) snippet.style.display = 'none';
+      return;
+    }
+
+    if (placeholder) { placeholder.style.display = 'block'; placeholder.textContent = 'Reading file…'; }
+    if (snippet) snippet.style.display = 'none';
+
+    let fileContent = localContent;
+    let reviewLabel = filePath || 'local file';
+
+    // If no local content was loaded via picker, fetch from workspace
+    if (!fileContent && filePath) {
+      try {
+        const base = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+        const r = await fetch(base + '/workspace/file/read?path=' + encodeURIComponent(filePath), { credentials: 'include' });
+        const d = await r.json();
+        if (d.content !== undefined) {
+          fileContent = d.content;
+        } else {
+          throw new Error(d.error || 'Could not read file');
+        }
+      } catch (e) {
+        if (placeholder) { placeholder.style.display = 'block'; placeholder.textContent = 'Error reading file: ' + e.message; }
+        return;
+      }
+    }
+
+    // Show file content immediately while AI reviews it
+    if (placeholder) placeholder.style.display = 'none';
+    if (snippet) {
+      snippet.textContent = '// Loading AI review for: ' + reviewLabel + '\n// Please wait…\n\n' + (fileContent || '').substring(0, 4000);
+      snippet.style.display = 'block';
+    }
+    if (diffEl) diffEl.style.display = 'none';
+    window.__truaiCodeReviewContent = fileContent || '';
+
+    // Ask TruAi to review the code
+    try {
+      const base = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+      const csrf = (window.TRUAI_CONFIG || {}).CSRF_TOKEN || '';
+      const reviewPrompt = 'Please perform a code review of the following file: ' + reviewLabel + '\n\nProvide: issues found, suggestions, risk level, and a score out of 100.\n\nFile content:\n```\n' + (fileContent || '').substring(0, 6000) + '\n```';
+      const r = await fetch(base + '/chat/message', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body: JSON.stringify({ message: reviewPrompt, model: 'auto' })
+      });
+      const data = await r.json();
+      const review = data.response || data.message || data.content || data.reply || data.output;
+      if (review) {
+        window.updateCodeReview(review, '// Code Review: ' + reviewLabel + ' · ' + new Date().toLocaleTimeString());
+      }
+    } catch (e) {
+      // Keep the file content displayed; AI review failed
+      if (snippet) snippet.textContent = '// Code Review: ' + reviewLabel + '\n// AI review unavailable: ' + e.message + '\n\n' + (fileContent || '').substring(0, 4000);
+    }
+  }
+
+  function copyReview() {
+    const txt = (document.getElementById('code-review-content') || {}).innerText || '';
+    navigator.clipboard.writeText(txt).catch(() => {});
+  }
+
+  // Update code review globally
+  window.updateCodeReview = function(content, label) {
+    const placeholder = document.getElementById('codeReviewPlaceholder');
+    const snippet     = document.getElementById('codeReviewSnippet');
+    const diffEl      = document.getElementById('codeReviewDiff');
+    if (!placeholder || !snippet) return;
+    if (!content || !content.trim()) {
+      placeholder.style.display = 'block';
+      placeholder.textContent = label || 'No code review available';
+      snippet.style.display = 'none';
+      if (diffEl) diffEl.style.display = 'none';
+      return;
+    }
+    const text = typeof content === 'string' ? content : (content.code || content.text || JSON.stringify(content));
+    let display = (label ? label + '\n\n' : '') + text;
+    if (display.length > 8000) display = display.substring(0, 8000) + '\n\n… (truncated)';
+    placeholder.style.display = 'none';
+    snippet.style.display = 'block';
+    snippet.textContent = display;
+    if (diffEl) { diffEl.style.display = 'none'; diffEl.innerHTML = ''; }
+    window.__truaiCodeReviewContent = display;
+  };
+
+  // Diff toggle
+  document.addEventListener('DOMContentLoaded', () => {
+    const diffBtn   = document.getElementById('codeReviewDiffBtn');
+    const snippet   = document.getElementById('codeReviewSnippet');
+    const diffEl    = document.getElementById('codeReviewDiff');
+    if (!diffBtn || !snippet || !diffEl) return;
+    diffBtn.addEventListener('click', () => {
+      const showDiff = diffEl.style.display !== 'none';
+      if (showDiff) {
+        diffEl.style.display = 'none';
+        snippet.style.display = 'block';
+        diffBtn.textContent = 'Diff';
+      } else {
+        const lines = (window.__truaiCodeReviewContent || snippet.textContent || '').split('\n');
+        diffEl.innerHTML = '';
+        lines.forEach(line => {
+          const div = document.createElement('div');
+          div.className = 'diff-same';
+          div.textContent = line || ' ';
+          diffEl.appendChild(div);
+        });
+        snippet.style.display = 'none';
+        diffEl.style.display = 'block';
+        diffBtn.textContent = 'Snippet';
+      }
+    });
+
+    // Clear target
+    document.getElementById('codeReviewClearTarget')?.addEventListener('click', () => {
+      window.__truaiXcodeTargetPath = null;
+      const chip = document.getElementById('codeReviewTargetChip');
+      const path = document.getElementById('codeReviewTargetPath');
+      if (chip) chip.style.display = 'none';
+      if (path) path.textContent = '';
+    });
+  });
+
+  window.TruAiUpdateTargetChip = function() {
+    const path  = window.__truaiXcodeTargetPath;
+    const chip  = document.getElementById('codeReviewTargetChip');
+    const pathEl= document.getElementById('codeReviewTargetPath');
+    if (!chip || !pathEl) return;
+    if (path) { chip.style.display = 'inline-flex'; pathEl.textContent = path; }
+    else       { chip.style.display = 'none'; pathEl.textContent = ''; }
+  };
+
+  // ── Attach file (from Cursor) ──────────────────────────────────────────────
+  function attachFile(type) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = type === 'image'
+      ? 'image/*'
+      : '.html,.php,.js,.json,.md,.css,.sh,.ts,.tsx,.py';
+    input.onchange = e => {
+      const f = e.target.files[0];
+      if (f) {
+        const ta = document.getElementById('aiTextEntry');
+        ta.value += (ta.value ? '\n' : '') + `[Attached: ${f.name}]`;
+      }
+    };
+    input.click();
+  }
+
+  // ── Popup management ───────────────────────────────────────────────────────
+  function togglePopup(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('visible');
+    if (id === 'chat-popup' && el.classList.contains('visible')) {
+      renderChatHistoryPopup();
+    }
+  }
+
+  document.addEventListener('click', e => {
+    ['settings-popup','operations-popup','chat-popup'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && e.target === el) el.classList.remove('visible');
+    });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      ['settings-popup','operations-popup','chat-popup'].forEach(id => {
+        document.getElementById(id)?.classList.remove('visible');
+      });
+    }
+  });
+
+  // ── Settings tabs ─────────────────────────────────────────────────────────
+  function switchSettingsTab(btn, tab) {
+    document.querySelectorAll('.settings-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ['general','models','aimode','operations','features','privacy','security'].forEach(t => {
+      const el = document.getElementById('settings-tab-' + t);
+      if (el) el.style.display = t === tab ? '' : 'none';
+    });
+    if (tab === 'operations') refreshSettingsOpsSummary();
+    if (tab === 'aimode')     syncSettingsModeButtons();
+    if (tab === 'security')   secInitTab();
+  }
+
+  function syncSettingsModeButtons() {
+    ['agent','chat','edit'].forEach(m => {
+      const btn = document.getElementById('smode-' + m);
+      if (btn) btn.classList.toggle('active', state.mode === m);
+    });
+    // Sync model select in settings
+    const sel = document.getElementById('model-select');
+    if (sel) sel.value = state.model;
+  }
+
+  function setModeFromSettings(m, btn) {
+    setMode(m);
+    document.querySelectorAll('.settings-mode-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+  }
+
+  function refreshSettingsOpsSummary() {
+    const container = document.getElementById('settings-ops-live');
+    if (!container) return;
+    const apiBase = window.TRUAI_CONFIG.API_BASE;
+    fetch(apiBase + '/task/list?limit=5', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.tasks || !data.tasks.length) {
+          container.innerHTML = '<span style="color:#3a3d4a;">No active tasks.</span>';
+          return;
+        }
+        container.innerHTML = data.tasks.map(t => {
+          const shortId = (t.id || '').toString().slice(-10);
+          const status  = t.status || '—';
+          const color   = (status === 'CREATED' || status === 'LOCKED') ? '#008ed6' : '#8b8d98';
+          return `<div style="padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:11px;">
+            <span style="color:${color};">${shortId} · ${status}</span>
+          </div>`;
+        }).join('');
+      })
+      .catch(() => {
+        if (container) container.innerHTML = '<span style="color:#3a3d4a;">Could not load tasks.</span>';
+      });
+  }
+
+  function toggleReveal(id) {
+    const el = document.getElementById(id);
+    if (el) el.type = el.type === 'password' ? 'text' : 'password';
+  }
+
+  async function verifyApiKey(provider) {
+    const isOpenAI = provider === 'openai';
+    const keyEl     = document.getElementById(isOpenAI ? 'aiApiKeyOpenAI' : 'aiApiKeySonnet');
+    const btn       = document.getElementById(isOpenAI ? 'verifyOpenAI'   : 'verifyAnthropic');
+    const statusEl  = document.getElementById(isOpenAI ? 'verifyStatusOpenAI' : 'verifyStatusAnthropic');
+
+    const key = (keyEl?.value || '').trim();
+    if (!key) {
+      statusEl.style.color = '#e05555';
+      statusEl.textContent = 'Enter a key first.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Testing…';
+    btn.className = 'verify-btn';
+    statusEl.textContent = '';
+
+    try {
+      const body = isOpenAI
+        ? { openaiApiKey: key,    anthropicApiKey: '' }
+        : { openaiApiKey: '',     anthropicApiKey: key };
+
+      const cfg  = window.TRUAI_CONFIG || {};
+      const base = cfg.API_BASE || (window.location.origin + '/TruAi/api/v1');
+      const csrf = cfg.CSRF_TOKEN || '';
+
+      const res  = await fetch(`${base}/ai/test`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+      const result = isOpenAI ? data.results?.openai : data.results?.anthropic;
+
+      if (result?.status === 'success') {
+        btn.className = 'verify-btn ok';
+        btn.textContent = '✓ Valid';
+        statusEl.style.color = '#32cd64';
+        statusEl.textContent = result.message || 'Connected successfully.';
+      } else {
+        btn.className = 'verify-btn err';
+        btn.textContent = '✗ Failed';
+        statusEl.style.color = '#e05555';
+        statusEl.textContent = result?.message || 'Verification failed.';
+      }
+    } catch (e) {
+      btn.className = 'verify-btn err';
+      btn.textContent = '✗ Error';
+      statusEl.style.color = '#e05555';
+      statusEl.textContent = 'Network error: ' + e.message;
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => {
+        btn.className = 'verify-btn';
+        btn.textContent = 'Verify';
+        statusEl.textContent = '';
+      }, 8000);
+    }
+  }
+
+  async function saveSettings() {
+    // Save API keys and AI settings to backend (so AI chat works)
+    if (window.TruAiSettingsClient && typeof window.TruAiSettingsClient.saveSettings === 'function') {
+      await window.TruAiSettingsClient.saveSettings();
+    }
+    // Also persist other prefs to localStorage
+    const s = {
+      username:    (document.getElementById('settings-username')   || {}).value || '',
+      theme:       (document.getElementById('settings-theme')      || {}).value || 'dark',
+      fontSize:    (document.getElementById('settings-fontsize')   || {}).value || '13',
+      model:       (document.getElementById('aiModelSelect')       || {}).value || 'auto',
+      openaiKey:   (document.getElementById('aiApiKeyOpenAI')      || {}).value || '',
+      anthropicKey:(document.getElementById('aiApiKeySonnet')      || {}).value || '',
+      streaming:   (document.getElementById('settings-streaming')  || {}).value || '1',
+    };
+    localStorage.setItem('truai_settings', JSON.stringify(s));
+    const status = document.getElementById('settingsStatus');
+    if (status && !status.textContent) { status.textContent = '✓ Saved'; status.className = 'status-success'; setTimeout(() => { status.textContent = ''; }, 2000); }
+    togglePopup('settings-popup');
+  }
+
+  // ── Security Tab ─────────────────────────────────────────────────────────────
+  const SEC_STORAGE_KEY = 'truai_security_settings';
+
+  function secGetSettings() {
+    try { return JSON.parse(localStorage.getItem(SEC_STORAGE_KEY) || '{}'); } catch { return {}; }
+  }
+
+  function secSaveToggle(key, value) {
+    const s = secGetSettings();
+    s[key] = value;
+    localStorage.setItem(SEC_STORAGE_KEY, JSON.stringify(s));
+    // Show biometric method row only when biometric is enabled
+    if (key === 'biometricEnabled') {
+      const row = document.getElementById('sec-biometric-method-row');
+      if (row) row.style.display = value ? '' : 'none';
+    }
+  }
+
+  function secInitTab() {
+    const s = secGetSettings();
+    // Restore toggles
+    const set = (id, val, fallback) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.type === 'checkbox') el.checked = val !== undefined ? val : fallback;
+      else el.value = val !== undefined ? val : fallback;
+    };
+    set('sec-portal-protection', s.portalProtection, true);
+    set('sec-monitor-active',    s.monitorActive,    true);
+    set('sec-password-auth',     s.passwordAuth,     true);
+    set('sec-biometric-enabled', s.biometricEnabled, false);
+    set('sec-autologin',         s.autoLogin,        false);
+    set('sec-session-timeout',   s.sessionTimeout,   60);
+    set('sec-reauth-wake',       s.reauthOnWake,     false);
+    set('sec-suspend-idle',      s.suspendIdle,      false);
+    if (s.biometricMethod) {
+      const sel = document.getElementById('sec-biometric-method');
+      if (sel) sel.value = s.biometricMethod;
+    }
+    // Show biometric method row if enabled
+    const bioRow = document.getElementById('sec-biometric-method-row');
+    if (bioRow) bioRow.style.display = s.biometricEnabled ? '' : 'none';
+    // Fetch live ROMA status
+    secRefreshRomaStatus();
+  }
+
+  async function secRefreshRomaStatus() {
+    const badge = document.getElementById('sec-roma-badge');
+    const encEl = document.getElementById('sec-encryption-label');
+    if (!badge) return;
+    badge.className = 'roma-badge unverified';
+    badge.textContent = 'Checking…';
+    try {
+      const apiBase = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+      const r = await fetch(apiBase + '/security/roma', { credentials: 'include' });
+      const d = await r.json();
+      const state = d.trust_state || (d.roma ? 'VERIFIED' : 'UNVERIFIED');
+      if (state === 'VERIFIED' || (d.roma && d.portal_protected && d.monitor === 'active')) {
+        badge.className = 'roma-badge verified';
+        badge.textContent = 'Verified';
+      } else if (state === 'BLOCKED') {
+        badge.className = 'roma-badge blocked';
+        badge.textContent = 'Blocked';
+      } else {
+        badge.className = 'roma-badge unverified';
+        badge.textContent = 'Unverified';
+      }
+      if (encEl && d.encryption) encEl.textContent = d.encryption;
+      else if (encEl && d.roma && d.roma.encryption) encEl.textContent = d.roma.encryption;
+    } catch {
+      badge.className = 'roma-badge unverified';
+      badge.textContent = 'Unreachable';
+    }
+  }
+
+  async function secVerifyRoma() {
+    secShowStatus('info', 'Contacting ROMA…');
+    await secRefreshRomaStatus();
+    const badge = document.getElementById('sec-roma-badge');
+    if (badge && badge.classList.contains('verified')) {
+      secShowStatus('success', '✓ ROMA verified — portal protected, monitor active.');
+    } else if (badge && badge.classList.contains('blocked')) {
+      secShowStatus('error', '✗ ROMA blocked — suspicion threshold exceeded. Restart TruAi server to clear.');
+    } else {
+      secShowStatus('error', '✗ ROMA unverified — ensure TruAi server is running.');
+    }
+  }
+
+  async function secTestBiometric() {
+    const btn = document.getElementById('sec-test-bio-btn');
+    if (btn) btn.disabled = true;
+    secShowStatus('info', 'Requesting biometric verification via UBSAS…');
+    try {
+      const apiBase = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+      const csrf    = (window.TRUAI_CONFIG || {}).CSRF_TOKEN || '';
+      const r = await fetch(apiBase + '/auth/biometric', {
+        method:  'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body:    JSON.stringify({ app: 'truai' })
+      });
+      const d = await r.json();
+      if (d.success) {
+        secShowStatus('success', '✓ Biometric verified — user: ' + (d.username || 'authenticated'));
+      } else {
+        secShowStatus('error', '✗ Biometric failed: ' + (d.error || 'Verification unsuccessful'));
+      }
+    } catch (e) {
+      secShowStatus('error', '✗ Error: ' + e.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function secChangePassword() {
+    const cur  = (document.getElementById('sec-pass-current')  || {}).value || '';
+    const next = (document.getElementById('sec-pass-new')       || {}).value || '';
+    const conf = (document.getElementById('sec-pass-confirm')   || {}).value || '';
+    if (!cur || !next) { secShowStatus('error', 'Current and new password required.'); return; }
+    if (next !== conf) { secShowStatus('error', 'New passwords do not match.'); return; }
+    if (next.length < 8) { secShowStatus('error', 'New password must be at least 8 characters.'); return; }
+    secShowStatus('info', 'Changing password…');
+    try {
+      const apiBase = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+      const csrf    = (window.TRUAI_CONFIG || {}).CSRF_TOKEN || '';
+      const r = await fetch(apiBase + '/auth/change-password', {
+        method:  'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body:    JSON.stringify({ current_password: cur, new_password: next, confirm_password: conf })
+      });
+      const d = await r.json();
+      if (d.success) {
+        secShowStatus('success', '✓ Password changed successfully.');
+        ['sec-pass-current','sec-pass-new','sec-pass-confirm'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      } else {
+        secShowStatus('error', '✗ ' + (d.error || d.message || 'Password change failed.'));
+      }
+    } catch (e) {
+      secShowStatus('error', '✗ Error: ' + e.message);
+    }
+  }
+
+  async function secLogoutAll() {
+    if (!confirm('Log out all sessions? You will need to log in again.')) return;
+    try {
+      const apiBase = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+      const csrf    = (window.TRUAI_CONFIG || {}).CSRF_TOKEN || '';
+      await fetch(apiBase + '/auth/logout', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }
+      });
+      secShowStatus('success', '✓ Logged out. Redirecting…');
+      setTimeout(() => { window.location.href = '/TruAi/login-portal.html'; }, 1500);
+    } catch (e) {
+      secShowStatus('error', '✗ Logout failed: ' + e.message);
+    }
+  }
+
+  function secShowStatus(type, msg) {
+    const el = document.getElementById('sec-status-msg');
+    if (!el) return;
+    const colors = { success: '#00c864', error: '#e05050', info: '#008ed6' };
+    el.style.color = colors[type] || '#8b8d98';
+    el.textContent = msg;
+    if (type !== 'info') setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 5000);
+  }
+
+  // ── Chat History (localStorage, from Cursor) ───────────────────────────────
+  function saveChatHistory(userMsg, aiReply) {
+    const history = JSON.parse(localStorage.getItem('truai_chat_history') || '[]');
+    history.unshift({
+      title:   (userMsg || '').substring(0, 40),
+      preview: (userMsg || '').substring(0, 80),
+      reply:   (aiReply || '').substring(0, 120),
+      ts:      Date.now()
+    });
+    if (history.length > 100) history.pop();
+    localStorage.setItem('truai_chat_history', JSON.stringify(history));
+    state.chatHistory = history;
+  }
+
+  function loadChatHistory() {
+    state.chatHistory = JSON.parse(localStorage.getItem('truai_chat_history') || '[]');
+  }
+
+  function renderChatHistoryPopup() {
+    const list = document.getElementById('chat-history-list');
+    if (!list) return;
+
+    // Try loading from backend first (captures Gemini.ai / Phantom.ai interactions too)
+    const apiBase = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+    const csrf    = (window.TRUAI_CONFIG || {}).CSRF_TOKEN || '';
+    list.innerHTML = '<div style="color:#6b6d78; font-size:11px; text-align:center; padding:20px;">Loading…</div>';
+
+    fetch(apiBase + '/chat/conversations', {
+      credentials: 'include',
+      headers: { 'X-CSRF-Token': csrf }
+    })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+      const convs = (data && data.conversations) ? data.conversations : [];
+      if (convs.length === 0) throw new Error('empty');
+      list.innerHTML = convs.map(c => `
+        <div class="chat-history-item" data-conv-id="${escHtml(String(c.id))}">
+          <div class="chat-history-title">${escHtml(c.title || 'Untitled chat')}</div>
+          <div class="chat-history-preview" style="font-size:11px; color:#6b6d78; margin-top:2px;">${c.message_count || 0} message${c.message_count !== 1 ? 's' : ''}</div>
+          <div class="chat-history-meta">
+            <span>${new Date(c.updated_at || c.created_at || Date.now()).toLocaleDateString()}</span>
+            <span>${new Date(c.updated_at || c.created_at || Date.now()).toLocaleTimeString()}</span>
+          </div>
+        </div>
+      `).join('');
+      // Click a history entry → load into mini chat
+      list.querySelectorAll('.chat-history-item[data-conv-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          togglePopup('chat-popup');
+          // Open mini chat and load this conversation
+          const convId = el.dataset.convId;
+          const chatPanel = document.getElementById('chatMessages');
+          if (chatPanel) {
+            fetch(apiBase + '/chat/conversation/' + encodeURIComponent(convId), { credentials: 'include' })
+              .then(r => r.json())
+              .then(conv => {
+                if (conv && conv.messages) {
+                  chatPanel.innerHTML = '';
+                  conv.messages.forEach(m => {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'chat-message ' + (m.role || 'user');
+                    const content = document.createElement('div');
+                    content.className = 'chat-message-content';
+                    content.textContent = m.content || '';
+                    wrap.appendChild(content);
+                    chatPanel.appendChild(wrap);
+                  });
+                  chatPanel.scrollTop = chatPanel.scrollHeight;
+                }
+              }).catch(() => {});
+          }
+        });
+      });
+    })
+    .catch(() => {
+      // Fall back to localStorage
+      loadChatHistory();
+      if (state.chatHistory.length === 0) {
+        list.innerHTML = '<div style="color:#4B5563; font-size:13px; text-align:center; padding:40px 0;">No history yet. Start a conversation!</div>';
+        return;
+      }
+      list.innerHTML = state.chatHistory.map(item => `
+        <div class="chat-history-item">
+          <div class="chat-history-title">${escHtml(item.title)}…</div>
+          <div class="chat-history-preview">${escHtml(item.preview)}</div>
+          ${item.reply ? `<div style="font-size:11px; color:#6b6d78; margin-top:2px; font-style:italic;">${escHtml(item.reply)}…</div>` : ''}
+          <div class="chat-history-meta">
+            <span>${new Date(item.ts).toLocaleDateString()}</span>
+            <span>${new Date(item.ts).toLocaleTimeString()}</span>
+          </div>
+        </div>
+      `).join('');
+    });
+  }
+
+  function escHtml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Copy button handler ────────────────────────────────────────────────────
+  function buildTruAiCopyPayload(targetId, rawText) {
+    const text = (rawText || '').trim();
+    if (!text) return '';
+    if (targetId === 'operationsContent' || targetId === 'chatMessages') {
+      const sections = ['@TRUAI_TASKLOG', text];
+      const capsEl = document.getElementById('truaiCapabilities');
+      const capsText = capsEl ? ((capsEl.textContent || capsEl.innerText || '') + '').trim() : '';
+      if (capsText) sections.push('', '@TRUAI_CAPS', capsText);
+      return sections.join('\n');
+    }
+    return text;
+  }
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.copy-btn[data-copy-target]');
+    if (!btn) return;
+    const targetId = btn.getAttribute('data-copy-target');
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    let text;
+    if (targetId === 'chatMessages') {
+      const parts = [];
+      el.querySelectorAll('.chat-message').forEach(msg => {
+        const role = msg.classList.contains('user') ? 'User' : 'Assistant';
+        const c = (msg.querySelector('.chat-message-content') || msg).textContent || '';
+        if (c.trim()) parts.push(role + ': ' + c.trim());
+      });
+      text = parts.join('\n\n');
+    } else {
+      text = el.textContent || el.innerText || '';
+    }
+    text = buildTruAiCopyPayload(targetId, text);
+    if (!text.trim()) return;
+    const orig = btn.innerHTML;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.innerHTML = 'Copied';
+      setTimeout(() => { btn.innerHTML = orig; }, 1500);
+    }).catch(() => {
+      btn.innerHTML = 'Failed';
+      setTimeout(() => { btn.innerHTML = orig; }, 1500);
+    });
+  });
+
+  // ── Operations: Live task list + Why? popover ──────────────────────────────
+  (function() {
+    const apiBase = window.TRUAI_CONFIG.API_BASE;
+    const operationsContent    = document.getElementById('operationsContent');
+    const operationsStatusList = document.getElementById('operationsStatusList');
+    const operationsRoma       = document.getElementById('operationsRoma');
+    const execCurrent = document.getElementById('exec-current-label');
+    const execRisk    = document.getElementById('exec-risk-label');
+    const execRoi     = document.getElementById('exec-roi-label');
+    const execRoma    = document.getElementById('exec-roma-label');
+    const operationsLoading = operationsContent && operationsContent.querySelector('.operations-loading');
+
+    function setExecLine(current, risk, roi) {
+      if (execCurrent) execCurrent.textContent = current || 'Idle';
+      if (execRisk)    execRisk.textContent    = risk    || 'SAFE';
+      if (execRoi)     execRoi.textContent     = roi     || 'AUTO-ROI';
+    }
+
+    function loadOperationsList() {
+      if (!operationsStatusList) return;
+      fetch(apiBase + '/task/list?limit=15', { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => {
+          if (operationsLoading) operationsLoading.style.display = 'none';
+          if (data.tasks && data.tasks.length) {
+            operationsStatusList.style.display = 'block';
+            operationsStatusList.innerHTML = '';
+            data.tasks.forEach(t => {
+              const li = document.createElement('li');
+              li.dataset.taskId = t.id;
+              const shortId = (t.id || '').toString().slice(-12);
+              const status  = t.status || '—';
+              const label   = document.createElement('span');
+              label.textContent = shortId + ' • ' + status;
+              label.style.color = (status === 'CREATED' || status === 'LOCKED') ? '#008ed6' : '#8b8d98';
+              li.appendChild(label);
+              const prompt = (t.prompt || '').toString().replace(/\s+/g,' ').trim();
+              if (prompt) {
+                const pe = document.createElement('div');
+                pe.className = 'operations-task-prompt';
+                pe.title = prompt;
+                pe.textContent = prompt.length > 50 ? prompt.slice(0,50) + '…' : prompt;
+                li.appendChild(pe);
+              }
+              const viewBtn = document.createElement('button');
+              viewBtn.type = 'button'; viewBtn.textContent = 'View'; viewBtn.className = 'operations-view-details';
+              viewBtn.addEventListener('click', ev => { ev.stopPropagation(); loadTaskIntoResponse(t.id); });
+              li.appendChild(viewBtn);
+              const detailsBtn = document.createElement('button');
+              detailsBtn.type = 'button'; detailsBtn.textContent = 'Details'; detailsBtn.className = 'operations-details-link';
+              detailsBtn.addEventListener('click', ev => { ev.stopPropagation(); showWhyPopover(ev.target, t); });
+              li.appendChild(detailsBtn);
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button'; removeBtn.textContent = 'Remove'; removeBtn.className = 'operations-remove-btn';
+              removeBtn.addEventListener('click', ev => {
+                ev.stopPropagation();
+                if (!confirm('Remove this operation?\n\nTask: ' + (t.id||'').toString().slice(-12) + '\nStatus: ' + (t.status||'—') + '\n\nThis cannot be undone.')) return;
+                fetch(apiBase + '/task/' + encodeURIComponent(t.id), {
+                  method: 'DELETE',
+                  credentials: 'include',
+                  headers: { 'X-CSRF-Token': window.TRUAI_CONFIG.CSRF_TOKEN || '' }
+                }).then(r => r.json()).then(res => {
+                  if (res.success) {
+                    li.style.transition = 'opacity 0.3s';
+                    li.style.opacity = '0';
+                    setTimeout(() => { li.remove(); }, 320);
+                  } else {
+                    alert('Could not remove task: ' + (res.error || 'Unknown error'));
+                  }
+                }).catch(() => alert('Network error while removing task.'));
+              });
+              li.appendChild(removeBtn);
+              li.addEventListener('click', () => loadTaskIntoResponse(t.id));
+              operationsStatusList.appendChild(li);
+            });
+          } else {
+            operationsStatusList.style.display = 'none';
+          }
+          return fetch(apiBase + '/operations/status', { credentials: 'include' });
+        })
+        .then(r => r && r.json ? r.json() : {})
+        .then(data => {
+          if (operationsRoma) {
+            operationsRoma.style.display = 'block';
+            if (data.roma && data.roma.monitor === 'active') {
+              operationsRoma.textContent = 'ROMA • Portal protected • Monitor active';
+              if (execRoma) execRoma.textContent = 'ROMA: Active';
+            } else if (data.roma && data.roma.trust_state === 'BLOCKED') {
+              operationsRoma.textContent = 'ROMA • Blocked';
+              if (execRoma) execRoma.textContent = 'ROMA: Blocked';
+            } else {
+              operationsRoma.textContent = 'ROMA • Unverified';
+            }
+          }
+        })
+        .catch(() => {
+          if (operationsLoading) operationsLoading.textContent = 'Operations unavailable';
+        });
+    }
+
+    function loadTaskIntoResponse(taskId) {
+      fetch(apiBase + '/task/' + encodeURIComponent(taskId), { credentials: 'include' })
+        .then(r => r.json())
+        .then(full => {
+          if (full.error) return;
+          const resp = document.getElementById('ai-response-content');
+          if (resp) {
+            resp.classList.remove('empty');
+            resp.innerHTML = '';
+            appendMessage('ai', full.output != null ? full.output : (full.prompt || ''), resp);
+          }
+          document.querySelectorAll('#operationsStatusList li').forEach(el => el.classList.remove('active'));
+          const li = document.querySelector(`#operationsStatusList li[data-task-id="${taskId}"]`);
+          if (li) li.classList.add('active');
+          setExecLine((taskId||'').toString().slice(-12), full.risk_level||full.risk||'SAFE', full.auto_executed?'AUTO-ROI':'MANUAL');
+        }).catch(() => {});
+    }
+
+    function showWhyPopover(anchor, t) {
+      const existing = document.getElementById('roi-popover-el');
+      if (existing) existing.remove();
+      const pop = document.createElement('div');
+      pop.id = 'roi-popover-el';
+      pop.className = 'roi-popover';
+      const prompt = (t.prompt||'').toString().trim();
+      const lines = ['Task: '+(t.id||'—'), 'Status: '+(t.status||'—'), 'Risk: '+(t.risk_level||t.risk||'—'), 'Auto-executed: '+(t.auto_executed?'Yes':'No')];
+      if (prompt) lines.unshift('Request: '+(prompt.length>80?prompt.slice(0,80)+'…':prompt));
+      const header = document.createElement('div');
+      header.className = 'roi-popover-header';
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button'; copyBtn.className = 'copy-btn';
+      copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+      copyBtn.addEventListener('click', ev => {
+        ev.stopPropagation();
+        navigator.clipboard.writeText(lines.join('\n'));
+      });
+      header.appendChild(copyBtn);
+      pop.appendChild(header);
+      const c = document.createElement('div');
+      c.textContent = lines.join('\n');
+      pop.appendChild(c);
+      document.body.appendChild(pop);
+      const rect = anchor.getBoundingClientRect();
+      pop.style.left = (rect.left + window.scrollX) + 'px';
+      pop.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+      setTimeout(() => {
+        document.addEventListener('click', function close() {
+          if (pop.parentNode) pop.remove();
+          document.removeEventListener('click', close);
+        }, 0);
+      }, 0);
+    }
+
+    window.TruAiRefreshOperationsList = loadOperationsList;
+    document.addEventListener('DOMContentLoaded', loadOperationsList);
+  })();
+
+  // ── Mini Chat panel (API-backed) ───────────────────────────────────────────
+  (function() {
+    const apiBase = window.TRUAI_CONFIG.API_BASE;
+    const csrf    = window.TRUAI_CONFIG.CSRF_TOKEN || '';
+    let chatCurrentConvId = null;
+
+    function chatReq(path, opts) {
+      opts = opts || {};
+      opts.credentials = 'include';
+      opts.headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+      if (csrf) opts.headers['X-CSRF-Token'] = csrf;
+      return fetch(apiBase + path, opts).then(r => r.json());
+    }
+
+    function renderConversationList(convs, currentId) {
+      const list = document.getElementById('chatConversationList');
+      if (!list) return;
+      list.innerHTML = '';
+      convs.forEach(c => {
+        const li = document.createElement('li');
+        li.textContent = (c.title || 'Chat') + (c.message_count ? ' (' + c.message_count + ')' : '');
+        li.dataset.id = c.id;
+        if (String(currentId) === String(c.id)) li.classList.add('selected');
+        li.addEventListener('click', () => {
+          chatCurrentConvId = String(c.id);
+          renderConversationList(convs, chatCurrentConvId);
+          loadConversation(chatCurrentConvId);
+        });
+        list.appendChild(li);
+      });
+    }
+
+    function renderChatMessages(messages) {
+      const container = document.getElementById('chatMessages');
+      if (!container) return;
+      if (!messages || messages.length === 0) {
+        container.innerHTML = '<div style="color:#8b8d98; font-size:11px; padding:6px;">No messages. Start chatting!</div>';
+        return;
+      }
+      container.innerHTML = '';
+      messages.forEach(m => {
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-message ' + (m.role || 'user');
+        const content = document.createElement('div');
+        content.className = 'chat-message-content';
+        content.textContent = m.content || '';
+        wrap.appendChild(content);
+        container.appendChild(wrap);
+      });
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function loadConversation(id) {
+      chatReq('/chat/conversation/' + id)
+        .then(conv => {
+          if (conv && conv.messages) renderChatMessages(conv.messages);
+        }).catch(() => {});
+    }
+
+    function loadConversations() {
+      chatReq('/chat/conversations')
+        .then(data => {
+          const convs = (data && data.conversations) ? data.conversations : [];
+          renderConversationList(convs, chatCurrentConvId);
+        }).catch(() => {});
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const sendBtn = document.getElementById('chatSendBtn');
+      if (!input) return;
+      const text = (input.value || '').trim();
+      if (!text) return;
+      input.value = '';
+      input.disabled = true;
+      if (sendBtn) sendBtn.disabled = true;
+      chatReq('/chat/message', {
+        method: 'POST',
+        body: JSON.stringify({ conversation_id: chatCurrentConvId, message: text, model: 'auto' })
+      }).then(res => {
+        if (res.error) throw new Error(res.error);
+        chatCurrentConvId = res.conversation_id;
+        loadConversations();
+        loadConversation(chatCurrentConvId);
+      }).catch(() => {}).finally(() => {
+        input.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadConversations();
+
+      document.getElementById('chatNewChatBtn')?.addEventListener('click', () => {
+        chatCurrentConvId = null;
+        renderConversationList([], null);
+        renderChatMessages([]);
+        const inp = document.getElementById('chatInput');
+        if (inp) { inp.value = ''; inp.focus(); }
+      });
+
+      document.getElementById('chatSendBtn')?.addEventListener('click', sendChatMessage);
+      document.getElementById('chatInput')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+      });
+    });
+  })();
+
+  // ── Panel expand/maximize ──────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-panel-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-panel-toggle');
+        const panel  = btn.closest('.panel');
+        if (panel) {
+          panel.classList.toggle('maximized');
+          document.body.classList.toggle('panel-max-open', panel.classList.contains('maximized'));
+        }
+      });
+    });
+  });
+
+  // ── Content panel: file / folder browser ────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchBtn  = document.getElementById('contentSearchBtn');
+    const fileInput  = document.getElementById('contentFileInput');
+    const dirInput   = document.getElementById('contentDirInput');
+    if (!searchBtn) return;
+
+    // Detect Electron for native dialog support
+    const isElectron = typeof window !== 'undefined' && window.truaiElectron;
+
+    // Search button: always show picker choice menu (files vs folder)
+    searchBtn.addEventListener('click', () => {
+      openFileBrowserChoice();
+    });
+
+    // File input change
+    if (fileInput) {
+      fileInput.addEventListener('change', () => {
+        Array.from(fileInput.files || []).forEach(f => registerLocalFile(f));
+        fileInput.value = '';
+      });
+    }
+
+    // Directory input change
+    if (dirInput) {
+      dirInput.addEventListener('change', () => {
+        const files = Array.from(dirInput.files || []);
+        if (!files.length) return;
+        // Group by directory prefix from webkitRelativePath
+        const dirName = files[0]?.webkitRelativePath?.split('/')[0] || 'folder';
+        addFolderSectionHeader(dirName, files.length);
+        files.forEach(f => registerLocalFile(f, dirName));
+        dirInput.value = '';
+      });
+    }
+  });
+
+  // Show a small inline choice panel: Files vs Folder
+  function openFileBrowserChoice() {
+    const existing = document.getElementById('fileBrowserChoiceMenu');
+    if (existing) { existing.remove(); return; }
+
+    const electronAvail = isElectron && typeof window.truaiElectron?.openFileBrowser === 'function';
+
+    const menu = document.createElement('div');
+    menu.id = 'fileBrowserChoiceMenu';
+    menu.style.cssText = `
+      position: fixed; z-index: 99999;
+      background: #1a1c26; border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+      padding: 6px 0; min-width: 180px; font-size: 13px;
+    `;
+
+    function selectFiles() {
+      menu.remove();
+      if (electronAvail) {
+        window.truaiElectron.openFileBrowser({ multiple: true, folder: false }).then(items => {
+          if (!items || !items.length) return;
+          items.forEach(item => {
+            if (item && item.path) addPathToContentPanel(item.path, item.content || null);
+          });
+        }).catch(err => console.warn('Electron file dialog error:', err));
+      } else {
+        document.getElementById('contentFileInput')?.click();
+      }
+    }
+
+    function selectFolder() {
+      menu.remove();
+      if (electronAvail) {
+        window.truaiElectron.openFileBrowser({ folder: true }).then(items => {
+          if (!items || !items.length) return;
+          // Derive folder name from first relativePath or path
+          const firstItem = items[0];
+          const folderName = firstItem.relativePath
+            ? firstItem.relativePath.split('/')[0] || firstItem.relativePath.split('\\')[0]
+            : (firstItem.path.split('/').slice(-2, -1)[0] || 'folder');
+          addFolderSectionHeader(folderName, items.length);
+          items.forEach(item => {
+            if (item && item.path) addPathToContentPanel(item.path, item.content || null, folderName);
+          });
+        }).catch(err => console.warn('Electron folder dialog error:', err));
+      } else {
+        document.getElementById('contentDirInput')?.click();
+      }
+    }
+
+    const options = [
+      { label: '📄  Select File(s)', action: selectFiles },
+      { label: '📁  Select Folder',  action: selectFolder },
+    ];
+
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.textContent = opt.label;
+      btn.style.cssText = `
+        display: block; width: 100%; text-align: left; padding: 9px 16px;
+        background: none; border: none; color: #e8e9eb; cursor: pointer; font-size: 13px;
+      `;
+      btn.onmouseenter = () => { btn.style.background = 'rgba(0,142,214,0.15)'; };
+      btn.onmouseleave = () => { btn.style.background = 'none'; };
+      btn.addEventListener('click', opt.action);
+      menu.appendChild(btn);
+    });
+
+    // Position near the search button
+    const ref = document.getElementById('contentSearchBtn');
+    const rect = ref?.getBoundingClientRect();
+    if (rect) {
+      menu.style.top  = (rect.bottom + 4) + 'px';
+      menu.style.left = rect.left + 'px';
+    } else {
+      menu.style.top = '50px'; menu.style.left = '20px';
+    }
+
+    document.body.appendChild(menu);
+    // Close on outside click
+    setTimeout(() => {
+      document.addEventListener('click', function close(e) {
+        if (!menu.contains(e.target) && e.target !== ref) { menu.remove(); document.removeEventListener('click', close); }
+      });
+    }, 0);
+  }
+
+  // Register a single File object into the Content panel
+  function registerLocalFile(file, folderLabel) {
+    const fileListEl = document.getElementById('file-list');
+    const displayName = file.webkitRelativePath || file.name;
+    const baseName    = file.name;
+
+    // Add to list
+    if (fileListEl) {
+      const existingNames = Array.from(fileListEl.querySelectorAll('.file-item')).map(li => li.dataset.filename);
+      if (!existingNames.includes(displayName)) {
+        const ext  = (baseName.split('.').pop() || '').toLowerCase();
+        const txtExts = new Set(['html','css','js','ts','jsx','tsx','php','json','md','txt','sh','yaml','yml','xml','py','rb','sql','env','csv','toml','ini','conf','htaccess','gitignore']);
+        const imgExts = new Set(['png','jpg','jpeg','gif','webp','svg','ico']);
+        const extIcons = { html:'🌐', css:'🎨', js:'📜', ts:'📜', jsx:'📜', tsx:'📜', php:'🐘', json:'📦', md:'📝', py:'🐍', sh:'⚙️', yml:'⚙️', yaml:'⚙️', xml:'📋', sql:'🗄️', rb:'💎', csv:'📊', toml:'⚙️', ini:'⚙️', conf:'⚙️' };
+        const icon = extIcons[ext] || (imgExts.has(ext) ? '🖼️' : '📄');
+
+        const li = document.createElement('li');
+        li.className = 'file-item local-file';
+        li.dataset.filename = displayName;
+        li.title = displayName;
+        li.innerHTML = `
+          <span class="file-icon">${icon}</span>
+          <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(baseName)}</span>
+          <span style="font-size:9px; color:#4B5563; margin-left:4px; flex-shrink:0;">${folderLabel ? escHtml(folderLabel) : 'local'}</span>
+        `;
+        li.style.cssText = 'display:flex; align-items:center; gap:4px;';
+
+        li.addEventListener('click', () => {
+          document.querySelectorAll('#file-list .file-item').forEach(x => x.classList.remove('active'));
+          li.classList.add('active');
+
+          if (imgExts.has(ext)) {
+            // Image: show in code review as a preview note
+            const imgUrl = URL.createObjectURL(file);
+            window.__truaiLocalFileContent    = null;
+            window.__truaiCodeReviewTargetPath = baseName;
+            const chip   = document.getElementById('codeReviewTargetChip');
+            const pathEl = document.getElementById('codeReviewTargetPath');
+            if (chip && pathEl) { pathEl.textContent = baseName; chip.style.display = 'inline-flex'; }
+            if (window.updateCodeReview) window.updateCodeReview('/* Image file: ' + baseName + ' */\n/* Preview: ' + imgUrl + ' */', '// ' + baseName);
+          } else if (txtExts.has(ext)) {
+            const r = new FileReader();
+            r.onload = ev => {
+              const content = ev.target.result || '';
+              window.__truaiLocalFileContent    = content;
+              window.__truaiCodeReviewTargetPath = displayName;
+              const chip   = document.getElementById('codeReviewTargetChip');
+              const pathEl = document.getElementById('codeReviewTargetPath');
+              if (chip && pathEl) { pathEl.textContent = baseName; chip.style.display = 'inline-flex'; }
+              if (window.updateCodeReview) window.updateCodeReview(content, '// ' + displayName);
+            };
+            r.readAsText(file);
+          }
+        });
+
+        fileListEl.appendChild(li);
+
+        // Auto-load first text file into Code Review
+        if (txtExts.has(ext) && !window.__truaiLocalFileContent) {
+          const ar = new FileReader();
+          ar.onload = ev => {
+            const content = ev.target.result || '';
+            window.__truaiLocalFileContent    = content;
+            window.__truaiCodeReviewTargetPath = displayName;
+            const chip   = document.getElementById('codeReviewTargetChip');
+            const pathEl = document.getElementById('codeReviewTargetPath');
+            if (chip && pathEl) { pathEl.textContent = baseName; chip.style.display = 'inline-flex'; }
+            if (window.updateCodeReview) window.updateCodeReview(content, '// ' + displayName);
+          };
+          ar.readAsText(file);
+          li.classList.add('active');
+        }
+      }
+    }
+  }
+
+  // Add a folder section header to the content list
+  function addFolderSectionHeader(folderName, fileCount) {
+    const fileListEl = document.getElementById('file-list');
+    if (!fileListEl) return;
+    const li = document.createElement('li');
+    li.style.cssText = `
+      padding: 6px 4px 2px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #4B5563;
+      border-top: 1px solid rgba(255,255,255,0.05); margin-top: 6px;
+      list-style: none;
+    `;
+    li.textContent = '📁 ' + folderName + ' (' + fileCount + ' files)';
+    fileListEl.appendChild(li);
+  }
+
+  // Public helper used by Electron bridge and folder selection
+  function addPathToContentPanel(filePath, content, folderLabel) {
+    const fileListEl = document.getElementById('file-list');
+    if (!fileListEl) return;
+    const baseName = filePath.split('/').pop() || filePath.split('\\').pop() || filePath;
+    const ext = (baseName.split('.').pop() || '').toLowerCase();
+    const txtExts = new Set(['html','css','js','ts','jsx','tsx','php','json','md','txt','sh','yaml','yml','xml','py','rb','sql','env','csv','toml','ini','conf','htaccess','gitignore']);
+    const imgExts = new Set(['png','jpg','jpeg','gif','webp','svg','ico']);
+    const extIcons = { html:'🌐', css:'🎨', js:'📜', ts:'📜', jsx:'📜', tsx:'📜', php:'🐘', json:'📦', md:'📝', py:'🐍', sh:'⚙️', yml:'⚙️', yaml:'⚙️', xml:'📋', sql:'🗄️', rb:'💎', csv:'📊' };
+    const icon = extIcons[ext] || (imgExts.has(ext) ? '🖼️' : '📄');
+    const existing = Array.from(fileListEl.querySelectorAll('.file-item')).find(li => li.dataset.filename === filePath);
+    if (existing) { existing.click(); return; }
+
+    const li = document.createElement('li');
+    li.className = 'file-item local-file';
+    li.dataset.filename = filePath;
+    li.title = filePath;
+    const labelText = folderLabel ? escHtml(folderLabel) : 'native';
+    li.innerHTML = `<span class="file-icon">${icon}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(baseName)}</span><span style="font-size:9px;color:#4B5563;flex-shrink:0;margin-left:4px;">${labelText}</span>`;
+    li.style.cssText = 'display:flex;align-items:center;gap:4px;cursor:pointer;';
+
+    function loadFileContent(cb) {
+      if (content) { cb(content); return; }
+      // Lazy-load via Electron if available
+      const electronAvail = typeof window.truaiElectron?.readFile === 'function';
+      if (electronAvail && txtExts.has(ext)) {
+        window.truaiElectron.readFile(filePath).then(res => cb(res?.content || '')).catch(() => cb(''));
+      }
+    }
+
+    li.addEventListener('click', () => {
+      document.querySelectorAll('#file-list .file-item').forEach(x => x.classList.remove('active'));
+      li.classList.add('active');
+      if (imgExts.has(ext)) {
+        window.__truaiCodeReviewTargetPath = filePath;
+        const chip = document.getElementById('codeReviewTargetChip');
+        const pathEl = document.getElementById('codeReviewTargetPath');
+        if (chip && pathEl) { pathEl.textContent = baseName; chip.style.display = 'inline-flex'; }
+        if (window.updateCodeReview) window.updateCodeReview('/* Image: ' + baseName + ' */', '// ' + baseName);
+      } else if (txtExts.has(ext)) {
+        loadFileContent(c => {
+          window.__truaiLocalFileContent    = c;
+          window.__truaiCodeReviewTargetPath = filePath;
+          const chip   = document.getElementById('codeReviewTargetChip');
+          const pathEl = document.getElementById('codeReviewTargetPath');
+          if (chip && pathEl) { pathEl.textContent = baseName; chip.style.display = 'inline-flex'; }
+          if (window.updateCodeReview) window.updateCodeReview(c, '// ' + filePath);
+        });
+      }
+    });
+
+    fileListEl.appendChild(li);
+    // Auto-click first text file
+    if (txtExts.has(ext) && !window.__truaiLocalFileContent) li.click();
+  }
+  window.TruAiAddPathToContentPanel = addPathToContentPanel;
+  </script>
+
+  <!-- ── External scripts (Prototype AI client + Cursor Parity) ── -->
+  <script src="/TruAi/assets/js/crypto.js"></script>
+  <script src="/TruAi/assets/js/ai-client.js"></script>
+  <script src="/TruAi/assets/js/settings-client.js"></script>
+  <script src="/TruAi/assets/js/cursor-parity.js"></script>
+  <script src="/TruAi/assets/js/roma-security.js"></script>
+  <script>
+    (function() {
+      try {
+        if (window.TRUAI_CONFIG && window.TruAiAIClient) {
+          window.truAiClient = new TruAiAIClient(window.TRUAI_CONFIG);
+          console.log('✅ AI client created');
+        }
+      } catch(err) {
+        console.error('❌ Failed to create AI client:', err);
+      }
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (window.truAiClient) {
+          window.truAiClient.attachToUI({ textareaId: 'aiTextEntry', responseId: 'ai-response-content' });
+          console.log('✅ AI client attached');
+        } else if (window.TRUAI_CONFIG && window.TruAiAIClient) {
+          window.truAiClient = new TruAiAIClient(window.TRUAI_CONFIG);
+          window.truAiClient.attachToUI({ textareaId: 'aiTextEntry', responseId: 'ai-response-content' });
+          console.log('✅ AI client created & attached');
+        }
+        if (window.TruAiSettingsClient && window.TRUAI_CONFIG) {
+          window.TruAiSettingsClient.init(window.TRUAI_CONFIG);
+          console.log('✅ Settings client initialized');
+        }
+      } catch(err) {
+        console.error('❌ Client init error:', err);
+      }
+    });
+  </script>
+
+
+
+
+
+<!-- ── URL Mini-Browser Modal ──────────────────────────────────────────────── -->
+<style>
+  /* URL browser sizing */
+  #url-browser-modal .tool-modal { width: 860px; max-width: 96vw; height: 82vh; }
+  #url-browser-modal.maximized .tool-modal {
+    width: 100vw !important; max-width: 100vw !important;
+    height: 100vh !important; max-height: 100vh !important;
+    border-radius: 0;
+  }
+  #url-browser-modal.maximized { padding: 0; }
+  .url-browser-layout { display: flex; flex: 1; gap: 0; min-height: 0; overflow: hidden; }
+  .url-browser-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .url-browser-devpanel {
+    width: 280px;
+    flex-shrink: 0;
+    background: #0d0e13;
+    border-left: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .url-browser-devpanel.hidden { display: none; }
+  .dev-panel-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; }
+  .dev-tab {
+    padding: 6px 12px;
+    font-size: 11px;
+    color: #6b6d78;
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+  }
+  .dev-tab.active { color: #008ed6; border-bottom-color: #008ed6; }
+  .dev-panel-content { flex: 1; overflow-y: auto; padding: 10px; font-family: monospace; font-size: 11px; color: #8b8d98; }
+  .dev-panel-content pre { white-space: pre-wrap; word-break: break-all; }
+  .url-nav-bar {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 8px 10px;
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .url-nav-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    color: #8b8d98;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 3px 8px;
+    line-height: 1;
+  }
+  .url-nav-btn:hover { background: rgba(255,255,255,0.12); color: #e8e9eb; }
+  .url-nav-input {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    color: #e8e9eb;
+    font-size: 12px;
+    padding: 5px 14px;
+    outline: none;
+  }
+  .url-nav-input:focus { border-color: #008ed6; }
+  .url-preview-area {
+    flex: 1;
+    overflow: auto;
+    background: #fff;
+    position: relative;
+    min-height: 0;
+  }
+  .url-preview-area iframe { width: 100%; height: 100%; border: none; display: block; }
+  .url-source-area {
+    flex: 1;
+    overflow: auto;
+    background: #0d0e13;
+    padding: 12px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #8b8d98;
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: none;
+    min-height: 0;
+  }
+  .url-statusbar {
+    padding: 4px 10px;
+    font-size: 10px;
+    color: #4B5563;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.15);
+    min-height: 22px;
+  }
+</style>
+<div class="tool-modal-overlay" id="url-browser-modal" role="dialog" aria-label="URL Browser" aria-modal="true">
+  <div class="tool-modal wide" style="display:flex; flex-direction:column;">
+    <div class="tool-modal-header">
+      <span class="tool-modal-title"><img src="/TruAi/assets/images/TruAi-URL.png" style="width:18px;height:18px;vertical-align:middle;margin-right:7px;"> URL Browser</span>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button class="toolbar-btn" id="urlDevToggleBtn" onclick="toggleUrlDevPanel()" title="Toggle Dev Tools">Dev Tools</button>
+        <button class="toolbar-btn" id="urlReviewBtn" onclick="reviewUrlWithAI()" style="display:none;"><img src="/TruAi/assets/images/TruAi-Code-Editor.png" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> AI Review</button>
+        <button class="url-nav-btn" id="urlMaxBtn" onclick="toggleUrlMaximize()" title="Maximize">⛶</button>
+        <button class="tool-modal-close" onclick="closeToolModal('url-browser-modal')">✕</button>
+      </div>
+    </div>
+    <!-- Nav bar (address + controls) -->
+    <div class="url-nav-bar">
+      <button class="url-nav-btn" onclick="urlNavBack()" title="Back">‹</button>
+      <button class="url-nav-btn" onclick="urlNavForward()" title="Forward">›</button>
+      <button class="url-nav-btn" onclick="urlNavReload()" title="Reload">↺</button>
+      <input class="url-nav-input" id="urlBrowserInput" type="url" placeholder="https://example.com" autocomplete="off">
+      <button class="btn-primary" style="white-space:nowrap; font-size:12px; padding:5px 14px;" onclick="loadUrlPreview()">Go</button>
+      <button class="toolbar-btn" onclick="fetchUrlSource()">Source</button>
+    </div>
+    <!-- Main browser layout -->
+    <div class="url-browser-layout">
+      <div class="url-browser-main">
+        <div class="url-preview-area" id="urlPreviewArea">
+          <iframe id="urlIframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="URL Preview"
+            onload="onIframeLoad(this)"></iframe>
+        </div>
+        <pre class="url-source-area" id="urlSourceArea"></pre>
+      </div>
+      <!-- Dev Tools panel -->
+      <div class="url-browser-devpanel hidden" id="urlDevPanel">
+        <div class="dev-panel-tabs">
+          <button class="dev-tab active" data-dev-tab="source" onclick="switchDevTab(this,'source')">Source</button>
+          <button class="dev-tab" data-dev-tab="structure" onclick="switchDevTab(this,'structure')">Structure</button>
+          <button class="dev-tab" data-dev-tab="meta" onclick="switchDevTab(this,'meta')">Meta</button>
+        </div>
+        <div class="dev-panel-content" id="devPanelContent">
+          <span style="color:#4B5563;">Load a page to inspect it.</span>
+        </div>
+      </div>
+    </div>
+    <div class="url-statusbar" id="urlBrowserStatus"></div>
+  </div>
+</div>
+
+<!-- ── Terminal Modal ───────────────────────────────────────────────────────── -->
+<div class="tool-modal-overlay" id="terminal-modal" role="dialog" aria-label="Terminal" aria-modal="true">
+  <div class="tool-modal">
+    <div class="tool-modal-header">
+      <span class="tool-modal-title"><img src="/TruAi/assets/images/TruAi-Terminal.png" style="width:18px;height:18px;vertical-align:middle;margin-right:7px;"> Terminal</span>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="toolbar-btn" onclick="clearTerminal()">Clear</button>
+        <button class="toolbar-btn" onclick="loadTerminalToCodeReview()">→ Code Review</button>
+        <button class="tool-modal-close" onclick="closeToolModal('terminal-modal')">✕</button>
+      </div>
+    </div>
+    <div class="tool-modal-body">
+      <div class="terminal-output" id="terminalOutput">
+        <div class="terminal-line info">TruAi Terminal — connected</div>
+        <div class="terminal-line info">Type a command or ask TruAi to run one. Use ↑ for history.</div>
+        <div class="terminal-line info">─────────────────────────────────────────────</div>
+      </div>
+      <div class="terminal-prompt-row">
+        <span class="terminal-prompt-label">truai $</span>
+        <input class="terminal-input" id="terminalInput" type="text" placeholder="Enter command…" autocomplete="off" spellcheck="false">
+        <button class="btn-primary" style="white-space:nowrap; font-size:12px; padding:7px 14px;" onclick="sendTerminalCommand()">Run</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── GitHub Integration Modal ─────────────────────────────────────────────── -->
+<div class="tool-modal-overlay" id="github-modal" role="dialog" aria-label="GitHub Integration" aria-modal="true">
+  <div class="tool-modal">
+    <div class="tool-modal-header">
+      <span class="tool-modal-title"><img src="/TruAi/assets/images/TruAi-Github.png" style="width:18px;height:18px;vertical-align:middle;margin-right:7px;"> GitHub Integration</span>
+      <button class="tool-modal-close" onclick="closeToolModal('github-modal')">✕</button>
+    </div>
+    <div class="tool-modal-body">
+      <div class="github-field">
+        <label>Repository URL</label>
+        <input type="url" id="githubRepoUrl" placeholder="https://github.com/user/repo" autocomplete="off">
+      </div>
+      <div class="github-field">
+        <label>Personal Access Token (optional — needed for private repos)</label>
+        <input type="password" id="githubToken" placeholder="ghp_…">
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-primary" onclick="connectGitHub()">Connect &amp; Browse</button>
+        <button class="toolbar-btn" onclick="githubPullToCodeReview()">Pull to Code Review</button>
+        <button class="toolbar-btn" id="githubAiReviewBtn" onclick="githubAiReview()" style="display:none;"><img src="/TruAi/assets/images/TruAi-Code-Editor.png" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> AI Review</button>
+      </div>
+      <div style="font-size:11px; color:#4B5563; min-height:14px;" id="githubStatus"></div>
+      <div class="github-file-list" id="githubFileList" style="display:none;"></div>
+      <pre class="url-source-box" id="githubPreviewBox" style="display:none; max-height:180px;"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ── Code Review File Picker (hidden input) ────────────────────────────────── -->
+<input type="file" id="codeReviewFileInput" style="display:none;"
+  accept=".html,.css,.js,.ts,.php,.json,.md,.txt,.sh,.yaml,.yml,.xml,.py,.rb,.sql">
+
+<script>
+// ── Tool modal helpers ──────────────────────────────────────────────────────
+function openToolModal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('visible'); el.style.display = 'flex'; }
+}
+function closeToolModal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.remove('visible'); el.style.display = ''; }
+}
+document.addEventListener('click', e => {
+  ['url-browser-modal','terminal-modal','github-modal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && e.target === el) closeToolModal(id);
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') ['url-browser-modal','terminal-modal','github-modal'].forEach(closeToolModal);
+});
+
+// ── URL Browser (enhanced) ───────────────────────────────────────────────────
+let urlBrowserMaximized = false;
+let urlDevPanelOpen = false;
+let activeDevTab = 'source';
+
+function openUrlBrowser() {
+  openToolModal('url-browser-modal');
+  setTimeout(() => document.getElementById('urlBrowserInput')?.focus(), 80);
+}
+
+function toggleUrlMaximize() {
+  const modal = document.getElementById('url-browser-modal');
+  const btn   = document.getElementById('urlMaxBtn');
+  if (!modal) return;
+  urlBrowserMaximized = !urlBrowserMaximized;
+  modal.classList.toggle('maximized', urlBrowserMaximized);
+  if (btn) btn.textContent = urlBrowserMaximized ? '⊡' : '⛶';
+}
+
+function toggleUrlDevPanel() {
+  const panel = document.getElementById('urlDevPanel');
+  if (!panel) return;
+  urlDevPanelOpen = !urlDevPanelOpen;
+  panel.classList.toggle('hidden', !urlDevPanelOpen);
+}
+
+function switchDevTab(btn, tab) {
+  document.querySelectorAll('.dev-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeDevTab = tab;
+  refreshDevPanel();
+}
+
+function refreshDevPanel() {
+  const content = document.getElementById('devPanelContent');
+  if (!content) return;
+  const src = window.__truaiUrlSourceHtml || '';
+  if (!src) { content.innerHTML = '<span style="color:#4B5563;">Load a page to inspect it.</span>'; return; }
+  if (activeDevTab === 'source') {
+    content.innerHTML = '<pre>' + escHtml(src.substring(0, 20000)) + (src.length > 20000 ? '\n… (truncated)' : '') + '</pre>';
+  } else if (activeDevTab === 'structure') {
+    // Extract tags for a simple DOM outline
+    const tags = [];
+    let m, re = /<([a-z][a-z0-9]*)[^>]*>/gi;
+    while ((m = re.exec(src)) !== null && tags.length < 200) tags.push(m[1].toLowerCase());
+    const counts = {};
+    tags.forEach(t => { counts[t] = (counts[t]||0)+1; });
+    const lines = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([t,c]) => `<span style="color:#008ed6;">${escHtml(t)}</span>  ×${c}`);
+    content.innerHTML = '<div style="display:flex;flex-direction:column;gap:3px;">' + lines.join('') + '</div>';
+  } else if (activeDevTab === 'meta') {
+    const metas = [];
+    let mm, mr = /<meta[^>]+>/gi;
+    while ((mm = mr.exec(src)) !== null) metas.push(mm[0]);
+    const titles = src.match(/<title[^>]*>([^<]*)<\/title>/i);
+    const lines = [];
+    if (titles) lines.push('<b style="color:#e8e9eb;">Title:</b> ' + escHtml(titles[1]));
+    metas.slice(0, 40).forEach(m => lines.push('<span style="color:#6b6d78;">' + escHtml(m) + '</span>'));
+    content.innerHTML = lines.join('<br>') || '<span style="color:#4B5563;">No meta tags found.</span>';
+  }
+}
+
+function onIframeLoad(iframe) {
+  const status = document.getElementById('urlBrowserStatus');
+  if (status) status.textContent = 'Page loaded · ' + (iframe.src || '');
+  const aiBtn = document.getElementById('urlReviewBtn');
+  if (aiBtn) aiBtn.style.display = 'inline-flex';
+}
+
+function urlNavBack()    { const f = document.getElementById('urlIframe'); try { f.contentWindow.history.back(); } catch(e) {} }
+function urlNavForward() { const f = document.getElementById('urlIframe'); try { f.contentWindow.history.forward(); } catch(e) {} }
+function urlNavReload()  {
+  const f = document.getElementById('urlIframe');
+  const src = f?.src;
+  if (src && src !== 'about:blank') { f.src = src; }
+}
+
+async function loadUrlPreview() {
+  const urlInput  = document.getElementById('urlBrowserInput');
+  const status    = document.getElementById('urlBrowserStatus');
+  const iframe    = document.getElementById('urlIframe');
+  const srcArea   = document.getElementById('urlSourceArea');
+  const prevArea  = document.getElementById('urlPreviewArea');
+  const url = (urlInput?.value || '').trim();
+  if (!url || !url.match(/^https?:\/\//i)) { if (status) status.textContent = 'Please enter a valid http(s) URL.'; return; }
+  if (status) status.textContent = 'Loading ' + url + ' …';
+  if (srcArea)  srcArea.style.display = 'none';
+  if (prevArea) prevArea.style.display = 'block';
+  // Direct iframe load
+  if (iframe)   iframe.src = url;
+  // Attach URL context to AI input
+  const ta = document.getElementById('aiTextEntry');
+  if (ta) ta.value = (ta.value ? ta.value + '\n' : '') + '[URL: ' + url + ']';
+}
+
+async function fetchUrlSource() {
+  const urlInput = document.getElementById('urlBrowserInput');
+  const status   = document.getElementById('urlBrowserStatus');
+  const srcArea  = document.getElementById('urlSourceArea');
+  const prevArea = document.getElementById('urlPreviewArea');
+  const aiBtn    = document.getElementById('urlReviewBtn');
+  const url = (urlInput?.value || '').trim();
+  if (!url || !url.match(/^https?:\/\//i)) { if (status) status.textContent = 'Please enter a valid http(s) URL.'; return; }
+  if (status) status.textContent = 'Fetching source…';
+  if (prevArea) prevArea.style.display = 'none';
+  try {
+    const base = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+    const r = await fetch(base + '/url/fetch?url=' + encodeURIComponent(url), { credentials: 'include' });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    if (srcArea) { srcArea.textContent = d.html || ''; srcArea.style.display = 'block'; }
+    if (aiBtn)   aiBtn.style.display = 'inline-flex';
+    window.__truaiUrlSourceHtml = d.html || '';
+    if (status) status.textContent = 'Source loaded · ' + Math.round((d.html||'').length / 1024) + ' KB · ' + url;
+    if (urlDevPanelOpen) refreshDevPanel();
+  } catch(e) {
+    if (status) status.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function reviewUrlWithAI() {
+  const src = window.__truaiUrlSourceHtml || '';
+  closeToolModal('url-browser-modal');
+  if (src && window.updateCodeReview) window.updateCodeReview(src, '// URL source');
+  const ta = document.getElementById('aiTextEntry');
+  if (ta) {
+    const url = (document.getElementById('urlBrowserInput')?.value || '').trim();
+    ta.value = 'Review this webpage source and identify its purpose, technology stack, and any notable code patterns.\n\nURL: ' + url;
+    ta.focus();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('urlBrowserInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') loadUrlPreview();
+  });
+});
+
+// ── Terminal ────────────────────────────────────────────────────────────────
+let terminalHistory = [];
+let terminalHistoryIdx = -1;
+
+function openTerminalPanel() {
+  openToolModal('terminal-modal');
+  // Update Code Review subtitle
+  const reviewLabel = document.querySelector('.code-review-extended .panel-label span') ||
+                      document.querySelector('.code-review-extended .panel-label');
+  if (reviewLabel) reviewLabel.textContent = 'Terminal';
+  setTimeout(() => document.getElementById('terminalInput')?.focus(), 80);
+}
+
+function clearTerminal() {
+  const out = document.getElementById('terminalOutput');
+  if (out) out.innerHTML = '<div class="terminal-line info">TruAi Terminal — cleared</div>';
+}
+
+function addTerminalLine(text, cls) {
+  const out = document.getElementById('terminalOutput');
+  if (!out) return;
+  const line = document.createElement('div');
+  line.className = 'terminal-line' + (cls ? ' ' + cls : '');
+  line.textContent = text;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function loadTerminalToCodeReview() {
+  const out = document.getElementById('terminalOutput');
+  const text = out ? out.innerText || out.textContent : '';
+  if (window.updateCodeReview) window.updateCodeReview(text, '// Terminal output');
+  closeToolModal('terminal-modal');
+}
+
+async function sendTerminalCommand() {
+  const input = document.getElementById('terminalInput');
+  const cmd = (input?.value || '').trim();
+  if (!cmd) return;
+  terminalHistory.unshift(cmd);
+  terminalHistoryIdx = -1;
+  if (input) input.value = '';
+  addTerminalLine('truai $ ' + cmd);
+  const base = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+  const csrf = (window.TRUAI_CONFIG || {}).CSRF_TOKEN || '';
+  try {
+    const r = await fetch(base + '/terminal/execute', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+      body: JSON.stringify({ command: cmd })
+    });
+    const d = await r.json();
+    if (d.executed) {
+      addTerminalLine(d.output || '(no output)');
+    } else {
+      // Command not in server allowlist — ask TruAi AI to handle it
+      addTerminalLine('ℹ️  Server allowlist: ' + (d.error || 'restricted') + '. Asking TruAi…', 'info');
+      const aiBase = (window.TRUAI_CONFIG || {}).API_BASE || '/TruAi/api/v1';
+      const aiR = await fetch(aiBase + '/chat/message', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body: JSON.stringify({ message: 'Terminal command: `' + cmd + '`\nExplain what this would do, and if safe, provide the expected output for macOS.', model: 'auto' })
+      });
+      const aiD = await aiR.json();
+      const reply = aiD.response || aiD.message || aiD.output || aiD.content || '';
+      if (reply) {
+        reply.split('\n').forEach(line => addTerminalLine(line));
+      }
+    }
+  } catch(e) {
+    addTerminalLine('Error: ' + e.message, 'err');
+  }
+}
+
+document.getElementById('terminalInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { sendTerminalCommand(); return; }
+  if (e.key === 'ArrowUp') {
+    terminalHistoryIdx = Math.min(terminalHistoryIdx + 1, terminalHistory.length - 1);
+    if (terminalHistory[terminalHistoryIdx]) e.target.value = terminalHistory[terminalHistoryIdx];
+    e.preventDefault();
+  }
+  if (e.key === 'ArrowDown') {
+    terminalHistoryIdx = Math.max(terminalHistoryIdx - 1, -1);
+    e.target.value = terminalHistoryIdx >= 0 ? (terminalHistory[terminalHistoryIdx] || '') : '';
+    e.preventDefault();
+  }
+});
+
+// ── GitHub Integration ───────────────────────────────────────────────────────
+let githubLoadedFiles = [];
+
+function openGitHubPanel() {
+  openToolModal('github-modal');
+  setTimeout(() => document.getElementById('githubRepoUrl')?.focus(), 80);
+}
+
+async function connectGitHub() {
+  const repoUrl  = (document.getElementById('githubRepoUrl')?.value || '').trim();
+  const token    = (document.getElementById('githubToken')?.value || '').trim();
+  const status   = document.getElementById('githubStatus');
+  const fileList = document.getElementById('githubFileList');
+  const preview  = document.getElementById('githubPreviewBox');
+  const aiBtn    = document.getElementById('githubAiReviewBtn');
+  if (!repoUrl.match(/^https?:\/\/github\.com\//i)) {
+    status.textContent = 'Please enter a valid GitHub repository URL.';
+    return;
+  }
+  // Convert URL to API endpoint
+  const parts = repoUrl.replace(/https?:\/\/github\.com\//i,'').replace(/\.git$/,'').split('/');
+  const owner = parts[0], repo = parts[1];
+  if (!owner || !repo) { status.textContent = 'Could not parse owner/repo from URL.'; return; }
+  status.textContent = 'Connecting to GitHub…';
+  fileList.style.display = 'none';
+  preview.style.display = 'none';
+  aiBtn.style.display = 'none';
+  const apiUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/';
+  const headers = { 'Accept': 'application/vnd.github.v3+json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  try {
+    const r = await fetch(apiUrl, { headers });
+    if (!r.ok) throw new Error('GitHub API error: ' + r.status + ' ' + r.statusText);
+    const files = await r.json();
+    if (!Array.isArray(files)) throw new Error('Unexpected response from GitHub API');
+    githubLoadedFiles = files;
+    fileList.innerHTML = '';
+    files.forEach(f => {
+      const item = document.createElement('div');
+      item.className = 'github-file-item';
+      item.innerHTML = (f.type === 'dir' ? '📁' : '📄') + ' <span style="flex:1">' + escHtml(f.name) + '</span><span style="font-size:10px; color:#4B5563;">' + (f.size ? Math.ceil(f.size/1024) + ' KB' : '') + '</span>';
+      if (f.type === 'file') {
+        item.addEventListener('click', () => loadGitHubFile(f, headers));
+      }
+      fileList.appendChild(item);
+    });
+    fileList.style.display = 'block';
+    aiBtn.style.display = 'inline-block';
+    status.textContent = 'Connected · ' + files.length + ' items in root of ' + owner + '/' + repo;
+  } catch(e) {
+    status.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadGitHubFile(fileEntry, hdrs) {
+  const status  = document.getElementById('githubStatus');
+  const preview = document.getElementById('githubPreviewBox');
+  if (!fileEntry.download_url) return;
+  status.textContent = 'Loading ' + fileEntry.name + '…';
+  try {
+    const r = await fetch(fileEntry.download_url, hdrs ? { headers: hdrs } : {});
+    const text = await r.text();
+    preview.textContent = text;
+    preview.style.display = 'block';
+    window.__truaiGithubFileContent = text;
+    window.__truaiGithubFileName    = fileEntry.name;
+    status.textContent = 'Loaded: ' + fileEntry.name + ' (' + text.length + ' chars)';
+  } catch(e) {
+    status.textContent = 'Error loading file: ' + e.message;
+  }
+}
+
+function githubPullToCodeReview() {
+  const content = window.__truaiGithubFileContent || '';
+  const name    = window.__truaiGithubFileName    || 'github-file';
+  if (!content) { document.getElementById('githubStatus').textContent = 'Select a file first.'; return; }
+  if (window.updateCodeReview) window.updateCodeReview(content, '// GitHub: ' + name);
+  window.__truaiCodeReviewTargetPath = name;
+  window.__truaiLocalFileContent     = content;
+  const chip   = document.getElementById('codeReviewTargetChip');
+  const pathEl = document.getElementById('codeReviewTargetPath');
+  if (chip && pathEl) { pathEl.textContent = name; chip.style.display = 'inline-flex'; }
+  closeToolModal('github-modal');
+}
+
+async function githubAiReview() {
+  const content = window.__truaiGithubFileContent || '';
+  const name    = window.__truaiGithubFileName    || 'github-file';
+  if (!content) { document.getElementById('githubStatus').textContent = 'Select a file first.'; return; }
+  githubPullToCodeReview();
+  const ta = document.getElementById('aiTextEntry');
+  if (ta) {
+    ta.value = 'Review the GitHub file: ' + name + '. Identify issues, improvements, and provide a quality score.';
+    ta.focus();
+  }
+}
+
+// ── Code Review file picker (icon button) ────────────────────────────────────
+function openCodeReviewFilePicker() {
+  const input = document.getElementById('codeReviewFileInput');
+  if (input) input.click();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const crInput = document.getElementById('codeReviewFileInput');
+  if (!crInput) return;
+  crInput.addEventListener('change', () => {
+    const file = crInput.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const content = ev.target.result || '';
+      window.__truaiLocalFileContent    = content;
+      window.__truaiCodeReviewTargetPath = file.name;
+      const chip   = document.getElementById('codeReviewTargetChip');
+      const pathEl = document.getElementById('codeReviewTargetPath');
+      if (chip && pathEl) { pathEl.textContent = file.name; chip.style.display = 'inline-flex'; }
+      if (window.updateCodeReview) window.updateCodeReview(content, '// ' + file.name);
+    };
+    reader.readAsText(file);
+    crInput.value = '';
+  });
+
+  // Terminal input listeners (DOMContentLoaded wire)
+  document.getElementById('terminalInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { sendTerminalCommand(); }
+  });
+  document.getElementById('urlBrowserInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { loadUrlPreview(); }
+  });
+});
+
+// ── Improved attachFile ───────────────────────────────────────────────────────
+function attachFile(type) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  if (type === 'image') {
+    input.accept = 'image/*';
+  } else {
+    input.accept = '.html,.php,.js,.json,.md,.css,.sh,.ts,.tsx,.py,.xml,.yaml,.yml,.sql,.rb,.txt';
+    input.multiple = true;
+  }
+  input.onchange = e => {
+    Array.from(e.target.files || []).forEach(f => {
+      const ta = document.getElementById('aiTextEntry');
+      if (ta) ta.value += (ta.value ? '\n' : '') + '[Attached: ' + f.name + ']';
+      if (type !== 'image') {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const content = ev.target.result || '';
+          // Load first selected file into Code Review
+          if (!window.__truaiLocalFileContent) {
+            window.__truaiLocalFileContent    = content;
+            window.__truaiCodeReviewTargetPath = f.name;
+            const chip   = document.getElementById('codeReviewTargetChip');
+            const pathEl = document.getElementById('codeReviewTargetPath');
+            if (chip && pathEl) { pathEl.textContent = f.name; chip.style.display = 'inline-flex'; }
+            if (window.updateCodeReview) window.updateCodeReview(content, '// ' + f.name);
+          }
+        };
+        reader.readAsText(f);
+      }
+    });
+  };
+  input.click();
+}
+</script>
+</body></html>

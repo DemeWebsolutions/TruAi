@@ -1,0 +1,35 @@
+# Gemini.ai Systemd Service
+# For running Gemini as a standalone PHP server (alternative to Plesk Apache)
+#
+# Install:
+#   sudo cp deploy/gemini-ai.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable gemini-ai
+#   sudo systemctl start gemini-ai
+#
+# If using Plesk + Apache, this is NOT needed.
+
+[Unit]
+Description=Gemini.ai Server Management Agent
+After=network.target
+
+[Service]
+Type=simple
+User=gemini
+Group=gemini
+WorkingDirectory=/var/www/vhosts/demewebsolutions.com/gemini_ai
+Environment="TRUAI_DEPLOYMENT=production"
+EnvironmentFile=/var/www/vhosts/demewebsolutions.com/gemini_ai/.env
+ExecStart=/usr/bin/php -S 127.0.0.1:8443 router.php
+Restart=on-failure
+RestartSec=5
+
+# Security
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/www/vhosts/demewebsolutions.com/gemini_ai/logs
+ReadWritePaths=/var/www/vhosts/demewebsolutions.com/gemini_ai/database
+
+[Install]
+WantedBy=multi-user.target
