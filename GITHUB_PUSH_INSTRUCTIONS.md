@@ -1,36 +1,59 @@
 # Push TruAi Pilot Milestone to GitHub
 
-The **TruAi Pilot Milestone** commit has been created locally. To publish it to GitHub:
+**Remotes configured:**
+- **TruAi (this repo):** `origin` → `git@github.com:DemeWebsolutions/TruAi.git`
+- **Tru.ai (separate repo):** `git@github.com:DemeWebsolutions/Tru.ai.git` — use if you push the Electron app to its own repo.
 
-## 1. Create a repository on GitHub (if needed)
+## Push this project (TruAi)
 
-- Go to [GitHub](https://github.com/new).
-- Create a new repository (e.g. `TruAi` or `TruAi-Pilot`).
-- Do **not** initialize with a README (you already have one).
-
-## 2. Add the remote and push
-
-From the project root (`/Users/mydemellc./Desktop/TruAi`):
+From the project root:
 
 ```bash
-# Add your GitHub repository as origin (replace with your actual URL)
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-
-# Or with SSH:
-# git remote add origin git@github.com:YOUR_USERNAME/YOUR_REPO_NAME.git
-
-# Push the pilot milestone (first push)
+cd "/Users/mydemellc./Desktop/TruAi"
 git push -u origin main
 ```
 
-## 3. Verify
+### If you get "Permission denied (publickey)"
 
-- Confirm on GitHub that the latest commit is **"TruAi Pilot Milestone Complete"**.
-- Check that `assets/images/`, `backend/`, `public/TruAi/`, and `electron/` are present.
+GitHub is using SSH; your Mac needs an SSH key added to your GitHub account.
 
-## Scope of this update
+1. **Check for an existing key:**  
+   `ls -la ~/.ssh/*.pub`  
+   If you see `id_ed25519.pub` or `id_rsa.pub`, use it in step 3.
 
-- **Local software:** This repository (`TruAi`) includes the full stack and the Electron app source in `electron/`.
-- **Electron macOS app:** The built app is produced from `electron/` (e.g. via `npm run dist`). There is no separate `/Tru.ai` directory in this workspace; the Electron application is part of this repo.
+2. **Create a new key (if needed):**  
+   `ssh-keygen -t ed25519 -C "your_email@example.com"`  
+   Press Enter to accept the default path; set a passphrase or leave empty.
 
-If you maintain a separate **Tru.ai** repo for the packaged app only, copy or sync the contents of `electron/` and any build artifacts into that repo and push there separately.
+3. **Add the public key to GitHub:**  
+   - Copy: `cat ~/.ssh/id_ed25519.pub` (or `id_rsa.pub`)  
+   - GitHub → Settings → SSH and GPG keys → New SSH key → paste and save.
+
+4. **Test:**  
+   `ssh -T git@github.com`  
+   Then run `git push -u origin main` again.
+
+### Alternative: use HTTPS with a Personal Access Token
+
+If you prefer HTTPS (GitHub no longer accepts account passwords):
+
+```bash
+git remote set-url origin https://github.com/DemeWebsolutions/TruAi.git
+git push -u origin main
+```
+
+When prompted for password, use a [Personal Access Token](https://github.com/settings/tokens) (classic) with `repo` scope, not your GitHub password.
+
+## Tru.ai repo (Electron app only)
+
+If you maintain a separate **Tru.ai** repo for the packaged Electron app:
+
+- Repo: https://github.com/DemeWebsolutions/Tru.ai  
+- SSH: `git@github.com:DemeWebsolutions/Tru.ai.git`
+
+To add it as a second remote and push the `electron/` folder only, you’d typically use a separate clone of Tru.ai and copy in the contents of `electron/` (and any build outputs), then commit and push from that clone.
+
+## Verify after push
+
+- On GitHub, latest commit should be **"TruAi Pilot Milestone Complete"** (or the docs commit after it).
+- Confirm `assets/images/`, `backend/`, `public/TruAi/`, and `electron/` are in the repo.
