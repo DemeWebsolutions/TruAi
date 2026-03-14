@@ -28,9 +28,14 @@ curl -H "Authorization: Bearer $TRUAI_TOKEN" http://127.0.0.1:8010/version
 docker compose config
 ```
 
-## Failure-mode test (fail-open)
+## ROMA policy (v1 Option A)
 
-When Qdrant is down, query should return 200 with `degraded: true` and empty results:
+- **Localhost** (127.0.0.1, ::1): fail-open — degraded query returns empty results; upsert queues when Qdrant down
+- **External**: fail-closed — returns 503 when degraded (no queue, no empty results)
+
+## Failure-mode test (fail-open, localhost only)
+
+When Qdrant is down, query from localhost should return 200 with `degraded: true` and empty results:
 
 ```bash
 docker stop truai-qdrant

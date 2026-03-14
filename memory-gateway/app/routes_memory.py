@@ -1,5 +1,5 @@
 """Memory routes — query, upsert; auth, ROMA, redaction, fail-open."""
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from app.auth import verify_bearer
@@ -28,12 +28,14 @@ class UpsertRequest(BaseModel):
 
 @router.post("/query")
 async def memory_query(req: QueryRequest, request: Request):
-    """Query memory — fail-open: returns degraded:true + [] if Qdrant down."""
+    """Query memory — fail-open only for localhost when ROMA VERIFIED."""
     apply_roma(request)
     check_private_key_block(req.text, req.filters or {})
 
     client = get_client()
     if not client:
+        if request.state.is_external:
+            raise HTTPException(status_code=503, detail="Memory unavailable (external fail-closed)")
         return {"degraded": True, "results": []}
 
     try:
@@ -41,18 +43,19 @@ async def memory_query(req: QueryRequest, request: Request):
         results = search(client, req.collection, vec, top_k=req.top_k, filters=req.filters)
         return {"degraded": False, "results": results}
     except Exception:
+        if request.state.is_external:
+            raise HTTPException(status_code=503, detail="Memory query failed (external fail-closed)")
         return {"degraded": True, "results": []}
 
 
 @router.post("/upsert")
 async def memory_upsert(req: UpsertRequest, request: Request):
-    """Upsert memory — queue if Qdrant down; block private keys."""
+    """Upsert memory — queue only for localhost when ROMA VERIFIED."""
     apply_roma(request)
     check_private_key_block(req.text, req.payload or {})
 
     payload = req.payload or {}
     redacted_text, redacted_payload = redact_top_level(req.text, payload)
-    # Store redacted for persistence
     payload_to_store = redacted_payload or {}
     if redacted_text is not None:
         payload_to_store["text"] = redacted_text
@@ -68,6 +71,8 @@ async def memory_upsert(req: UpsertRequest, request: Request):
         except Exception:
             pass
 
-    # Fail-open: queue for later
+    if request.state.is_external:
+        raise HTTPException(status_code=503, detail="Memory upsert unavailable (external fail-closed)")
+
     enqueue(req.collection, req.text, payload_to_store, EMBEDDING_DIMS)
     return {"status": "ok", "queued": True}
