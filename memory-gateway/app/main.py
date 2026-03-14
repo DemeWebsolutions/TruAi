@@ -4,13 +4,15 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",
-)
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+# Explicit logger levels: gateway.* at INFO, reduce noise from libs
+logging.getLogger("gateway.requests").setLevel(logging.INFO)
+logging.getLogger("gateway.worker").setLevel(logging.INFO)
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 from app.auth import verify_bearer
 from app.embeddings_ollama import ollama_reachable
+from app.permissions import token_to_identity
 from app.limits import apply_limits_middleware
 from app.policies import apply_roma
 from app.tracing import TracingMiddleware
@@ -73,6 +75,13 @@ async def root():
     return {"service": "TruAi Memory Gateway", "version": VERSION}
 
 
+def _get_identity(request: Request) -> str:
+    """Extract identity from Authorization header (truai/phantom/gemini)."""
+    auth = request.headers.get("Authorization", "")
+    token = auth[7:] if auth.startswith("Bearer ") else ""
+    return token_to_identity(token) if token else "unknown"
+
+
 @app.get("/health", dependencies=[Depends(verify_bearer)])
 async def health(request: Request):
     """Detailed health: zone, roma_verified, fail_open_allowed, queue_depth, qdrant, ollama."""
@@ -83,6 +92,7 @@ async def health(request: Request):
     return {
         "status": "ok",
         "trace_id": getattr(request.state, "trace_id", ""),
+        "identity": _get_identity(request),
         "zone": getattr(request.state, "zone", "unknown"),
         "roma_verified": getattr(request.state, "roma_verified", False),
         "fail_open_allowed": getattr(request.state, "fail_open_allowed", False),
