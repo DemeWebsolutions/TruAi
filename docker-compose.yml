@@ -5,6 +5,8 @@ services:
   memory-gateway:
     build: ./memory-gateway
     container_name: truai-gateway
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:8010:8010"
     environment:
@@ -13,6 +15,9 @@ services:
       - EMBEDDING_MODEL=nomic-embed-text
       - EMBEDDING_DIMS=768
       - GATEWAY_DATA_DIR=/data
+      - ROMA_URL=${ROMA_URL:-http://host.docker.internal:8001/TruAi/api/v1/security/roma}
+      - LOCAL_CIDRS=${LOCAL_CIDRS:-127.0.0.1/32,::1/128,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12}
+      - WG_CIDRS=${WG_CIDRS:-10.100.0.0/24}
     env_file:
       - .env
     volumes:

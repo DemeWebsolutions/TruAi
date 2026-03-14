@@ -1,24 +1,31 @@
 """Policy checks — block private keys, ROMA fail-open/fail-closed."""
 from fastapi import HTTPException, Request
 
+from app.cidr import get_zone
 from app.redact import has_private_key_block
-
-
-def is_localhost(request: Request) -> bool:
-    """True if request is from localhost only (127.0.0.1, ::1). Option A."""
-    ip = request.client.host if request.client else ""
-    return ip in ("127.0.0.1", "::1")
+from app.roma import get_roma_status
 
 
 def apply_roma(request: Request) -> None:
     """
-    v1 Option A: localhost = VERIFIED (fail-open permitted).
-    External = fail-closed on degradation (routes enforce 503).
-    Sets request.state.is_local, request.state.is_external.
+    Option B: CIDR zone + ROMA HTTP trust check.
+    fail-open only if zone=local AND ROMA trust_state=VERIFIED.
+    zone=wg and zone=public always fail-closed.
+    Sets request.state.zone, request.state.is_local, request.state.is_external.
     """
-    is_local = is_localhost(request)
-    request.state.is_local = is_local
-    request.state.is_external = not is_local
+    ip = request.client.host if request.client else ""
+    zone = get_zone(ip)
+    request.state.zone = zone
+
+    fail_open = False
+    if zone == "local":
+        roma = get_roma_status()
+        trust = (roma or {}).get("trust_state")
+        if trust == "VERIFIED":
+            fail_open = True
+
+    request.state.is_local = fail_open
+    request.state.is_external = not fail_open
 
 
 def check_private_key_block(text: str | None, payload: dict | None) -> None:

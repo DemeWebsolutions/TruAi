@@ -1,16 +1,19 @@
-"""ROMA policy: local (VERIFIED) = fail-open; WireGuard = fail-closed."""
-from fastapi import Request
+"""ROMA HTTP trust check — Option B."""
+import httpx
 
-from app.cidr import is_private_or_localhost
+from app.config import ROMA_URL
 
 
-def is_local_verified(request: Request) -> bool:
+def get_roma_status() -> dict | None:
     """
-    True if request is from localhost/private IP (treated as VERIFIED).
-    WireGuard IPs are not private → fail-closed.
+    Fetch ROMA trust status from TruAi endpoint.
+    Returns {"trust_state": "VERIFIED"} or None on failure.
     """
-    # X-Forwarded-For can be spoofed; for v1 we trust direct client IP
-    client = request.client
-    if not client:
-        return False
-    return is_private_or_localhost(client.host)
+    try:
+        with httpx.Client(timeout=5.0) as client:
+            r = client.get(ROMA_URL)
+            r.raise_for_status()
+            data = r.json()
+            return data if isinstance(data, dict) else None
+    except Exception:
+        return None

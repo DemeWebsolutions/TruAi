@@ -28,14 +28,17 @@ curl -H "Authorization: Bearer $TRUAI_TOKEN" http://127.0.0.1:8010/version
 docker compose config
 ```
 
-## ROMA policy (v1 Option A)
+## ROMA policy (Option B)
 
-- **Localhost** (127.0.0.1, ::1): fail-open — degraded query returns empty results; upsert queues when Qdrant down
-- **External**: fail-closed — returns 503 when degraded (no queue, no empty results)
+- **zone=local** + ROMA trust_state=VERIFIED: fail-open — degraded query returns empty results; upsert queues when Qdrant down
+- **zone=wg** (WireGuard): always fail-closed — 503 when degraded
+- **zone=public**: always fail-closed — 503 when degraded
 
-## Failure-mode test (fail-open, localhost only)
+CIDRs: `LOCAL_CIDRS` (default: loopback + RFC1918), `WG_CIDRS` (default: 10.100.0.0/24). ROMA URL: `ROMA_URL` (default: `http://host.docker.internal:8001/TruAi/api/v1/security/roma` when in Docker).
 
-When Qdrant is down, query from localhost should return 200 with `degraded: true` and empty results:
+## Failure-mode test (fail-open, zone=local + ROMA VERIFIED)
+
+When Qdrant is down and request is from LOCAL_CIDRS with ROMA VERIFIED, query should return 200 with `degraded: true` and empty results:
 
 ```bash
 docker stop truai-qdrant
@@ -54,6 +57,8 @@ docker start truai-qdrant
 - `TRUAI_TOKENS`, `PHANTOM_TOKENS`, `GEMINI_TOKENS` — comma-separated Bearer tokens (required)
 - `QDRANT_URL`, `OLLAMA_URL` — set by docker-compose for containers
 - `MAX_TEXT_CHARS`, `MAX_PAYLOAD_CHARS` — optional limits (default 20000)
+- `ROMA_URL` — TruAi ROMA endpoint (default: host.docker.internal:8001 in Docker)
+- `LOCAL_CIDRS`, `WG_CIDRS` — comma-separated CIDRs for zone classification
 
 ## Endpoints
 
