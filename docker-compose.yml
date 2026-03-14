@@ -1,0 +1,56 @@
+# TruAi Memory Gateway v1 — localhost-only, internal network
+# Usage: docker compose up -d --build
+
+services:
+  memory-gateway:
+    build: ./memory-gateway
+    container_name: truai-gateway
+    ports:
+      - "127.0.0.1:8010:8010"
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_URL=http://ollama:11434
+      - EMBEDDING_MODEL=nomic-embed-text
+      - EMBEDDING_DIMS=768
+      - GATEWAY_DATA_DIR=/data
+    env_file:
+      - .env
+    volumes:
+      - gateway_data:/data
+    networks:
+      - truai-internal
+    depends_on:
+      - qdrant
+      - ollama
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: truai-qdrant
+    ports:
+      - "127.0.0.1:6333:6333"   # localhost-only for debugging
+    volumes:
+      - qdrant_storage:/qdrant/storage
+      - qdrant_snapshots:/qdrant/snapshots
+    networks:
+      - truai-internal
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: truai-ollama
+    volumes:
+      - ollama_models:/root/.ollama
+    networks:
+      - truai-internal
+    restart: unless-stopped
+
+networks:
+  truai-internal:
+    driver: bridge
+
+volumes:
+  qdrant_storage:
+  qdrant_snapshots:
+  ollama_models:
+  gateway_data:
