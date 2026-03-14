@@ -135,3 +135,22 @@ LOAD_TEST_N=100 python scripts/load_test.py
 - Version in `app/main.py` (`VERSION`)
 - `memory-gateway/CHANGELOG.md` for gateway-specific changes
 - Tag releases: `memory-gateway-v1.0.0`
+
+---
+
+## Production go-live punchlist
+
+Use this checklist before production. Feature completion is separate; these are deployment/ops gates.
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| 1 | **Tokens** | ☐ | Replace `change-me-*` in `.env` with strong, unique tokens for TRUAI_TOKENS, PHANTOM_TOKENS, GEMINI_TOKENS |
+| 2 | **ROMA reachable** | ☐ | TruAi backend running; gateway can reach `ROMA_URL`; `/health` shows `roma_verified: true` when local |
+| 3 | **LOCAL_CIDRS** | ☐ | Include Phantom host subnet if Phantom runs on separate LAN box |
+| 4 | **WG_CIDRS** | ☐ | Set real WireGuard subnet if different from `10.100.0.0/24` |
+| 5 | **Gateway exposure (Gemini)** | ☐ | Choose: bind to WG interface only, or `0.0.0.0` + firewall rules allowing only WG + local |
+| 6 | **Firewall** | ☐ | If using 0.0.0.0: block public access; allow only LOCAL_CIDRS + WG_CIDRS to port 8010 |
+| 7 | **Embedding model** | ☐ | `ollama pull nomic-embed-text` completed; `EMBEDDING_DIMS` matches model (768 for nomic-embed-text) |
+| 8 | **Qdrant persistence** | ☐ | Volume mounted; data survives container restarts |
+| 9 | **Queue persistence** | ☐ | `GATEWAY_DATA_DIR` volume mounted; queue.db survives restarts |
+| 10 | **Smoke test** | ☐ | Upsert → query → failure-mode test (Qdrant down) passes per expectations |
