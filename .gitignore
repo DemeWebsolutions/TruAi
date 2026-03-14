@@ -54,3 +54,4 @@ electron/dist/
 electron/out/
 *.dmg
 *.zip
+memory-gateway/app/__pycache__/
