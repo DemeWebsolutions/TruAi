@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+  qdrant:
+    image: qdrant/qdrant
+    networks:
+      internal:
+    ports:
+      - "6333"
+  ollama:
+    image: ollama/ollama
+    networks:
+      internal:
+    ports:
+      - "11434"
+  memory-gateway:
+    build: ./memory-gateway
+    networks:
+      internal:
+    ports:
+      - "127.0.0.1:8010:80"
+    environment:
+      ROMA_URL: http://127.0.0.1:8001/TruAi/api/v1/security/roma
+      QDRANT_URL: http://qdrant:6333
+      OLLAMA_URL: http://ollama:11434
+      EMBED_MODEL: nomic-embed-text
+      VECTOR_SIZE: 768
+      DISTANCE: Cosine
+      LOCAL_CIDRS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+      WG_CIDRS: 10.100.0.0/24
+      TRUAI_TOKENS: ${TRUAI_TOKENS}
+      PHANTOM_TOKENS: ${PHANTOM_TOKENS}
+      GEMINI_TOKENS: ${GEMINI_TOKENS}
+networks:
+  internal:
+    driver: bridge
