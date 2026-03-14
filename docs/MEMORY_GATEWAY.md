@@ -68,3 +68,7 @@ docker start truai-qdrant
 | `/version` | GET | Bearer |
 | `/memory/query` | POST | Bearer |
 | `/memory/upsert` | POST | Bearer |
+
+### `/health` response (detailed)
+
+Returns `zone`, `roma_verified`, `fail_open_allowed`, `queue_depth`, `qdrant_reachable`, `ollama_reachable` for debugging and monitoring.

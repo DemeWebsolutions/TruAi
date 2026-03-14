@@ -11,21 +11,20 @@ def apply_roma(request: Request) -> None:
     Option B: CIDR zone + ROMA HTTP trust check.
     fail-open only if zone=local AND ROMA trust_state=VERIFIED.
     zone=wg and zone=public always fail-closed.
-    Sets request.state.zone, request.state.is_local, request.state.is_external.
+    Sets request.state.zone, request.state.roma_verified, request.state.fail_open_allowed.
     """
     ip = request.client.host if request.client else ""
     zone = get_zone(ip)
     request.state.zone = zone
 
-    fail_open = False
+    roma_verified = False
     if zone == "local":
         roma = get_roma_status()
         trust = (roma or {}).get("trust_state")
-        if trust == "VERIFIED":
-            fail_open = True
+        roma_verified = trust == "VERIFIED"
 
-    request.state.is_local = fail_open
-    request.state.is_external = not fail_open
+    request.state.roma_verified = roma_verified
+    request.state.fail_open_allowed = zone == "local" and roma_verified
 
 
 def check_private_key_block(text: str | None, payload: dict | None) -> None:

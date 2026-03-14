@@ -59,6 +59,13 @@ def delete_from_queue(row_id: int) -> None:
         conn.commit()
 
 
+def queue_depth() -> int:
+    """Return number of pending items in queue."""
+    init_db()
+    with sqlite3.connect(QUEUE_DB_PATH) as conn:
+        return conn.execute("SELECT COUNT(*) FROM memory_queue").fetchone()[0]
+
+
 def increment_attempts(row_id: int, error: str) -> None:
     """Increment attempts and store last error."""
     with sqlite3.connect(QUEUE_DB_PATH) as conn:

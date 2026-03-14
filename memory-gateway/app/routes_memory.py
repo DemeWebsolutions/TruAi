@@ -34,7 +34,7 @@ async def memory_query(req: QueryRequest, request: Request):
 
     client = get_client()
     if not client:
-        if request.state.is_external:
+        if not request.state.fail_open_allowed:
             raise HTTPException(status_code=503, detail="Memory unavailable (external fail-closed)")
         return {"degraded": True, "results": []}
 
@@ -43,7 +43,7 @@ async def memory_query(req: QueryRequest, request: Request):
         results = search(client, req.collection, vec, top_k=req.top_k, filters=req.filters)
         return {"degraded": False, "results": results}
     except Exception:
-        if request.state.is_external:
+        if not request.state.fail_open_allowed:
             raise HTTPException(status_code=503, detail="Memory query failed (external fail-closed)")
         return {"degraded": True, "results": []}
 
@@ -71,7 +71,7 @@ async def memory_upsert(req: UpsertRequest, request: Request):
         except Exception:
             pass
 
-    if request.state.is_external:
+    if not request.state.fail_open_allowed:
         raise HTTPException(status_code=503, detail="Memory upsert unavailable (external fail-closed)")
 
     enqueue(req.collection, req.text, payload_to_store, EMBEDDING_DIMS)
