@@ -60,6 +60,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Memory Gateway v1.0.0 (`memory-gateway/`): request logging with `trace_id`, per-token collection permissions (TruAi/Phantom/Gemini), embedding probe, Qdrant schema, queue observability, operator runbook. See `memory-gateway/CHANGELOG.md`.
+
 ### Planned for 1.1.0
 - Windows Hello biometric support
 - Browser extension for Chrome, Firefox, Safari, Edge

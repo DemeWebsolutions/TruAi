@@ -2,7 +2,7 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
-from app.config import EMBEDDING_DIMS, QDRANT_URL
+from app.config import DEFAULT_COLLECTIONS, EMBEDDING_DIMS, PAYLOAD_INDEX_KEYS, QDRANT_URL
 
 
 def get_client() -> QdrantClient | None:
@@ -25,6 +25,26 @@ def ensure_collection(client: QdrantClient, collection: str, dims: int) -> None:
             )
     except Exception:
         pass
+
+
+def ensure_payload_index(client: QdrantClient, collection: str, key: str) -> None:
+    """Create payload index for filter field if missing."""
+    try:
+        client.create_payload_index(
+            collection_name=collection,
+            field_name=key,
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+    except Exception:
+        pass
+
+
+def ensure_all_collections_and_indexes(client: QdrantClient) -> None:
+    """Create default collections and payload indexes on startup."""
+    for coll in DEFAULT_COLLECTIONS:
+        ensure_collection(client, coll, EMBEDDING_DIMS)
+        for key in PAYLOAD_INDEX_KEYS:
+            ensure_payload_index(client, coll, key)
 
 
 def upsert_points(

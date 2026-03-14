@@ -13,6 +13,22 @@ def ollama_reachable() -> bool:
         return False
 
 
+def probe_embedding_dims() -> None:
+    """Verify embedding dims match EMBEDDING_DIMS. Raises if mismatch or unreachable."""
+    from app.config import EMBEDDING_DIMS
+
+    url = f"{OLLAMA_URL.rstrip('/')}/api/embeddings"
+    with httpx.Client(timeout=10.0) as client:
+        r = client.post(url, json={"model": EMBEDDING_MODEL, "prompt": "probe"})
+        r.raise_for_status()
+        vec = r.json().get("embedding", [])
+    if len(vec) != EMBEDDING_DIMS:
+        raise RuntimeError(
+            f"Embedding dims mismatch: expected {EMBEDDING_DIMS}, got {len(vec)}. "
+            "Check EMBEDDING_MODEL and EMBEDDING_DIMS."
+        )
+
+
 def get_embedding(text: str) -> list[float]:
     """Fetch embedding from Ollama. Raises on error."""
     url = f"{OLLAMA_URL.rstrip('/')}/api/embeddings"

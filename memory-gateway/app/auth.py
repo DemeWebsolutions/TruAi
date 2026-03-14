@@ -8,7 +8,7 @@ security = HTTPBearer(auto_error=True)
 
 
 def verify_bearer(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:
-    """Validate Bearer token; raise 401 if invalid."""
+    """Validate Bearer token; raise 401 if invalid. Returns token (use token_to_identity for identity)."""
     token = credentials.credentials
     if not token or token not in ALL_TOKENS:
         raise HTTPException(status_code=401, detail="Invalid or missing token")
