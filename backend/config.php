@@ -96,7 +96,7 @@ define('CORS_ENABLED', true);
 // For localhost development, allow http://localhost:8001 and http://127.0.0.1:8001 (primary),
 // plus legacy ports for backwards compatibility.
 $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$allowedOrigins = ['http://localhost:8001', 'http://127.0.0.1:8001', 'http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8765', 'http://127.0.0.1:8765', 'http://localhost:8787', 'http://127.0.0.1:8787', 'http://localhost', 'http://127.0.0.1'];
+$allowedOrigins = ['http://localhost:8001', 'http://127.0.0.1:8001', 'http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8765', 'http://127.0.0.1:8765', 'http://localhost', 'http://127.0.0.1'];
 define('CORS_ORIGIN', in_array($requestOrigin, $allowedOrigins) ? $requestOrigin : 'http://localhost:8001');
 
 // Create necessary directories

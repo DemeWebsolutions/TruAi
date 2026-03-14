@@ -170,6 +170,14 @@ function createWindow() {
     return { action: 'deny' };
   });
 
+  // Intercept navigation to Phantom.ai (port 8080) — open in a dedicated window
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (/^https?:\/\/(127\.0\.0\.1|localhost):8080\b/.test(url)) {
+      event.preventDefault();
+      openPhantomWindow(url);
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
     stopPhpServer();
@@ -178,6 +186,46 @@ function createWindow() {
 
 function stopPhpServer() {
   if (phpProcess) { phpProcess.kill(); phpProcess = null; }
+}
+
+// ── Phantom.ai Window ────────────────────────────────────────────────────────
+let phantomWindow = null;
+
+function openPhantomWindow(url) {
+  if (phantomWindow && !phantomWindow.isDestroyed()) {
+    phantomWindow.loadURL(url);
+    phantomWindow.focus();
+    return;
+  }
+  const root = getTruAiRoot();
+  const iconPath = root ? path.join(root, 'assets', 'images', 'TruAi-icon.png') : null;
+
+  phantomWindow = new BrowserWindow({
+    width:     1280,
+    height:    850,
+    minWidth:  800,
+    minHeight: 500,
+    title:     'Phantom.ai',
+    show:      false,
+    backgroundColor: '#ffffff',
+    ...(iconPath && fs.existsSync(iconPath) ? { icon: iconPath } : {}),
+    webPreferences: {
+      nodeIntegration:  false,
+      contextIsolation: true,
+      sandbox:          true,
+    },
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+  });
+
+  phantomWindow.once('ready-to-show', () => { phantomWindow.show(); phantomWindow.focus(); });
+  phantomWindow.loadURL(url);
+
+  phantomWindow.webContents.setWindowOpenHandler(({ url: linkUrl }) => {
+    if (!linkUrl.startsWith('http://127.0.0.1') && !linkUrl.startsWith('http://localhost')) shell.openExternal(linkUrl);
+    return { action: 'deny' };
+  });
+
+  phantomWindow.on('closed', () => { phantomWindow = null; });
 }
 
 // ── Dialogs ───────────────────────────────────────────────────────────────────

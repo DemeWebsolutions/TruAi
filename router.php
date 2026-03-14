@@ -51,6 +51,22 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json)$/i'
     return true;
 }
 
+// Redirect Phantom.ai to external portal (http://127.0.0.1:8080) — must precede generic file serving
+if (preg_match('#^/TruAi/phantom(\.html)?/?$#', $requestUri) || preg_match('#^/phantom(\.html)?/?$#', $requestUri)) {
+    header('Location: http://127.0.0.1:8080/login-portal.html', true, 302);
+    return true;
+}
+
+// Serve Gemini.ai portal at /TruAi/gemini or /TruAi/gemini.html
+if (preg_match('#^/TruAi/gemini(\.html)?/?$#', $requestUri) || preg_match('#^/gemini(\.html)?/?$#', $requestUri)) {
+    $geminiPath = __DIR__ . '/dev/gemini-portal.html';
+    if (file_exists($geminiPath)) {
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile($geminiPath);
+        return true;
+    }
+}
+
 // Serve HTML pages from public/TruAi/ directory first (new UBSAS/LSRP pages take precedence)
 if (strpos($requestUri, '/TruAi/') === 0 && preg_match('/\.html$/i', $requestUri)) {
     $publicHtmlPath = __DIR__ . '/public' . $requestUri;
@@ -82,22 +98,6 @@ if (preg_match('#^/(welcome|start|loading|access-granted|access-denied|login-por
         readfile($path);
         return true;
     }
-}
-
-// Serve Gemini.ai portal at /TruAi/gemini or /TruAi/gemini.html
-if (preg_match('#^/TruAi/gemini(\.html)?/?$#', $requestUri) || preg_match('#^/gemini(\.html)?/?$#', $requestUri)) {
-    $geminiPath = __DIR__ . '/dev/gemini-portal.html';
-    if (file_exists($geminiPath)) {
-        header('Content-Type: text/html; charset=UTF-8');
-        readfile($geminiPath);
-        return true;
-    }
-}
-
-// Redirect Phantom.ai to external portal (http://127.0.0.1:8787/Phantom.ai.portal.html)
-if (preg_match('#^/TruAi/phantom(\.html)?/?$#', $requestUri) || preg_match('#^/phantom(\.html)?/?$#', $requestUri)) {
-    header('Location: http://127.0.0.1:8787/Phantom.ai.portal.html', true, 302);
-    return true;
 }
 
 // Redirect /monitor and /TruAi/monitor to main TruAi dashboard

@@ -100,7 +100,7 @@ cat > "$CONFIG_DIR/config.json" <<JSONEOF
   "apps": {
     "truai":   { "url": "http://127.0.0.1:8001", "enabled": true  },
     "gemini":  { "url": "http://127.0.0.1:5000", "enabled": false },
-    "phantom": { "url": "http://127.0.0.1:8787", "enabled": false }
+    "phantom": { "url": "http://127.0.0.1:8080", "enabled": false }
   },
   "biometric_available": ${BIOMETRIC_AVAILABLE},
   "keychain_available":  ${KEYCHAIN_AVAILABLE},

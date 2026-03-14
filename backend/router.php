@@ -119,7 +119,7 @@ class Router {
         if (CORS_ENABLED) {
             // Get request origin
             $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
-            $allowedOrigins = ['http://localhost:8001', 'http://127.0.0.1:8001', 'http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8765', 'http://127.0.0.1:8765', 'http://localhost:8787', 'http://127.0.0.1:8787', 'http://localhost:5000', 'http://127.0.0.1:5000', 'http://154.53.54.169:5000', 'http://localhost', 'http://127.0.0.1'];
+            $allowedOrigins = ['http://localhost:8001', 'http://127.0.0.1:8001', 'http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8765', 'http://127.0.0.1:8765', 'http://localhost:5000', 'http://127.0.0.1:5000', 'http://154.53.54.169:5000', 'http://localhost', 'http://127.0.0.1'];
             
             // Allow credentials only from allowed origins
             if (in_array($requestOrigin, $allowedOrigins)) {

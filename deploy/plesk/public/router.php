@@ -77,7 +77,7 @@ if (preg_match('#^/TruAi/gemini(\.html)?/?$#', $requestUri) || preg_match('#^/ge
 }
 
 if (preg_match('#^/TruAi/phantom#', $requestUri) || preg_match('#^/phantom#', $requestUri)) {
-    header('Location: http://127.0.0.1:8787/Phantom.ai.portal.html', true, 302);
+    header('Location: http://127.0.0.1:8080/login-portal.html', true, 302);
     return;
 }
 
