@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "components": [
+    {
+      "name": "qdrant",
+      "version": "v1.17.0",
+      "darwin-arm64": {
+        "url": "https://github.com/qdrant/qdrant/releases/download/v1.17.0/qdrant-darwin-arm64.tar.gz",
+        "sha256": ""
+      },
+      "darwin-amd64": {
+        "url": "https://github.com/qdrant/qdrant/releases/download/v1.17.0/qdrant-darwin-amd64.tar.gz",
+        "sha256": ""
+      }
+    }
+  ],
+  "_comment": "sha256 filled at build time; Supervisor only downloads components listed here"
+}

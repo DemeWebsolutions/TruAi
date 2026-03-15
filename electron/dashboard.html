@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TruAi Platform</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0b0d11; color: #e2e8f0; }
+    .tabs { display: flex; background: #1a1d24; padding: 0 12px; gap: 4px; }
+    .tab { padding: 12px 16px; cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab:hover { background: #252830; }
+    .tab.active { border-bottom-color: #3b82f6; color: #60a5fa; }
+    .panel { display: none; padding: 20px; min-height: 400px; }
+    .panel.active { display: block; }
+    .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .status-card { background: #1a1d24; padding: 16px; border-radius: 8px; }
+    .status-card.ok { border-left: 4px solid #22c55e; }
+    .status-card.fail { border-left: 4px solid #ef4444; }
+    .status-card.warn { border-left: 4px solid #f59e0b; }
+    .log-view { font-family: monospace; font-size: 12px; background: #0f1115; padding: 12px; border-radius: 8px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; }
+    iframe { width: 100%; height: 600px; border: none; border-radius: 8px; background: #fff; }
+    .checklist { list-style: none; padding: 0; }
+    .checklist li { padding: 8px 0; border-bottom: 1px solid #252830; display: flex; align-items: center; gap: 12px; }
+    .checklist input[type="checkbox"] { width: 18px; height: 18px; }
+    button { background: #3b82f6; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #2563eb; }
+    button.secondary { background: #374151; }
+    .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <div class="tab active" data-tab="status">Status</div>
+    <div class="tab" data-tab="truai">TruAi</div>
+    <div class="tab" data-tab="logs">Logs</div>
+    <div class="tab" data-tab="config">Config</div>
+    <div class="tab" data-tab="checklist">Go-live</div>
+  </div>
+
+  <div id="status" class="panel active">
+    <h2>Platform Status</h2>
+    <div class="status-grid" id="statusGrid"></div>
+    <p style="margin-top: 16px;">
+      <button id="btnRefresh">Refresh</button>
+      <button id="btnStart" class="secondary">Start Stack</button>
+      <button id="btnStop" class="secondary">Stop Stack</button>
+    </p>
+  </div>
+
+  <div id="truai" class="panel">
+    <iframe id="truaiFrame" src="about:blank"></iframe>
+  </div>
+
+  <div id="logs" class="panel">
+    <h2>Logs</h2>
+    <select id="logSelect">
+      <option value="gateway">Gateway</option>
+      <option value="qdrant">Qdrant</option>
+      <option value="php">PHP</option>
+      <option value="supervisor">Supervisor</option>
+    </select>
+    <pre class="log-view" id="logView">Select a log...</pre>
+  </div>
+
+  <div id="config" class="panel">
+    <h2>Configuration</h2>
+    <p>Config path: <code id="configPath"></code></p>
+    <textarea id="configEditor" style="width:100%; height:300px; font-family:monospace; background:#1a1d24; color:#e2e8f0; padding:12px; border-radius:8px;"></textarea>
+    <p><button id="btnSaveConfig">Save</button></p>
+  </div>
+
+  <div id="checklist" class="panel">
+    <h2>Production Go-live Checklist</h2>
+    <ul class="checklist" id="goLiveChecklist"></ul>
+  </div>
+
+  <script>
+    const { trinity } = window;
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.panel');
+
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      panels.forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById(t.dataset.tab).classList.add('active');
+      if (t.dataset.tab === 'truai' && trinity?.getTruAiUrl) {
+        document.getElementById('truaiFrame').src = trinity.getTruAiUrl();
+      }
+    }));
+
+    async function refreshStatus() {
+      const grid = document.getElementById('statusGrid');
+      if (!trinity?.getStatus) { grid.innerHTML = '<p class="error">IPC not available</p>'; return; }
+      try {
+        const s = await trinity.getStatus();
+        grid.innerHTML = [
+          { name: 'Qdrant', ok: s.qdrant, cls: s.qdrant ? 'ok' : 'fail' },
+          { name: 'Ollama', ok: s.ollama, cls: s.ollama ? 'ok' : 'fail' },
+          { name: 'Gateway', ok: s.gateway, cls: s.gateway ? 'ok' : 'fail' },
+          { name: 'PHP', ok: s.php, cls: s.php ? 'ok' : 'fail' },
+          { name: 'Embedding model', ok: s.ollamaModel, cls: s.ollamaModel ? 'ok' : 'warn' },
+        ].map(x => `<div class="status-card ${x.cls}"><strong>${x.name}</strong><br>${x.ok ? 'OK' : 'Not ready'}</div>`).join('');
+      } catch (e) {
+        grid.innerHTML = `<p class="error">${e.message}</p>`;
+      }
+    }
+
+    document.getElementById('btnRefresh')?.addEventListener('click', refreshStatus);
+    document.getElementById('btnStart')?.addEventListener('click', () => trinity?.startStack?.());
+    document.getElementById('btnStop')?.addEventListener('click', () => trinity?.stopStack?.());
+
+    document.getElementById('logSelect')?.addEventListener('change', async () => {
+      const sel = document.getElementById('logSelect').value;
+      const view = document.getElementById('logView');
+      if (trinity?.getLog) view.textContent = await trinity.getLog(sel) || '(empty)';
+    });
+
+    document.getElementById('btnSaveConfig')?.addEventListener('click', () => trinity?.saveConfig?.(document.getElementById('configEditor').value));
+
+    const checklistItems = [
+      'Replace change-me tokens with strong, unique tokens',
+      'ROMA reachable; /health shows roma_verified: true',
+      'LOCAL_CIDRS includes Phantom host if separate',
+      'WG_CIDRS set if different from 10.100.0.0/24',
+      'Gateway exposure: WG-interface-only or 0.0.0.0 + firewall',
+      'Firewall: block public; allow LOCAL_CIDRS + WG_CIDRS',
+      'Embedding model pulled (nomic-embed-text)',
+      'Qdrant persistence volume mounted',
+      'Queue persistence (GATEWAY_DATA_DIR)',
+      'Smoke test: upsert → query → failure-mode',
+    ];
+    document.getElementById('goLiveChecklist').innerHTML = checklistItems
+      .map((text, i) => `<li><input type="checkbox" id="c${i}"><label for="c${i}">${text}</label></li>`).join('');
+
+    if (trinity?.getConfigPath) document.getElementById('configPath').textContent = await trinity.getConfigPath() || '—';
+    if (trinity?.getConfig) document.getElementById('configEditor').value = await trinity.getConfig() || '{}';
+    refreshStatus();
+  </script>
+</body>
+</html>

@@ -43,3 +43,14 @@ contextBridge.exposeInMainWorld('truaiElectron', {
   /** Platform string for conditional UI */
   platform: process.platform,
 });
+
+contextBridge.exposeInMainWorld('trinity', {
+  getStatus: () => ipcRenderer.invoke('trinity:get-status'),
+  startStack: () => ipcRenderer.invoke('trinity:start-stack'),
+  stopStack: () => ipcRenderer.invoke('trinity:stop-stack'),
+  getLog: (name) => ipcRenderer.invoke('trinity:get-log', name),
+  getConfig: () => ipcRenderer.invoke('trinity:get-config'),
+  saveConfig: (content) => ipcRenderer.invoke('trinity:save-config', content),
+  getConfigPath: () => ipcRenderer.invoke('trinity:get-config-path'),
+  getTruAiUrl: () => ipcRenderer.invoke('trinity:get-truai-url'),
+});

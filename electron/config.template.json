@@ -1,0 +1,16 @@
+{
+  "ports": {
+    "truai": 8001,
+    "gateway": 8010,
+    "qdrant": 6333,
+    "ollama": 11434
+  },
+  "gateway": {
+    "embeddingModel": "nomic-embed-text",
+    "embeddingDims": 768,
+    "romaUrl": "http://127.0.0.1:8001/TruAi/api/v1/security/roma",
+    "localCidrs": "127.0.0.1/32,::1/128,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12",
+    "wgCidrs": "10.100.0.0/24"
+  },
+  "_comment": "Tokens stored in Keychain only. .env generated from this for subprocesses."
+}

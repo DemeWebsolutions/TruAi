@@ -1,0 +1,9 @@
+{
+  "name": "@truai/memory-client",
+  "version": "1.0.0",
+  "description": "Memory Gateway client for Phantom/Gemini apps",
+  "main": "index.js",
+  "author": "My Deme, LLC",
+  "license": "proprietary",
+  "private": true
+}

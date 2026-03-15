@@ -55,3 +55,9 @@ electron/out/
 *.dmg
 *.zip
 memory-gateway/app/__pycache__/
+memory-gateway/dist/
+memory-gateway/build/
+memory-gateway/.venv/
+memory-gateway/*.spec.bak
+apps/*/node_modules/
+electron/php/

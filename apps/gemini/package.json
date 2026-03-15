@@ -1,0 +1,26 @@
+{
+  "name": "gemini-ai-app",
+  "productName": "Gemini.ai",
+  "version": "1.0.0",
+  "description": "Gemini.ai — WireGuard client, strict fail-closed",
+  "main": "main.js",
+  "author": "My Deme, LLC",
+  "license": "proprietary",
+  "private": true,
+  "dependencies": {
+    "@truai/memory-client": "file:../../packages/memory-client"
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.trinity.gemini",
+    "productName": "Gemini.ai",
+    "mac": { "category": "public.app-category.productivity", "target": ["dmg", "zip"] }
+  }
+}

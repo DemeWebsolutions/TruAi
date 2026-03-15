@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Phantom.ai</title></head>
+<body>
+  <h1>Phantom.ai</h1>
+  <p>Gateway URL: <input id="gatewayUrl" value="http://127.0.0.1:8010" style="width:300px"></p>
+  <p>Token: <input id="token" type="password" placeholder="Phantom token"></p>
+  <button id="test">Test connection</button>
+  <pre id="output"></pre>
+  <script>
+    const out = document.getElementById('output');
+    document.getElementById('test').onclick = async () => {
+      if (!window.phantom) { out.textContent = 'IPC not available'; return; }
+      try {
+        const res = await window.phantom.query({ collection: 'phantom_episodes', text: 'test', top_k: 5 });
+        out.textContent = JSON.stringify(res, null, 2);
+      } catch (e) { out.textContent = e.message; }
+    };
+  </script>
+</body>
+</html>

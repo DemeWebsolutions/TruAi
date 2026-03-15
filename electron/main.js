@@ -11,8 +11,12 @@ const { spawn } = require('child_process');
 const http   = require('http');
 const fs     = require('fs');
 
-const PORT            = 8001;
+const supervisor = require('./supervisor');
+const { PATHS, DEFAULT_PORTS, getUrls } = require('./runtimeContract');
+
+const PORT            = DEFAULT_PORTS.TRUAI_PORT;
 const TRUAI_LOGIN_URL = `http://127.0.0.1:${PORT}/TruAi/login-portal.html`;
+const DASHBOARD_URL   = `file://${path.join(__dirname, 'dashboard.html')}`;
 
 let phpProcess  = null;
 let mainWindow  = null;
@@ -110,7 +114,7 @@ function waitForServer(maxAttempts = 40) {
   });
 }
 
-// ── Start PHP built-in server ─────────────────────────────────────────────────
+// ── Start PHP built-in server (legacy, used by supervisor too) ─────────────────
 function startPhpServer(root) {
   const routerPath = path.join(root, 'router.php');
   if (!fs.existsSync(routerPath)) return false;
@@ -188,6 +192,25 @@ function stopPhpServer() {
   if (phpProcess) { phpProcess.kill(); phpProcess = null; }
 }
 
+// ── Platform Dashboard (optional; does not alter main window UX) ─────────────────
+let dashboardWindow = null;
+
+function openDashboardWindow() {
+  if (!fs.existsSync(path.join(__dirname, 'dashboard.html'))) return;
+  if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+    dashboardWindow.focus();
+    return;
+  }
+  dashboardWindow = new BrowserWindow({
+    width: 900,
+    height: 700,
+    title: 'TruAi Platform',
+    webPreferences: { nodeIntegration: false, contextIsolation: true, preload: path.join(__dirname, 'preload.js') },
+  });
+  dashboardWindow.loadFile(path.join(__dirname, 'dashboard.html'));
+  dashboardWindow.on('closed', () => { dashboardWindow = null; });
+}
+
 // ── Phantom.ai Window ────────────────────────────────────────────────────────
 let phantomWindow = null;
 
@@ -263,27 +286,36 @@ function showPermissionError() {
 
 // ── App startup ───────────────────────────────────────────────────────────────
 function openApp() {
-  isServerRunning().then(running => {
-    if (running) { createWindow(); return; }
+  const root = getTruAiRoot();
+  if (!root) { showProjectNotFound(); return; }
+  try { fs.accessSync(path.join(root, 'router.php'), fs.constants.R_OK); }
+  catch { showPermissionError(); return; }
 
-    const root = getTruAiRoot();
-    if (!root) { showProjectNotFound(); return; }
-
-    // Check read access
-    try { fs.accessSync(path.join(root, 'router.php'), fs.constants.R_OK); }
-    catch { showPermissionError(); return; }
-
-    const started = startPhpServer(root);
-    if (!started) { showProjectNotFound(); return; }
-
-    waitForServer()
-      .then(() => createWindow())
-      .catch(err => {
+  const hasDashboard = fs.existsSync(path.join(__dirname, 'dashboard.html'));
+  if (hasDashboard) {
+    supervisor.ensureDirs();
+    if (supervisor.isLockedAndAlive()) { createWindow(); return; }
+    isServerRunning().then(running => {
+      if (running) { createWindow(); return; }
+      startPhpServer(root);
+      waitForServer().then(() => createWindow()).catch(err => {
         console.error(err.message);
         stopPhpServer();
         if (!permErrShown) showProjectNotFound();
       });
-  });
+    });
+  } else {
+    isServerRunning().then(running => {
+      if (running) { createWindow(); return; }
+      const started = startPhpServer(root);
+      if (!started) { showProjectNotFound(); return; }
+      waitForServer().then(() => createWindow()).catch(err => {
+        console.error(err.message);
+        stopPhpServer();
+        if (!permErrShown) showProjectNotFound();
+      });
+    });
+  }
 }
 
 // ── App menu ──────────────────────────────────────────────────────────────────
@@ -294,6 +326,8 @@ function buildMenu() {
       submenu: [
         { label: 'Open File(s)…',  accelerator: 'CmdOrCtrl+O',       click: () => mainWindow?.webContents.executeJavaScript('typeof openFileBrowserChoice==="function"&&openFileBrowserChoice()') },
         { label: 'Open Folder…',   accelerator: 'CmdOrCtrl+Shift+O', click: () => mainWindow?.webContents.executeJavaScript('document.getElementById("contentDirInput")?.click()') },
+        { type: 'separator' },
+        { label: 'Platform Dashboard…', click: () => openDashboardWindow() },
         { type: 'separator' },
         { role: 'quit' },
       ],
@@ -370,6 +404,67 @@ ipcMain.handle('truai:app-info', () => ({
   userDataDir: app.getPath('userData'),
 }));
 
+// ── IPC: Trinity supervisor (dashboard) ───────────────────────────────────────
+ipcMain.handle('trinity:get-status', async () => {
+  const urls = getUrls(supervisor.getPorts());
+  const token = process.env.TRUAI_TOKEN || 'change-me-truai-1';
+  return {
+    qdrant: await supervisor.checkQdrant(supervisor.getPorts().QDRANT_PORT),
+    ollama: await supervisor.checkOllama(supervisor.getPorts().OLLAMA_PORT),
+    gateway: await supervisor.checkGateway(supervisor.getPorts().GATEWAY_PORT, token),
+    php: await isServerRunning(),
+    ollamaModel: await supervisor.checkOllamaModel(),
+  };
+});
+
+ipcMain.handle('trinity:start-stack', async () => {
+  const root = getTruAiRoot();
+  if (!root) return { error: 'TruAi project not found' };
+  if (supervisor.isLockedAndAlive()) return { error: 'Stack already running' };
+  supervisor.ensureDirs();
+  const portCheck = await supervisor.checkPorts();
+  if (portCheck.TRUAI_PORT || portCheck.GATEWAY_PORT) return { error: 'Ports in use. Stop other services or use auto-select.' };
+  supervisor.acquireLock();
+  const token = process.env.TRUAI_TOKEN || 'change-me-truai-1';
+  const qr = await supervisor.startQdrant();
+  if (!qr.ok) console.warn('Qdrant:', qr.error);
+  const gr = await supervisor.startGateway(token);
+  if (!gr.ok) console.warn('Gateway:', gr.error);
+  const pr = supervisor.startPhp(root);
+  if (!pr.ok) console.warn('PHP:', pr.error);
+  phpProcess = supervisor.processes.php || phpProcess;
+  return { ok: true };
+});
+
+ipcMain.handle('trinity:stop-stack', () => {
+  supervisor.stopAll();
+  stopPhpServer();
+  return { ok: true };
+});
+
+ipcMain.handle('trinity:get-log', async (_, name) => {
+  const logPath = PATHS[`${name}Log`] || path.join(PATHS.logs, `${name}.log`);
+  try {
+    const content = fs.readFileSync(logPath, 'utf8');
+    return content.slice(-50000);
+  } catch { return ''; }
+});
+
+ipcMain.handle('trinity:get-config-path', () => PATHS.configJson);
+ipcMain.handle('trinity:get-config', async () => {
+  try {
+    return fs.readFileSync(PATHS.configJson, 'utf8');
+  } catch { return '{}'; }
+});
+ipcMain.handle('trinity:save-config', async (_, content) => {
+  try {
+    fs.mkdirSync(PATHS.config, { recursive: true });
+    fs.writeFileSync(PATHS.configJson, content, 'utf8');
+    return { ok: true };
+  } catch (e) { return { error: e.message }; }
+});
+ipcMain.handle('trinity:get-truai-url', () => TRUAI_LOGIN_URL);
+
 // ── Helper: recursive directory scan ─────────────────────────────────────────
 function scanDir(dir, depth, results = []) {
   if (depth <= 0) return results;
@@ -398,8 +493,12 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  supervisor.stopAll();
   stopPhpServer();
   app.quit();
 });
 
-app.on('before-quit', () => stopPhpServer());
+app.on('before-quit', () => {
+  supervisor.stopAll();
+  stopPhpServer();
+});

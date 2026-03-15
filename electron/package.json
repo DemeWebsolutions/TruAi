@@ -33,7 +33,12 @@
     },
     "files": [
       "main.js",
-      "preload.js"
+      "preload.js",
+      "supervisor.js",
+      "runtimeContract.js",
+      "config.template.json",
+      "dashboard.html",
+      "runtime/manifest.json"
     ],
     "extraResources": [
       { "from": "../assets", "to": "assets", "filter": ["**/*"] },

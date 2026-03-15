@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Gemini.ai</title></head>
+<body>
+  <h1>Gemini.ai</h1>
+  <p>Gateway URL (WG): <input id="gatewayUrl" value="http://10.100.0.1:8010" style="width:300px"></p>
+  <p>Token: <input id="token" type="password" placeholder="Gemini token"></p>
+  <button id="checkWg">Check WireGuard</button>
+  <button id="test">Test query</button>
+  <pre id="output"></pre>
+  <script>
+    const out = document.getElementById('output');
+    document.getElementById('checkWg').onclick = async () => {
+      if (!window.gemini) { out.textContent = 'IPC not available'; return; }
+      const res = await window.gemini.checkWg();
+      out.textContent = JSON.stringify(res, null, 2);
+    };
+    document.getElementById('test').onclick = async () => {
+      if (!window.gemini) { out.textContent = 'IPC not available'; return; }
+      try {
+        const res = await window.gemini.query({ collection: 'gemini_episodes', text: 'test', top_k: 5 });
+        out.textContent = JSON.stringify(res, null, 2);
+      } catch (e) { out.textContent = e.message; }
+    };
+  </script>
+</body>
+</html>
